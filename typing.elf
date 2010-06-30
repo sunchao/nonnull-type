@@ -1,0 +1,219 @@
+%%%%% typing.elf
+%%%%% Typing Rules 
+%%%%% Chao Sun
+%%%%% February, 2010
+
+
+%%% Result for Type Inference
+
+
+result : kind -> type.
+
+%abbrev expr-result = result exprk.
+
+%abbrev cond-result = result condk.
+
+%abbrev args-result = result argsk.
+
+result/expr : nulltp -> result exprk.
+
+result/cond : result condk.
+
+result/args/0 : result argsk.
+
+result/args/+ : nulltp -> result argsk -> result argsk.
+
+
+
+%%%%% Typing Rules
+
+
+nullTyping : clsmap -> methmap -> oflist -> term K -> result K -> type.
+     
+nullCallTyping : clsmap -> methmap -> args-result 
+    -> methtp -> expr-result -> type.
+
+nullCallTyping/call : nullCallTyping _ _ result/args/0
+    (methtp/base T) (result/expr T).
+
+nullCallTyping/arg
+   : nullCallTyping CM MM (result/args/+ T ARslt) (methtp/arg AF T) ERslt
+      <- ({o} nullCallTyping CM MM ARslt (AF o) ERslt).
+
+
+
+%%%%% Typing Rules
+
+
+nulltLit : nullTyping _ _ L (lit O) (result/expr T)
+    <- oflist-lookup L O T.
+
+nulltNull : nullTyping _ _ _ (lit null) (result/expr nulltp/null).
+
+nulltRead 
+   : nullTyping CM MM L (read E F) (result/expr T)
+      <- nullTyping CM MM L E (result/expr (nulltp/norm C nn/yes))
+      <- clsmap`lookup CM C (clstp/ _ FM)
+      <- fldmap`lookup FM F T.
+
+nulltWrite
+   : nullTyping CM MM L (write E1 F E2) (result/expr T)
+      <- nullTyping CM MM L E1 (result/expr (nulltp/norm C nn/yes))
+      <- nullTyping CM MM L E2 (result/expr T)
+      <- clsmap`lookup CM C (clstp/ _ FM)
+      <- fldmap`lookup FM F T.
+
+nulltLet 
+   : nullTyping CM MM L (let E F) Rslt
+      <- nullTyping CM MM L E (result/expr T)
+      <- ({x} nullTyping CM MM (oflist/+ x T L) (F x) Rslt).
+
+nulltIf 
+   : nullTyping CM MM L (if C E1 E2) Rslt
+      <- nullTyping CM MM L C _
+      <- nullTyping CM MM L E1 Rslt
+      <- nullTyping CM MM L E2 Rslt.
+
+nulltWhile 
+   : nullTyping CM MM L (while C E) (result/expr nulltp/null)
+      <- nullTyping CM MM L C _
+      <- nullTyping CM MM L E Rslt.
+
+nulltIfNotNull 
+   : nullTyping CM MM L (if (not (eql (lit O) (lit null))) E1 E2) Rslt
+      <- oflist-lookup L O (nulltp/norm C _)
+      <- nullTyping CM MM L E2 Rslt
+      <- nullTyping CM MM (oflist/+ O (nulltp/norm C nn/yes) L) E1 Rslt.
+
+nulltSub : nullTyping CM MM L E (result/expr T')
+    <- subtype T T'
+    <- clsmap-nulltp CM T'
+    <- nullTyping CM MM L E (result/expr T).
+
+
+
+%%%% Conditionals
+
+
+nulltEql : nullTyping CM MM L (eql E1 E2) result/cond
+    <- nullTyping CM MM L E2 _ 
+    <- nullTyping CM MM L E1 _.
+
+nulltNot : nullTyping CM MM L C CRslt -> nullTyping CM MM L (not C) CRslt.
+
+nulltAnd : nullTyping CM MM L C1 CRslt ->
+    nullTyping CM MM L C2 CRslt ->
+    nullTyping CM MM L (and C1 C2) CRslt.
+
+
+%%%% Function Calls
+
+
+nulltArgs/0 : nullTyping CM MM L args/0 result/args/0.
+
+nulltArgs/+ : nullTyping CM MM L E (result/expr T) ->
+    nullTyping CM MM L A ARslt -> 
+    nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt).
+
+
+nulltCallConst : 
+    clsmap`lookup CM C (clstp/ CNT FM) -> 			     
+    nullTyping CM MM L A ARslt ->
+    nullCallTyping CM MM ARslt CNT Rslt ->
+    fldmap`domain FM S ->				   
+    nullTyping CM MM L (call C (args/+ (alloc C S set/0) A)) Rslt.
+    
+nulltCallMeth : 
+    methmap`lookup MM M MT -> 			  
+    nullTyping CM MM L A ARslt ->
+    nullCallTyping CM MM ARslt MT Rslt ->
+    nullTyping CM MM L (call M A) Rslt.
+
+
+
+%%%%% Normal Method Typing
+
+
+methtpmatch : clsmap -> methmap -> oflist -> func -> methtp -> type.
+ 
+methtpmatch/base 
+   : methtpmatch CM MM L (func/0 E) (methtp/base T')
+      <- nullTyping CM MM L E (result/expr T)
+      <- subtype T T'.
+		   
+methtpmatch/args 
+   : methtpmatch CM MM L (func/+ F) (methtp/arg MTF T)
+      <- ({o} methtpmatch CM MM (oflist/+ o T L) (F o) (MTF o)).
+
+
+%%%%% Constructor Typing
+
+constyping : nat -> set -> clsmap -> methmap -> 
+	oflist -> (object -> expr) -> type.
+    
+constyping/0 : constyping _ (set/0) _ _ _ ([t] lit t).
+
+constyping/nn : constyping C S CM MM L ([t] (seq (write (lit t) F E) (B t))) 
+    <- clsmap`lookup CM C (clstp/ _ FM)
+    <- fldmap`lookup FM F (nulltp/norm C' nn/yes)
+    <- set`remove S (set/+ F set/0) S'
+    <- nullTyping CM MM L E (result/expr (nulltp/norm C' nn/yes))
+    <- constyping C S' CM MM L ([t] B t).
+
+constyping/mn : constyping C S CM MM L ([t] (seq (write (lit t) F E) (B t)))
+    <- clsmap`lookup CM C (clstp/ _ FM)
+    <- fldmap`lookup FM F (nulltp/norm C' nn/may)
+    <- nullTyping CM MM L E (result/expr (nulltp/norm C' _))
+    <- constyping C S CM MM L ([t] B t).
+
+
+constypematch : nat -> set -> clsmap -> methmap ->
+   oflist -> (object -> func) -> (object -> methtp) -> type.
+
+constypematch/base : constyping C S CM MM L E ->
+    constypematch C S CM MM L ([t] func/0 (E t)) ([t] methtp/base T).
+
+constypematch/args 
+   : constypematch C S CM MM L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
+      <- ({o} constypematch C S CM MM (oflist/+ o T L) 
+	    ([t] (F t o)) ([t] (CTF t o))).
+
+
+%%%%% Program Typing
+
+filt-nnfields : fldmap -> set -> type.
+
+filt-nnfields/0 : filt-nnfields fldmap`map/0 set`set/0.
+
+filt-nnfields/in
+   : filt-nnfields (fldmap`map/+ F (nulltp/norm _ nn/yes) M) (set`set/+ F S)
+      <- fldmap`shift F M M'
+      <- filt-nnfields M' S.
+
+filt-nnfields/out
+   : filt-nnfields (fldmap`map/+ F (nulltp/norm _ nn/may) M) S
+      <- fldmap`shift F M M'
+      <- filt-nnfields M S.
+
+
+env-prog* : clsmap -> methmap -> clsmap -> methmap ->  prog -> type.
+
+%abbrev env-prog = [CM][MM][G] env-prog* CM MM CM MM G.
+
+env-prog/0 : env-prog* _ _ clsmap`map/0 methmap`map/0 prog`map/0.
+
+env-prog/c
+   : env-prog* CM0 MM0
+      (clsmap`map/+ N (clstp/ (methtp/arg CTF (nulltp/norm _ nn/yes)) FM) CM) MM
+      (prog`map/+ N (func/+ FUNF) G1)
+      <- filt-nnfields FM S
+      <- constypematch N S CM MM oflist/0 FUNF CTF 
+      <- env-prog* CM0 MM0 CM MM G1.
+	 
+env-prog/m 
+   : env-prog* CM0 MM0 CM (methmap`map/+ N MT MM) (prog`map/+ N FUN G1)
+      <- methtpmatch CM MM oflist/0 FUN MT
+      <- env-prog* CM0 MM0 CM MM G1.
+
+
+

@@ -1,0 +1,103 @@
+%%%%% consistent.elf
+%%%%% Whether an environment is consistent
+%%%%% Chao Sun
+%%%%% March, 2010
+
+%{
+
+A environment is consistent if the following conditions are met :
+  1. all types in all fldmaps have entry in clsmap
+  2. all types used in all methmap have entry in clsmap
+  3. all types used in all constructors type have entry in clsmap
+  4. the return type of a constructor should be the same as its class
+
+}%
+
+%%% Check whether class types used in method-type is consistent with the clsmap.
+
+clsmap-nulltp : clsmap -> nulltp -> type.
+
+clsmap-nulltp/norm 
+   : clsmap-nulltp CM (nulltp/norm C _) 
+      <- clsmap`domain? CM C true.
+		   
+clsmap-nulltp/null : clsmap-nulltp CM nulltp/null.
+
+
+clsmap-methtp : clsmap -> methtp -> type.
+
+clsmap-methtp/base 
+   : clsmap-methtp CM (methtp/base T)
+      <- clsmap-nulltp CM T.
+
+clsmap-methtp/arg
+   : clsmap-methtp CM (methtp/arg MTF T)
+      <- clsmap-nulltp CM T
+      <- ({o} clsmap-methtp CM (MTF o)).
+
+
+%%% check whether the return type of the constructor
+%%%  is the same as the nat provided.
+
+nat-constp : nat -> methtp -> type.
+
+nat-constp/base : nat-constp N (methtp/base (nulltp/norm N _)).
+
+nat-constp/arg 
+   : nat-constp N (methtp/arg ([o] MTF o) _)
+      <- {O} nat-constp N (MTF O).
+
+
+%%% Check whether a fldmap is consistent with a clsmap
+
+clsmap-fldmap : clsmap -> fldmap -> type.
+
+clsmap-fldmap/0 : clsmap-fldmap _ fldmap`map/0.
+
+clsmap-fldmap/n 
+   : clsmap-fldmap CM (fldmap`map/+ F nulltp/null FM)
+      <- clsmap-fldmap CM FM.
+	  
+clsmap-fldmap/+ 
+   : clsmap-fldmap CM (fldmap`map/+ F (nulltp/norm N _) FM)
+      <- clsmap`domain? CM N true
+      <- clsmap-fldmap CM FM.
+
+
+%%% Check whether a clsmap is consistent itself
+
+clsmap-clsmap : clsmap -> clsmap -> type.
+
+clsmap-clsmap/0 : clsmap-clsmap _ clsmap`map/0.
+
+clsmap-clsmap/+
+   : clsmap-clsmap CM (clsmap`map/+ N (clstp/ CT FM) CM')
+      <- clsmap-methtp CM CT
+      <- nat-constp N CT
+      <- clsmap-fldmap CM FM
+      <- clsmap-clsmap CM CM'.
+
+% %abbrev clsmap-clsmap = [CM] clsmap-clsmap* CM CM.
+
+%%% Check whether a methmap is consistent with a clsmap
+
+clsmap-methmap : clsmap -> methmap -> type.
+
+clsmap-methmap/0 : clsmap-methmap _ methmap`map/0.
+
+clsmap-methmap/+
+   : clsmap-methmap CM (methmap`map/+ _ MT MM)
+      <- clsmap-methtp CM MT
+      <- clsmap-methmap CM MM.
+
+
+% consistency between clsmap and oflist
+
+clsmap-oflist : clsmap -> oflist -> type.
+
+clsmap-oflist/0 : clsmap-oflist _ oflist/0.
+
+clsmap-oflist/+
+   : clsmap-oflist CM (oflist/+ _ T L) 
+      <- clsmap-oflist CM L
+      <- clsmap-nulltp CM T.
