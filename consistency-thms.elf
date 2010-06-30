@@ -1,0 +1,257 @@
+%%%%% consistent-thms.elf
+%%%%% theorems about consistency between clsmap, fldmap, methmap, and oflist
+%%%%% Chao Sun
+%%%%% Jun 17, 2010
+
+
+% theorems about shift
+
+%theorem shift-preserves-clsmap-fldmap :
+        forall* {CM} {FM1} {FM2} {N}
+        forall  {CM-FM1: clsmap-fldmap CM FM1}
+		{SH: fldmap`shift N FM1 FM2}
+        exists  {CM-FM2: clsmap-fldmap CM FM2}
+        true.
+
+- : shift-preserves-clsmap-fldmap clsmap-fldmap/0 _ clsmap-fldmap/0.
+
+- : shift-preserves-clsmap-fldmap
+     (clsmap-fldmap/n CM-FM1) _ (clsmap-fldmap/n CM-FM1).
+
+- : shift-preserves-clsmap-fldmap 
+     (clsmap-fldmap/+ CM-FM1 IN) _ (clsmap-fldmap/+ CM-FM1 IN).
+
+%worlds (predvar | objvar) (shift-preserves-clsmap-fldmap _ _ _).
+%total  {} (shift-preserves-clsmap-fldmap _ _ _).
+
+
+
+% This theorem says if under a "bigger" clsmap CM0, CM is well-defined, and
+% class C in CM has fldmap FM, then all classes in FM is well-defined under CM0
+
+%theorem lookup-implies-clsmap-fldmap : 
+        forall* {CM0} {CM} {FM} {CT} {C}
+        forall  {CM-CM: clsmap-clsmap CM0 CM}
+                {L: clsmap`lookup CM C (clstp/ CT FM)}
+        exists  {CM-FM: clsmap-fldmap CM0 FM}
+        true.
+
+- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ _ CM-FM _ _)
+     (clsmap`lookup/= _) CM-FM.
+
+- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ CM-CM _ _ _)
+     (clsmap`lookup/> L _) CM-FM
+     <- lookup-implies-clsmap-fldmap CM-CM L CM-FM.
+
+%worlds (predvar | objvar) (lookup-implies-clsmap-fldmap _ _ _).
+%total {L} (lookup-implies-clsmap-fldmap _ L _).
+
+
+%theorem lookup-implies-clsmap-nulltp :
+        forall* {CM} {FM} {F} {T}
+        forall  {CM-FM: clsmap-fldmap CM FM}
+                {FM-LP: fldmap`lookup FM F T}
+        exists  {CM-T : clsmap-nulltp CM T}
+        true.
+
+- : lookup-implies-clsmap-nulltp (clsmap-fldmap/n _) _ clsmap-nulltp/null.
+
+- : lookup-implies-clsmap-nulltp (clsmap-fldmap/+ CM-FM N1-IN) 
+     (fldmap`lookup/= _) (clsmap-nulltp/norm N1-IN).
+
+- : lookup-implies-clsmap-nulltp (clsmap-fldmap/+ CM-FM _) 
+     (fldmap`lookup/> LP _) CM-T
+     <- lookup-implies-clsmap-nulltp CM-FM LP CM-T.
+
+- : lookup-implies-clsmap-nulltp (clsmap-fldmap/n CM-FM)
+     (fldmap`lookup/> LP _) CM-T
+     <- lookup-implies-clsmap-nulltp CM-FM LP CM-T.
+
+%worlds (objvar) (lookup-implies-clsmap-nulltp _ _ _).
+%total  CM-FM (lookup-implies-clsmap-nulltp CM-FM _ _).
+
+
+%theorem lookup-implies-clsmap-methtp :
+        forall* {CM} {MM} {MT} {M}
+        forall  {CM-MM: clsmap-methmap CM MM}
+                {MM-LP: methmap`lookup MM M MT}
+        exists  {CM-MT: clsmap-methtp CM MT}
+        true.
+
+- : lookup-implies-clsmap-methtp (clsmap-methmap/+ CM-MM CM-MT)
+     (methmap`lookup/= _) CM-MT.
+
+- : lookup-implies-clsmap-methtp (clsmap-methmap/+ CM-MM _)
+     (methmap`lookup/> LP _) CM-MT
+     <- lookup-implies-clsmap-methtp CM-MM LP CM-MT.
+
+%worlds (objvar) (lookup-implies-clsmap-methtp _ _ _).
+%total  MM-LP (lookup-implies-clsmap-methtp _ MM-LP _).
+
+
+%theorem lookup-implies-clsmap-constp/L :
+	forall* {CMM} {CM} {FM} {C} {CNT}
+	forall  {CM-CM: clsmap-clsmap CMM CM}
+		{CM-LP: clsmap`lookup CM C (clstp/ CNT FM)}
+	exists  {CM-CT: clsmap-methtp CMM CNT}
+	true.
+				 
+
+- : lookup-implies-clsmap-constp/L (clsmap-clsmap/+ _ _ _ CM-CT) 
+     (clsmap`lookup/= N1=N2) CM-CT.
+
+- : lookup-implies-clsmap-constp/L (clsmap-clsmap/+ CM-CM _ _ _)
+     (clsmap`lookup/> CM-LP _) CM-CT
+     <- lookup-implies-clsmap-constp/L CM-CM CM-LP CM-CT.
+
+%worlds (objvar) (lookup-implies-clsmap-constp/L _ _ _).
+%total CM-LP (lookup-implies-clsmap-constp/L _ CM-LP _).
+
+
+%theorem lookup-implies-clsmap-constp :
+	forall* {CM} {FM} {C} {CNT}
+	forall  {CM-CM: clsmap-clsmap CM CM}
+		{CM-LP: clsmap`lookup CM C (clstp/ CNT FM)}
+	exists  {CM-CT: clsmap-methtp CM CNT}
+	true.
+
+- : lookup-implies-clsmap-constp CM-CM CM-LP CM-CT
+     <- lookup-implies-clsmap-constp/L CM-CM CM-LP CM-CT.
+
+%worlds (objvar) (lookup-implies-clsmap-constp _ _ _).
+%total  {} (lookup-implies-clsmap-constp _ _ _).
+
+
+
+%theorem oflist-lookup-implies-clsmap-nulltp :
+        forall* {CM} {L} {O} {T}
+        forall  {CM-L: clsmap-oflist CM L} 
+                {LP: oflist-lookup L O T}
+        exists  {CM-T: clsmap-nulltp CM T}
+        true.
+
+- : oflist-lookup-implies-clsmap-nulltp
+     (clsmap-oflist/+ CM-T _) (oflist-lookup/=) CM-T.
+
+- : oflist-lookup-implies-clsmap-nulltp
+     (clsmap-oflist/+ _ CM-L) (oflist-lookup/!= LP) CM-T
+     <- oflist-lookup-implies-clsmap-nulltp CM-L LP CM-T.
+
+
+%worlds (objvar) (oflist-lookup-implies-clsmap-nulltp _ _ _).
+%total  LP (oflist-lookup-implies-clsmap-nulltp _ LP _).
+
+
+%theorem no-variable-lookup :
+	forall* {CM} {C} {CTF: object -> clstp} 
+	forall  {FLP: {o} clsmap`lookup CM C (CTF o)}
+	exists  {CT} {LP: clsmap`lookup CM C CT}
+	true.		       
+			  
+- : no-variable-lookup ([_] clsmap`lookup/= N1=N2) 
+     _ (clsmap`lookup/= N1=N2).
+
+- : no-variable-lookup ([o] clsmap`lookup/> (FLP o) P)
+     CT (clsmap`lookup/> LP P) 
+     <- no-variable-lookup FLP CT LP.
+
+%worlds (objvar) (no-variable-lookup _ _ _).
+%total  FLP (no-variable-lookup FLP _ _).
+
+
+%theorem clsmap-methtp-implies-lookup :
+        forall* {CM} {MM:methmap} {MT} {R} {C} {NN}
+	forall  {CM-MT: clsmap-methtp CM MT}
+		{TYP: nullCallTyping CM MM R MT 
+		       (result/expr (nulltp/norm C NN))}
+	exists  {CT} {CM-LP: clsmap`lookup CM C CT}
+	true.
+
+- : clsmap-methtp-implies-lookup 
+     (clsmap-methtp/base (clsmap-nulltp/norm (clsmap`domain?/in L))) _ _ L.
+
+- : clsmap-methtp-implies-lookup 
+     (clsmap-methtp/arg CM-MT CM-NT) (nullCallTyping/arg TYP) _ CM-LP
+     <- ({o} clsmap-methtp-implies-lookup (CM-MT o) (TYP o) _ (CM-LPF o))
+     <- no-variable-lookup CM-LPF CT CM-LP.
+
+%worlds (objvar) (clsmap-methtp-implies-lookup _ _ _ _).
+%total  TYP (clsmap-methtp-implies-lookup _ TYP _ _).
+
+
+%theorem clsmap-methtp-implies-clsmap-nulltp :
+        forall* {CM} {MM:methmap} {R} {MT} {T}
+        forall  {CM-MT: clsmap-methtp CM MT}
+                {TYP: nullCallTyping CM MM R MT (result/expr T)}
+        exists  {CM-T: clsmap-nulltp CM T}
+        true.
+
+- : clsmap-methtp-implies-clsmap-nulltp _ _ clsmap-nulltp/null.
+
+- : clsmap-methtp-implies-clsmap-nulltp CM-MT TYP
+     (clsmap-nulltp/norm (clsmap`domain?/in CM-LP))
+     <- clsmap-methtp-implies-lookup CM-MT TYP CT CM-LP.
+
+%worlds (objvar) (clsmap-methtp-implies-clsmap-nulltp _ _ _).
+%total   CM-MT   (clsmap-methtp-implies-clsmap-nulltp CM-MT _ _).
+
+
+%theorem typing-implies-clsmap-nulltp :
+        forall* {CM} {MM} {L} {E} {T} 
+        forall  {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM-L : clsmap-oflist CM L}
+                {TYP: nullTyping CM MM L E (result/expr T)}
+        exists  {CM-T: clsmap-nulltp CM T}
+        true.
+
+- : typing-implies-clsmap-nulltp _ _ _ _ clsmap-nulltp/null.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltLit LP) CM-T
+     <- oflist-lookup-implies-clsmap-nulltp CM-L LP CM-T.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L nulltNull clsmap-nulltp/null.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltRead FM-LP CM-LP TYP) CM-T
+     <- lookup-implies-clsmap-fldmap CM-CM CM-LP CM-FM
+     <- lookup-implies-clsmap-nulltp CM-FM FM-LP CM-T.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltWrite FM-LP CM-LP TYP _) CM-T
+     <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
+     
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltLet TYPF TYP) 
+     (clsmap-nulltp/norm (clsmap`domain?/in CM-LP))
+     <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T1
+     <- ({o} typing-implies-clsmap-nulltp 
+	   CM-CM CM-MM (clsmap-oflist/+ CM-T1 CM-L) (TYPF o) 
+	   (clsmap-nulltp/norm (clsmap`domain?/in (CM-LPF o))))
+     <- no-variable-lookup CM-LPF _ CM-LP.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L 
+     (nulltIf TYP _ _) CM-T
+     <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltWhile _ _) (clsmap-nulltp/null).
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltIfNotNull _ TYP _) CM-T
+     <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltSub TYP CM-T' _) CM-T'.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltCallMeth MM-LP _ CTYP) CM-T
+     <- lookup-implies-clsmap-methtp CM-MM MM-LP CM-MT
+     <- clsmap-methtp-implies-clsmap-nulltp CM-MT CTYP CM-T.
+
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltCallConst CM-LP TYP CTYP _) CM-T
+     <- lookup-implies-clsmap-constp CM-CM CM-LP CM-CT
+     <- clsmap-methtp-implies-clsmap-nulltp CM-CT CTYP CM-T.
+
+%worlds (objvar) (typing-implies-clsmap-nulltp _ _ _ _ _).
+%total  TYP (typing-implies-clsmap-nulltp _ _ _ TYP _).
