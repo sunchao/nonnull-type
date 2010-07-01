@@ -30,27 +30,6 @@ fldnn2perm/may : fldnn2perm F nn/may
 	        (conj (nestInShared o) (predcall p (predargs/1 o))))))))))).
 
 
-clsmap2predmap* : clsmap -> predmap -> clsmap -> predmap -> type.
-
-%abbrev clsmap2predmap
-   = [CM][PM] clsmap2predmap* CM predmap`map/0 CM PM.
-
-clsmap2predmap*/0 : clsmap2predmap* _ PM clsmap`map/0 PM.
-
-clsmap2predmap*/in
-   : clsmap2predmap* M PMin (clsmap`map/+ C _ CM) PMout
-      <- predmap`domain? PM C true
-      <- clsmap`shift C CM CM'
-      <- clsmap2predmap* M PMin CM' PMout.
-
-clsmap2predmap*/out
-   : clsmap2predmap* M PMin (clsmap`map/+ C FM CM) PMout
-      <- predmap`domain? PMin C false
-      <- clsmap`shift C CM CM'
-      <- ({f} predmap`update PMin C f (PMF' f))
-      <- ({f} fldmap2conj M (PMF' f) FM ([o] CJ f o) (PMF f))
-      <- clsmap2predmap* M (PMF (conj2pred CJ)) CM' PMout.
-
 
 fldmap2conj : clsmap -> predmap -> fldmap -> 
      (object -> formula) -> predmap -> type.
@@ -82,4 +61,25 @@ fldmap2conj/norm/out
       <- ({f} fldmap2conj CM (PMF' f) KM ([o] CJ f o) (PMF f))
       <- fldmap2conj CM (PMF (conj2pred CJ)) FM' ([r] G r) PMout.
 	 
+
+clsmap2predmap* : clsmap -> predmap -> clsmap -> predmap -> type.
+
+%abbrev clsmap2predmap
+   = [CM][PM] clsmap2predmap* CM predmap`map/0 CM PM.
+
+clsmap2predmap*/0 : clsmap2predmap* _ PM clsmap`map/0 PM.
+
+clsmap2predmap*/in
+   : clsmap2predmap* M PMin (clsmap`map/+ C _ CM) PMout
+      <- predmap`domain? PM C true
+      <- clsmap`shift C CM CM'
+      <- clsmap2predmap* M PMin CM' PMout.
+
+clsmap2predmap*/out
+   : clsmap2predmap* M PMin (clsmap`map/+ C FM CM) PMout
+      <- predmap`domain? PMin C false
+      <- clsmap`shift C CM CM'
+      <- ({f} predmap`update PMin C f (PMF' f))
+      <- ({f} fldmap2conj M (PMF' f) FM ([o] CJ f o) (PMF f))
+      <- clsmap2predmap* M (PMF (conj2pred CJ)) CM' PMout.
 
