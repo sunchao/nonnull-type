@@ -1,0 +1,54 @@
+%%%%% methmap.elf
+%%%%% Method Mapping
+%%%%% Chao Sun
+%%%%% February, 2010
+
+
+%%%% Definition for methtp
+
+methtp : type.
+
+methtp/base : nulltp -> methtp.
+
+methtp/arg : (object -> methtp) -> nulltp -> methtp.
+
+
+eq : methtp -> methtp -> type.
+
+eq/ : eq M M.
+
+
+%{%
+#define EQ eq
+BEGIN_ELF
+#include "EQ.i"
+END_ELF
+#undef EQ
+%}%
+
+
+%%%% Functor Use
+
+
+%{%
+#define data methtp
+BEGIN_ELF
+%abbrev methtp`eq = eq.
+%abbrev methtp`eq/ = eq/.
+%abbrev methtp`meta-eq = meta-eq.
+%abbrev methtp`false-implies-eq = false-implies-eq.
+%abbrev methtp`eq-reflexive = eq-reflexive.
+%abbrev methtp`eq-symmetric = eq-symmetric.
+%abbrev methtp`eq-transitive = eq-transitive.
+#include "map-base.elf"
+END_ELF
+#undef data
+%}%
+
+%%%% Renamings
+
+%abbrev methmap = map.
+
+
+
+

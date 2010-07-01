@@ -1,0 +1,241 @@
+%%%%% nonnull.elf
+%%%%% Non-null Type
+%%%%% Chao Sun
+%%%%% February, 2010
+
+
+nonnull : type.
+
+nonnull/yes : nonnull.
+
+nonnull/maybe : nonnull.
+
+
+eq : nonnull -> nonnull -> type.
+
+eq/ : eq NN NN.
+
+
+subtype : nonnull -> nonnull -> type.
+
+subtype/my : subtype nonnull/yes nonnull/maybe.
+
+subtype/ref : subtype N N.
+
+
+%%% Theorems
+
+%theorem false-implies-eq :
+	forall* {X1} {X2}
+	forall {F:void}
+	exists {E:eq X1 X2}
+	true.
+
+%worlds () (false-implies-eq _ _).
+%total { } (false-implies-eq _ _).
+
+
+%theorem meta-eq :
+	forall {X1} {X2} {E:eq X1 X2}
+	true.
+
+- : meta-eq _ _ eq/.
+
+%worlds () (meta-eq _ _ _).
+%total { } (meta-eq _ _ _).
+%reduces X = Y (meta-eq X Y _).
+
+	
+%theorem eq-reflexive : 
+	forall {X} 
+	exists {E:eq X X} 
+	true.
+
+- : eq-reflexive _ eq/.
+
+%worlds () (eq-reflexive _ _).
+%total { } (eq-reflexive _ _).
+
+
+%theorem eq-symmetric : 
+	forall* {X} {Y}
+	forall {E:eq X Y}
+	exists {F:eq Y X}
+	true.
+
+- : eq-symmetric (eq/) (eq/).
+
+%worlds () (eq-symmetric _ _).
+%total { } (eq-symmetric _ _).
+
+
+%theorem eq-transitive : 
+	forall* {X} {Y} {Z}
+	forall {E1:eq X Y} {E2:eq Y Z}
+	exists {F:eq X Z}
+	true.
+
+- : eq-transitive (eq/) (eq/) (eq/).
+
+%worlds () (eq-transitive _ _ _).
+%total { } (eq-transitive _ _ _).
+
+
+%%% Theorems about ne
+
+% %theorem false-implies-ne :
+% 	forall* {X1} {X2}
+% 	forall {F:void}
+% 	exists {G:ne X1 X2}
+% 	true.
+
+% %worlds () (false-implies-ne _ _).
+% %total { } (false-implies-ne _ _).
+
+
+% %theorem ne-respects-eq :
+% 	forall* {X1} {X2} {Y1} {Y2}
+% 	forall {D1:ne X1 X2} {E1:eq X1 Y1} {E2:eq X2 Y2}
+% 	exists {D2:ne Y1 Y2}
+% 	true.
+
+% - : ne-respects-eq X1<>X2 eq/ eq/ X1<>X2.
+
+% %worlds () (ne-respects-eq _ _ _ _).
+% %total { } (ne-respects-eq _ _ _ _).
+
+% %theorem ne-anti-reflexive :
+% 	forall* {X}
+% 	forall {R:ne X X}
+% 	exists {F:void}
+% 	true.
+
+%% % %worlds () (ne-anti-reflexive X<>X %{=>}% _).
+% %total {} (ne-anti-reflexive _ _).
+
+% %theorem ne-symmetric :
+% 	forall* {X} {Y}
+% 	forall {R1:ne X Y}
+% 	exists {R2:ne Y X}
+% 	true.
+
+% - : ne-symmetric (ne/ym) (ne/my).
+
+% - : ne-symmetric (ne/my) (ne/ym).
+
+% % %worlds () (ne-symmetric Y<>M %{=>}% M<>Y).
+% %total {} (ne-symmetric _ _).
+
+% %theorem eq-ne-implies-false :
+% 	forall* {X} {Y}
+% 	forall {D1:eq X Y} {D2:ne X Y}
+% 	exists {F:void}
+% 	true.
+
+% - : eq-ne-implies-false eq/ X<>X F
+%     <- ne-anti-reflexive X<>X F.
+
+% %worlds () (eq-ne-implies-false X=Y X<>Y %{=>}% _).
+% %total {} (eq-ne-implies-false _ _ _).
+
+
+% %theorem eq?-total* :
+% 	forall {M} {N}
+% 	exists {B} {T:eq? M N B}
+% 	true.
+
+% - : eq?-total* _ _ _ (eq?/yes).
+% - : eq?-total* _ _ _ (eq?/no ne/ym).
+% - : eq?-total* _ _ _ (eq?/no ne/my).
+ 
+% %worlds () (eq?-total* _ _ _ _).
+% %total { } (eq?-total* _ _ _ _).
+
+
+% %abbrev eq?-total = eq?-total* _ _ _.
+
+% %theorem leq-contradiction :
+%         forall {LEQ: leq nonnull/maybe nonnull/yes}
+%         exists {F: void}
+%         true.
+
+% %worlds () (leq-contradiction _ _).
+% %total {} (leq-contradiction _ _).
+
+
+% %theorem false-implies-leq :
+%         forall* {NN1} {NN2}
+% 	forall {F:void}
+% 	exists {L:leq NN1 NN2}
+% 	true.
+
+% %worlds () (false-implies-leq _ _).
+% %total {} (false-implies-leq _ _).
+
+
+% %theorem leq-anti-reflexive :
+%         forall* {NN1} {NN2}
+%         forall  {L1: leq NN1 NN2} {L2: leq NN2 NN1}
+%         exists  {E: eq NN1 NN2}
+%         true.
+
+% - : leq-anti-reflexive leq/ref leq/ref eq/.
+
+% %worlds () (leq-anti-reflexive L1 L2 %{=>}% E).
+% %total {} (leq-anti-reflexive _ _ _).
+
+
+% %theorem leq-transitive :
+% 	forall* {NN1} {NN2} {NN3}
+% 	forall {L1:leq NN1 NN2} {L2:leq NN2 NN3}
+% 	exists {L3:leq NN1 NN3}
+% 	true.
+
+% - : leq-transitive leq/my _ leq/my.
+
+% - : leq-transitive leq/ref _ leq/my.
+
+% - : leq-transitive leq/ref _ leq/ref.
+
+% %worlds () (leq-transitive NN1 NN2 %{=>}% NN3).
+% %total {} (leq-transitive _ _ _).
+
+%%%% Exports
+
+
+%abbrev nn`eq = eq.
+%abbrev nn`eq/ = eq/.
+%abbrev nn`false-implies-eq = false-implies-eq.
+%abbrev nn`meta-eq = meta-eq.
+%abbrev nn`eq-reflexive = eq-reflexive.
+%abbrev nn`eq-symmetric = eq-symmetric.
+%abbrev nn`eq-transitive = eq-transitive.
+% %abbrev nn`ne = ne.
+% %abbrev nn`ne/ym = ne/ym.
+% %abbrev nn`ne/my = ne/my.
+% %abbrev nn`eq? = eq?.
+% %abbrev nn`eq?/yes = eq?/yes.
+% %abbrev nn`eq?/no = eq?/no.
+% %abbrev nn`false-implies-ne = false-implies-ne.
+% %abbrev nn`ne-respects-eq = ne-respects-eq.
+% %abbrev nn`ne-anti-reflexive = ne-anti-reflexive.
+% %abbrev nn`ne-symmetric = ne-symmetric.
+% %abbrev nn`eq-ne-implies-false = eq-ne-implies-false.
+% %abbrev nn`eq?-total* = eq?-total*.
+% %abbrev nn`eq?-total = eq?-total.
+
+
+%%%% To save time in typing...
+
+%abbrev nn = nonnull.
+%abbrev nn/yes = nonnull/yes.
+%abbrev nn/may = nonnull/maybe.
+%abbrev nn`subtype = subtype.
+%abbrev nn`subtype/my = subtype/my.
+%abbrev nn`subtype/ref = subtype/ref.
+% %abbrev nn`leq = leq.
+% %abbrev nn`leq/my = leq/my.
+% %abbrev nn`leq/ref = leq/ref.
+% %abbrev nn`false-implies-leq = false-implies-leq.
+% %abbrev nn`leq-anti-reflexive = leq-anti-reflexive.
+% %abbrev nn`leq-transitive = leq-transitive.

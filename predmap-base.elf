@@ -1,0 +1,28 @@
+%%%%% predmap.elf
+%%%%% Map Class ID to their predicate (without recursion)
+%%%%% Used in proving totality of conversion
+%%%%% Chao Sun
+%%%%% March, 2010
+
+%%% Functor Use
+
+%{%
+#define WORLDS predvar | objvar
+#define data nullpred
+BEGIN_ELF
+%abbrev nullpred`eq = predicate`eq.
+%abbrev nullpred`eq/ = predicate`eq/.
+%abbrev nullpred`meta-eq = predicate`meta-eq.
+%abbrev nullpred`false-implies-eq = predicate`false-implies-eq.
+%abbrev nullpred`eq-reflexive = predicate`eq-reflexive.
+%abbrev nullpred`eq-symmetric = predicate`eq-symmetric.
+%abbrev nullpred`eq-transitive = predicate`eq-transitive.
+#include "map-base.elf"
+#include "map-domain.elf"
+END_ELF
+#undef data
+%}%
+
+%%% Renamings
+
+%abbrev predmap = map.

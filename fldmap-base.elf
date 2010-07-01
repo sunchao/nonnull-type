@@ -1,0 +1,26 @@
+%%%%% fldmap.elf
+%%%%% Field Mapping
+%%%%% Chao Sun
+%%%%% February, 2010
+
+
+
+%%%% Functor Use
+
+
+%%%% Functor Use
+
+
+%{%
+#define data ty
+BEGIN_ELF
+#include "map-base.elf"
+#include "map-domain.elf"
+END_ELF
+#undef data
+%}%
+
+
+%%%% Renamings
+
+%abbrev fldmap = map.

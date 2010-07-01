@@ -1,0 +1,26 @@
+%%%%% clsmap.elf
+%%%%% Mapping a class to its fldmap
+%%%%% Chao Sun
+%%%%% June 30, 2010
+
+
+%%%% Functor Use
+
+
+%{%
+#define WORLDS 
+#define data fldmap
+
+BEGIN_ELF
+
+#include "map-base.elf"
+#include "map-domain.elf"
+
+END_ELF
+#undef data
+%}%
+
+
+%%%% Renamings
+
+%abbrev clsmap = map.

@@ -1,0 +1,66 @@
+%%%%% clsmap2predmap.elf
+%%%%% Chao Sun
+%%%%% Jun 30, 2010
+
+%abbrev all : nat = z.
+
+%abbrev own : nat = s z.
+
+%abbrev allPerm : object -> permission = ([r] (unitperm (basic r all null))).
+
+%abbrev sharedPerm = unitperm (basic null own null).
+
+%abbrev nestInShared : object -> formula = ([r] (nested (allPerm r) null own)).
+
+%abbrev conj2pred : (nullpred -> object -> formula) -> nullpred 
+	= [g] (predicate/Y ([f] (predicate/+ ([o] predicate/0 (g f o))))).
+
+
+nn2perm : nn -> (nullpred -> object -> permission) -> type.
+
+nn2perm/yes : nn2perm nn/yes
+    ([p][n] (unitperm (nonlinear
+        (conj (nestInShared n) (predcall p (predargs/1 n)))))).
+
+nn2perm/may : nn2perm nn/may
+    ([p][n] (unitperm (conditional (objequal n null) empty
+       (unitperm (nonlinear (conj (nestInShared n) (predcall p (predargs/1 n)))))))).
+
+
+clsmap2predmap : clsmap -> predmap -> clsmap -> predmap -> type.
+
+
+clsmap2predmap/0 : clsmap2predmap _ PM clsmap`map/0 PM.
+
+clsmap2predmap/in
+   : clsmap2predmap M PMin (clsmap`map/+ C _ CM) PMout
+      <- predmap`domain? PM C true
+      <- clsmap`shift C CM CM'
+      <- clsmap2predmap M PMin CM' PMout.
+
+clsmap2predmap/out
+   : clsmap2predmap M PMin (clsmap`map/+ C FM CM) PMout
+      <- predmap`domain? PMin C false
+      <- ({f} predmap`update PMin C f (PMF' f))
+      <- ({f} fldmap2conj M (PMF' f) FM ([o] CJ f o) (PMF f))
+      <- clsmap`shift C CM CM'
+      <- clsmap2predmap M (PMF (conj2pred CJ)) CM' PMout.
+
+
+fldtp2perm : clsmap -> predmap -> nat -> nulltp -> formula -> type.
+
+fldmap2conj : clsmap -> predmap -> fldmap -> 
+     (object -> formula) -> predmap -> type.
+
+fldmap2conj/0 : fldmap2conj CM PM fldmap`map/0 ([o] t) PM.
+
+fldmap2conj/in
+   : fldmap2conj CM PM (fldmap`map/+ F (nulltp/norm C N) FM)
+      <- predmap`lookup PM C CP
+      <- 
+      
+
+
+		     
+	 
+

@@ -1,0 +1,14 @@
+%%%%% subtype.elf
+%%%%% Subtyping Relation
+%%%%% Chao Sun
+%%%%% February, 2010
+
+
+subtype : nulltp -> nulltp -> type.
+
+subtype/uu : subtype nulltp/null nulltp/null.
+
+subtype/uo : subtype nulltp/null (nulltp/norm _ nn/may).
+
+subtype/oo : subtype (nulltp/norm C NN1) (nulltp/norm C NN2)
+	      <- nn`subtype NN1 NN2.
