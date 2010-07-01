@@ -4,15 +4,55 @@
 %%%%% February, 2010
 
 
+nulltp : type.
 
-%%%% Functor Use
+nulltp/null : nulltp.
+
+nulltp/norm : nat -> nn -> nulltp.
+
+
+eq : nulltp -> nulltp -> type.
+
+eq/ : eq T T.
+
+
+%{%
+#define EQ eq
+BEGIN_ELF
+#include "EQ.i"
+END_ELF
+#undef EQ
+%}%
+
+%theorem nulltp-eq-implies-eq :
+        forall* {C1} {C2} {NN1} {NN2}
+        forall  {EQ: eq (nulltp/norm C1 NN1) (nulltp/norm C2 NN2)}
+        exists  {CEQ: nat`eq C1 C2} {NNEQ: nn`eq NN1 NN2}
+        true.
+
+- : nulltp-eq-implies-eq eq/ nat`eq/ nn`eq/.
+
+%worlds () (nulltp-eq-implies-eq _ _ _).
+%total  {} (nulltp-eq-implies-eq _ _ _).
+
+
+%theorem nulltp-preserves-eq :
+        forall* {C1} {C2} {NN1} {NN2}
+        forall  {CEQ: nat`eq C1 C2} {NNEQ: nn`eq NN1 NN2}
+        exists  {EQ: eq (nulltp/norm C1 NN1) (nulltp/norm C2 NN2)}
+        true.
+
+- : nulltp-preserves-eq nat`eq/ nn`eq/ eq/.
+
+%worlds () (nulltp-preserves-eq _ _ _).
+%total  {} (nulltp-preserves-eq _ _ _).
 
 
 %%%% Functor Use
 
 
 %{%
-#define data ty
+#define data nulltp
 BEGIN_ELF
 #include "map-base.elf"
 #include "map-domain.elf"
