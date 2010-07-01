@@ -54,6 +54,15 @@ END_ELF
 %{%
 #define data nulltp
 BEGIN_ELF
+%abbrev nulltp`eq = eq.
+%abbrev nulltp`eq/ = eq/.
+%abbrev nulltp`meta-eq = meta-eq.
+%abbrev nulltp`false-implies-eq = false-implies-eq.
+%abbrev nulltp`eq-reflexive = eq-reflexive.
+%abbrev nulltp`eq-symmetric = eq-symmetric.
+%abbrev nulltp`eq-transitive = eq-transitive.
+%abbrev nulltp`nulltp-eq-implies-eq = nulltp-eq-implies-eq.
+%abbrev nulltp`nulltp-preserves-eq = nulltp-preserves-eq.
 #include "map-base.elf"
 #include "map-domain.elf"
 END_ELF
