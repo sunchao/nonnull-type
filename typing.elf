@@ -53,14 +53,14 @@ nulltNull : nullTyping _ _ _ (lit null) (result/expr nulltp/null).
 nulltRead 
    : nullTyping CM MM L (read E F) (result/expr T)
       <- nullTyping CM MM L E (result/expr (nulltp/norm C nn/yes))
-      <- clsmap`lookup CM C (clstp/ _ FM)
+      <- clsmap`lookup CM C FM
       <- fldmap`lookup FM F T.
 
 nulltWrite
    : nullTyping CM MM L (write E1 F E2) (result/expr T)
       <- nullTyping CM MM L E1 (result/expr (nulltp/norm C nn/yes))
       <- nullTyping CM MM L E2 (result/expr T)
-      <- clsmap`lookup CM C (clstp/ _ FM)
+      <- clsmap`lookup CM C FM
       <- fldmap`lookup FM F T.
 
 nulltLet 
@@ -117,9 +117,10 @@ nulltArgs/+ : nullTyping CM MM L E (result/expr T) ->
 
 
 nulltCallConst : 
-    clsmap`lookup CM C (clstp/ CNT FM) -> 			     
+    clsmap`lookup CM C FM ->
+    methmap`lookup MM C MT ->
     nullTyping CM MM L A ARslt ->
-    nullCallTyping CM MM ARslt CNT Rslt ->
+    nullCallTyping CM MM ARslt MT Rslt ->
     fldmap`domain FM S ->				   
     nullTyping CM MM L (call C (args/+ (alloc C S set/0) A)) Rslt.
     
@@ -131,7 +132,7 @@ nulltCallMeth :
 
 
 
-%%%%% Normal Method Typing
+%%%%% Method Typing
 
 
 methtpmatch : clsmap -> methmap -> oflist -> func -> methtp -> type.
@@ -154,14 +155,14 @@ constyping : nat -> set -> clsmap -> methmap ->
 constyping/0 : constyping _ (set/0) _ _ _ ([t] lit t).
 
 constyping/nn : constyping C S CM MM L ([t] (seq (write (lit t) F E) (B t))) 
-    <- clsmap`lookup CM C (clstp/ _ FM)
+    <- clsmap`lookup CM C FM
     <- fldmap`lookup FM F (nulltp/norm C' nn/yes)
     <- set`remove S (set/+ F set/0) S'
     <- nullTyping CM MM L E (result/expr (nulltp/norm C' nn/yes))
     <- constyping C S' CM MM L ([t] B t).
 
 constyping/mn : constyping C S CM MM L ([t] (seq (write (lit t) F E) (B t)))
-    <- clsmap`lookup CM C (clstp/ _ FM)
+    <- clsmap`lookup CM C FM
     <- fldmap`lookup FM F (nulltp/norm C' nn/may)
     <- nullTyping CM MM L E (result/expr (nulltp/norm C' _))
     <- constyping C S CM MM L ([t] B t).
@@ -181,39 +182,16 @@ constypematch/args
 
 %%%%% Program Typing
 
-filt-nnfields : fldmap -> set -> type.
+filt-nnflds : fldmap -> set -> type.
 
-filt-nnfields/0 : filt-nnfields fldmap`map/0 set`set/0.
+filt-nnflds/0 : filt-nnflds fldmap`map/0 set`set/0.
 
-filt-nnfields/in
-   : filt-nnfields (fldmap`map/+ F (nulltp/norm _ nn/yes) M) (set`set/+ F S)
+filt-nnflds/in
+   : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/yes) M) (set`set/+ F S)
       <- fldmap`shift F M M'
-      <- filt-nnfields M' S.
+      <- filt-nnflds M' S.
 
-filt-nnfields/out
-   : filt-nnfields (fldmap`map/+ F (nulltp/norm _ nn/may) M) S
+filt-nnflds/out
+   : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/may) M) S
       <- fldmap`shift F M M'
-      <- filt-nnfields M S.
-
-
-env-prog* : clsmap -> methmap -> clsmap -> methmap ->  prog -> type.
-
-%abbrev env-prog = [CM][MM][G] env-prog* CM MM CM MM G.
-
-env-prog/0 : env-prog* _ _ clsmap`map/0 methmap`map/0 prog`map/0.
-
-env-prog/c
-   : env-prog* CM0 MM0
-      (clsmap`map/+ N (clstp/ (methtp/arg CTF (nulltp/norm _ nn/yes)) FM) CM) MM
-      (prog`map/+ N (func/+ FUNF) G1)
-      <- filt-nnfields FM S
-      <- constypematch N S CM MM oflist/0 FUNF CTF 
-      <- env-prog* CM0 MM0 CM MM G1.
-	 
-env-prog/m 
-   : env-prog* CM0 MM0 CM (methmap`map/+ N MT MM) (prog`map/+ N FUN G1)
-      <- methtpmatch CM MM oflist/0 FUN MT
-      <- env-prog* CM0 MM0 CM MM G1.
-
-
-
+      <- filt-nnflds M S.

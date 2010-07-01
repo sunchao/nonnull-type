@@ -2,13 +2,11 @@
 
 SUBDIRS = library frac-nesting simple-concur permission-type
 META = Makefile sources.cfg
-GEN = clsmap.elf methmap.elf fldmap.elf predmap.elf 
-HELP = clsmap-base.elf methmap-base.elf fldmap-base.elf predmap-base.elf
-HAND = abbrev.elf nonnull.elf nulltp.elf subtype.elf predmap.elf methmap.elf \
-			 fldmap.elf predmap.elf oflist.elf consistent.elf typing.elf \
-			consistent-thms.elf clspred.elf clspred-lemmas.elf clspred-totality.elf \
-			convert.elf convert-totality.elf permop-lemmas.elf convert-ok-thms.elf
-CSRC = clsmap.cpp fldmap.cpp methmap.cpp predmap.cpp 
+GEN  = clsmap.elf methmap.elf fldmap.elf 
+HELP = clsmap-base.elf methmap-base.elf fldmap-base.elf 
+HAND = block.elf nonnull.elf nulltp.elf subtype.elf oflist.elf typing.elf consistency.elf 
+       consistency-thms.elf clsmap2predmap.elf
+CSRC = clsmap.cpp fldmap.cpp methmap.cpp 
 
 RELEASE = shared-fj.tgz
 

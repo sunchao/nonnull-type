@@ -1,24 +1,14 @@
-%%%%% consistent.elf
-%%%%% Whether an environment is consistent
+%%%%% consistency.elf
+%%%%% Consistency relation between clsmap, methmap, fldmap and oflist
 %%%%% Chao Sun
 %%%%% March, 2010
 
-%{
-
-A environment is consistent if the following conditions are met :
-  1. all types in all fldmaps have entry in clsmap
-  2. all types used in all methmap have entry in clsmap
-  3. all types used in all constructors type have entry in clsmap
-  4. the return type of a constructor should be the same as its class
-
-}%
 
 %%% Check whether class types used in method-type is consistent with the clsmap.
 
 clsmap-nulltp : clsmap -> nulltp -> type.
 
-clsmap-nulltp/norm 
-   : clsmap-nulltp CM (nulltp/norm C _) 
+clsmap-nulltp/norm : clsmap-nulltp CM (nulltp/norm C _) 
       <- clsmap`domain? CM C true.
 		   
 clsmap-nulltp/null : clsmap-nulltp CM nulltp/null.
@@ -26,11 +16,9 @@ clsmap-nulltp/null : clsmap-nulltp CM nulltp/null.
 
 clsmap-methtp : clsmap -> methtp -> type.
 
-clsmap-methtp/base 
-   : clsmap-methtp CM (methtp/base T)
-      <- clsmap-nulltp CM T.
+clsmap-methtp/base : clsmap-methtp CM (methtp/base T) <- clsmap-nulltp CM T.
 
-clsmap-methtp/arg
+clsmap-methtp/arg 
    : clsmap-methtp CM (methtp/arg MTF T)
       <- clsmap-nulltp CM T
       <- ({o} clsmap-methtp CM (MTF o)).
@@ -71,9 +59,7 @@ clsmap-clsmap : clsmap -> clsmap -> type.
 clsmap-clsmap/0 : clsmap-clsmap _ clsmap`map/0.
 
 clsmap-clsmap/+
-   : clsmap-clsmap CM (clsmap`map/+ N (clstp/ CT FM) CM')
-      <- clsmap-methtp CM CT
-      <- nat-constp N CT
+   : clsmap-clsmap CM (clsmap`map/+ N FM CM')
       <- clsmap-fldmap CM FM
       <- clsmap-clsmap CM CM'.
 
