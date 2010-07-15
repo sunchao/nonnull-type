@@ -30,21 +30,24 @@
 % class C in CM has fldmap FM, then all classes in FM is well-defined under CM0
 
 %theorem lookup-implies-clsmap-fldmap : 
-        forall* {CM0} {CM} {FM} {C}
-        forall  {CM-CM: clsmap-clsmap CM0 CM}
+        forall* {M} {CM} {FM} {C}
+        forall  {M-CM: clsmap-clsmap M CM}
                 {L: clsmap`lookup CM C FM}
-        exists  {CM-FM: clsmap-fldmap CM0 FM}
+        exists  {M-FM: clsmap-fldmap M FM}
         true.
 
-- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ _ CM-FM)
-     (clsmap`lookup/= _) CM-FM.
+- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ _ _ M-FM _)
+     (clsmap`lookup/= _) M-FM.
 
-- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ CM-CM _)
-     (clsmap`lookup/> L _) CM-FM
-     <- lookup-implies-clsmap-fldmap CM-CM L CM-FM.
+- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ M-CM' SH _ _)
+     (clsmap`lookup/> L P) M-FM
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- clsmap`shift-preserves-lookup* L SH P'' L'
+     <- lookup-implies-clsmap-fldmap M-CM' L' M-FM.
 
 %worlds () (lookup-implies-clsmap-fldmap _ _ _).
-%total  L (lookup-implies-clsmap-fldmap _ L _).
+%total  M-CM (lookup-implies-clsmap-fldmap M-CM _ _).
 
 
 %theorem lookup-implies-clsmap-nulltp :

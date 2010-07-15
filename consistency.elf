@@ -59,9 +59,11 @@ clsmap-clsmap : clsmap -> clsmap -> type.
 clsmap-clsmap/0 : clsmap-clsmap _ clsmap`map/0.
 
 clsmap-clsmap/+
-   : clsmap-clsmap CM (clsmap`map/+ N FM CM')
-      <- clsmap-fldmap CM FM
-      <- clsmap-clsmap CM CM'.
+   : clsmap-clsmap M (clsmap`map/+ C FM CM)
+      <- clsmap`domain? M C true
+      <- clsmap-fldmap M FM
+      <- clsmap`shift C CM CM'
+      <- clsmap-clsmap M CM'.
 
 % %abbrev clsmap-clsmap = [CM] clsmap-clsmap* CM CM.
 
