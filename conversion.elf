@@ -1,0 +1,78 @@
+%%%%% conversion.elf
+%%%%% Conversion from nonnull type to permission type
+%%%%% Chao Sun
+%%%%% July 14, 2010
+
+%abbrev null-perm = [o] unitperm 
+	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
+
+nn2perm : nn -> (nullpred -> object -> permission) -> type.
+
+nn2perm/yes : nn2perm nn/yes
+	([p][o] unitperm (nonlinear
+		(conj (nestInShared o) (predcall p (predargs/1 o))))).
+
+nn2perm/may : nn2perm nn/may
+	([p][o] unitperm (conditional (objequal o null)
+		empty 
+		(unitperm (nonlinear 
+			(conj (nestInShared o) (predcall p (predargs/1 o))))))).
+     
+
+fldmap2perm : fldmap -> (object -> permission) -> type.
+
+fldmap2perm/0 
+   : fldmap2perm fldmap`map/0 ([t] (unitperm (basic t all null))).
+
+fldmap2perm/+ 
+   : fldmap2perm (fldmap`map/+ F _ FM) 
+      ([t] (Pi t) , (unitperm (basic t F null)))
+      <- fldmap`shift F FM FM'
+      <- fldmap2perm FM Pi.
+
+
+nulltp2perm : predmap -> nulltp -> (object -> permission) -> type.
+
+nulltp2perm/null : nulltp2perm _ nulltp/null ([o] null-perm o).
+
+nulltp2perm/norm
+   : nulltp2perm PM (nulltp/norm C NN) (PF PD)
+      <- nn2perm NN PF
+      <- predmap`lookup PM C PD.
+
+
+methtp2proctype* : predmap -> permission -> methtp -> proctype -> type.
+
+%abbrev methtp2proctype = [PM][MT][PT] methtp2proctype* PM empty MT PT.
+
+
+methtp2proctype*/base 
+   : methtp2proctype* PM Pi (methtp/base T) 
+      (proctype/base (sharedPerm , Pi)
+	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
+      <- nulltp2perm PM T PF.
+
+methtp2proctype*/arg
+   : methtp2proctype* PM Pi (methtp/arg MTF T) (proctype/arg PTF)
+      <- nulltp2perm PM T PF
+      <- ({o} methtp2proctype* PM (Pi , (PF o)) (MTF o) (PTF o)).
+
+
+constp2proctype* : predmap -> fldmap -> permission -> 
+	(object -> methtp) -> (object -> proctype) -> type.
+
+%abbrev constp2proctype = [PM][FM][MT][PT] constp2proctype* PM FM empty MT PT.
+
+constp2proctype*/base 
+   : constp2proctype* PM FM Pi ([t] methtp/base T)
+      ([t] proctype/base (sharedPerm , Pi , (F t))
+	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
+      <- fldmap2perm FM F
+      <- nulltp2perm PM T PF.
+
+constp2proctype*/arg 
+   : constp2proctype* PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
+      <- nulltp2perm PM T PF
+      <- ({o} constp2proctype* PM FM (Pi , (PF o)) ([t] CTF t o) ([t] PTF t o)).
+
+
