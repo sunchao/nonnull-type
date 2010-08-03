@@ -1,0 +1,134 @@
+%%%%% conversion-thms.elf
+%%%%% Theorems about conversion
+%%%%% Chao Sun
+%%%%% July 15, 2010
+
+
+%theorem nulltp-conversion-ok :
+	forall* {PM} {CM} {MM} {L} {W} {Pi}
+                {K: kind} {E: term K} {Rslt : result K}
+	forall  {CM-L: clsmap-oflist CM L}
+		{CM-CM: clsmap-clsmap CM CM}
+		{CM-MM: clsmap-methmap CM MM}
+		{CM2PM: clsmap2predmap CM PM}		 
+		{NTYP: nullTyping CM MM L E Rslt}
+		{E2P: env2perm PM CM MM W}
+		{L2P: oflist2perm PM L Pi}
+	exists  {Out: output K} {TYP: typing W Pi E Out}
+		{P-O: perm-output PM Pi Rslt Out}
+	true.
+	 
+
+- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltRead FM-LP CM-LP NTYP)
+     E2P L2P _
+     (tTrans2
+	(tRead1 
+	   TYPE
+	   (letTyping/exists [v]
+	      (letTyping/base v
+		 (tTrans
+		    (transform/trans3
+		       (transform/implies
+			  (implies/trans7 %{ (PF v) (WS, Pi) }%
+			     (implies/combine (IMP v) (implies/equiv EQV))
+			     (implies/equiv (equiv/symmetric equiv/associate))
+			     (implies/combine %{ (NS v) (WS ((PF v) Pi)) }%
+				implies/reflexive (implies/equiv equiv/roll2))
+			     (implies/equiv equiv/associate)
+			     (implies/combine implies/carve implies/reflexive)
+			     (implies/equiv (equiv/symmetric equiv/associate))
+			     (implies/combine %{ (FP o) (EC ((PF v) Pi)) }%
+				(implies/equiv (equiv/symmetric equiv/one))
+				(implies/reflexive))))
+		       (transform/skolem)
+		       (transform/inside 
+			  ([r]
+			     (transform/implies
+				(implies/trans
+				   (implies/combine
+				      (implies/equiv equiv/distribute)
+				      (implies/reflexive))
+				   (implies/equiv 
+				      (equiv/symmetric equiv/associate)))))))
+		    (letTyping/exists 
+		       ([r] 
+			  (letTyping/base null
+			     (tRead:typing _ _ (read (lit v) _) _))))
+		    (transform/inside
+		       ([r]
+			  (transform/trans3
+			     (transform/implies
+				(implies/trans8
+				   (implies/equiv equiv/associate)
+				   (implies/combine
+				      (implies/trans4
+					 (implies/equiv
+					    (equiv/symmetric equiv/distribute))
+					 (implies/equiv equiv/one)
+					 (implies/combine
+					    (implies/reflexive) 
+					    (implies/duplicate))
+					 (implies/equiv equiv/associate))
+				      (implies/reflexive))
+				   (implies/equiv (equiv/symmetric equiv/associate))
+				   (implies/combine
+				      (implies/pack r)
+				      (implies/equiv equiv/roll2))
+				   (implies/equiv equiv/associate)
+				   (implies/combine %{ WS ((FF r) ((PF v) Pi)) }%
+				      (implies/linear-modus-ponens)
+				      (implies/reflexive)) 
+				   (implies/equiv equiv/roll3)
+				   (implies/combine 
+				      (implies/reflexive)
+				      (implies/equiv equiv/roll2))))
+			     (transform/drop)
+			     (transform/implies
+				(implies/combine
+				   (implies/reflexive)
+				   (implies/equiv (equiv/symmetric EQV)))))))))))
+	(transform/rem-unused)) 
+     (perm-output/expr (nulltp2perm/norm MCP MCD))
+     <- nulltp-conversion-ok 
+	CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYPE (perm-output/expr T2P)
+     <- move-writeshared L2P _ EQV
+     <- dup-fldperm T2P CM-LP FM-LP _ PD PM
+	(make-field-perm/ MCP) (make-field-pred/out MCD _) IMP.
+
+
+- : nulltp-conversion-ok _ _ _ _ (nulltLit L) _ L2P _ 
+     (tTrans2 tObjLoc 
+	(transform/trans
+	   (transform/implies IMP)
+	   (transform/gen-exists _)))
+     (perm-output/expr T2P)
+     <- dup-oflist-clspred _ L L2P _ T2P IMP.
+     
+- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltLet NTYPF NTYP)
+     E2P L2P _ 
+     (tTrans2
+	(tLet
+	   TYP1
+	   (letTyping/exists ([v] 
+	      letTyping/base v
+	  	 (tTrans2 (TYP2 v)
+		    (transform/inside ([v]
+		       (transform/trans
+			  (transform/implies
+			     (implies/trans3
+				(implies/equiv equiv/associate)
+				(implies/combine (implies/equiv equiv/commute)
+				   implies/reflexive)
+				(implies/equiv 
+				   (equiv/symmetric equiv/associate))))
+			  (transform/drop))))))))
+	(transform/rem-unused))
+     (perm-output/expr T2P2)
+     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYP1
+	(perm-output/expr T2P1)
+     <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L NTYP CM-T1
+     <- ({o} nulltp-conversion-ok (clsmap-oflist/+ CM-T1 CM-L) CM-CM CM-MM CM2PM
+	   (NTYPF o) E2P (oflist2perm/+ T2P1 L2P) _ (TYP2 o) 
+	   (perm-output/expr T2P2)).
+
+

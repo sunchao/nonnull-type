@@ -1,0 +1,127 @@
+%%%%% conversion-lemmas.elf
+%%%%% Chao Sun
+%%%%% July 19, 2010
+
+%theorem move-writeshared :
+	forall* {PM} {L} {Pi}
+	forall  {CV-L: oflist2perm PM L Pi}
+	exists  {Pi'} {EQ: equiv Pi (sharedPerm , Pi')}
+	true.
+		      
+- : move-writeshared oflist2perm/0 empty EQ
+     <- equiv-symmetric equiv/identity EQ.
+
+- : move-writeshared (oflist2perm/+ _ L2P) _ EQ3
+     <- move-writeshared L2P _ EQ
+     <- equiv-transitive 
+	(equiv/combine equiv/reflexive EQ) (equiv/associate) EQ1
+     <- equiv-transitive EQ1 (equiv/combine equiv/commute equiv/reflexive) EQ2
+     <- equiv-transitive EQ2 (equiv/symmetric equiv/associate) EQ3.
+	      
+%worlds () (move-writeshared L2P %{=>}% Pi' EQ).
+%total L2P (move-writeshared L2P %{=>}% Pi' EQ).
+
+
+%theorem dup-clspred :
+	forall* {PM} {T} {PF}
+	forall  {T2P: nulltp2perm PM T PF}
+	exists  {IMP: {o} implies (PF o) ((PF o) , (PF o))}
+        true.
+
+- : dup-clspred
+     (nulltp2perm/norm _ nn2perm/yes)
+     ([v] implies/duplicate).
+
+- : dup-clspred (nulltp2perm/null)
+     ([v] (implies/trans
+	     (implies/cond-inner 
+		(bimplies/reflexive)
+		(bimplies/reflexive)
+		(implies/equiv (equiv/symmetric equiv/identity)) 
+		(implies/duplicate))
+	     (implies/cond-distribute))).
+
+- : dup-clspred 
+     (nulltp2perm/norm _ nn2perm/may)
+     ([v] (implies/trans
+	     (implies/cond-inner 
+		(bimplies/reflexive)
+		(bimplies/reflexive)
+		(implies/equiv (equiv/symmetric equiv/identity))
+		(implies/duplicate))
+	     (implies/cond-distribute))).
+
+%worlds () (dup-clspred T2P %{=>}% IMP).
+%total  {} (dup-clspred T2P %{=>}% IMP).
+
+
+%theorem dup-oflist-clspred :
+        forall* {PM} {L} {T} {Pi}
+	forall  {O} {LP: oflist-lookup L O T}
+		{L2P: oflist2perm PM L Pi}
+        exists  {PF} {T2P: nulltp2perm PM T PF}
+		{IMP: implies Pi ((PF O) , Pi)}
+        true.
+
+- : dup-oflist-clspred O (oflist-lookup/=)
+     (oflist2perm/+ T2P L2P) _ T2P
+     (implies/trans
+	(implies/combine (IMP O) implies/reflexive)
+	(implies/equiv (equiv/symmetric equiv/associate)))
+     <- dup-clspred T2P IMP.
+
+- : dup-oflist-clspred O (oflist-lookup/!= L)
+     (oflist2perm/+ _ L2P) _ T2P
+     (implies/trans4
+	(implies/combine implies/reflexive IMP)
+	(implies/equiv equiv/associate)
+	(implies/combine (implies/equiv equiv/commute)
+	   (implies/reflexive))
+	(implies/equiv (equiv/symmetric equiv/associate)))
+     <- dup-oflist-clspred O L L2P _ T2P IMP.
+
+%worlds () (dup-oflist-clspred O LP L2P PF T2P %{=>}% IMP).
+%total  LP (dup-oflist-clspred O LP L2P PF T2P %{=>}% IMP).
+
+%theorem dup-fldperm/L :
+        forall* {CM} {PM} {FM} {C} {F} {G} {FC} {FNN}
+        forall  {CM2PM: clsmap2predmap CM PM}
+		{CM-LP: clsmap`lookup CM C FM}
+	 	{FM-LP: fldmap`lookup FM F (nulltp/norm FC FNN)}	  
+	exists  {PM1} {PM2} {PF} {PD} 
+                {F2C: fldmap2conj CM PM1 FM ([o] G o) PM2}
+		{PM-LP: predmap`lookup PM FC PD}  
+		{IMP: {o} implies (unitperm (nonlinear (G o)))
+		       (combine 
+			  (unitperm (nonlinear (nested (PF PD o) null own)))
+			  (unitperm (nonlinear (G o))))}
+	true.
+
+- : dup-fldperm/L (clsmap2predmap*/in CM2PM SH In) (clsmap`lookup/= _) FM-L
+     <-
+
+- : dup-fldperm/L (clsmap2predmap*/out CM2PM ([f] F2C f) ([f] UD f) SH Out)
+     (clsmap`lookup/= EQ) (fldmap`lookup/= EQF) _ _ _ _ 
+     (F2C
+		 
+
+%theorem dup-fldperm :
+	forall* {CM} {PM} {FM} {FF} {C} {F} {FC} {FNN}
+	forall  {CM2PM: clsmap2predmap CM PM}
+		{T2P: nulltp2perm PM (nulltp/norm C nn/yes) FF}
+		{CM-L: clsmap`lookup CM C FM}
+		{FM-L: fldmap`lookup FM F (nulltp/norm FC FNN)}
+	exists  {PF} {PD}
+		{NN2P: nn2perm FNN PF}	
+		{PM-L: predmap`lookup PM FC PD}	
+		{IMP: {o} implies (FF o)
+		       ((unitperm (nonlinear (nested (PF PD o) null own))) ,
+			  (FF o))}
+	true.
+
+- : dup-fldperm (clsmap2predmap*/in CM2PM SH In)
+     (nulltp2perm/norm PM-L nn2perm/yes) CM-L FM-L PF PD NN2P PM-LF
+     <- clsmap
+     
+		
+		
