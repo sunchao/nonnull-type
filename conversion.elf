@@ -61,7 +61,7 @@ methtp2proctype*/arg
 constp2proctype* : predmap -> fldmap -> permission -> 
 	(object -> methtp) -> (object -> proctype) -> type.
 
-%abbrev constp2proctype = [PM][FM][MT][PT] constp2proctype* PM FM empty MT PT.
+%abbrev constp2proctype = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
 
 constp2proctype*/base 
    : constp2proctype* PM FM Pi ([t] methtp/base T)
@@ -74,5 +74,55 @@ constp2proctype*/arg
    : constp2proctype* PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
       <- nulltp2perm PM T PF
       <- ({o} constp2proctype* PM FM (Pi , (PF o)) ([t] CTF t o) ([t] PTF t o)).
+
+
+env2perm : predmap -> clsmap -> methmap -> progtype -> type.
+
+env2perm/0 : env2perm _ _ methmap`map/0 progtype`map/0.
+
+
+%%% this is tedius - it should have another way of doing this
+
+% constructor
+env2perm/c 
+   : env2perm PM CM
+      (methmap`map/+ N (methtp/arg CTF _) MM) 
+      (progtype`map/+ N (proctype/arg PTF) W)
+      <- clsmap`lookup CM N FM
+      <- constp2proctype PM FM CTF PTF
+      <- methmap`shift N MM MM'
+      <- env2perm PM CM MM' W'
+      <- progtype`shift N W' W.
+
+% method
+env2perm/m
+   : env2perm PM CM
+      (methmap`map/+ N MT MM) 
+      (progtype`map/+ N PT W)
+      <- clsmap`fresh CM N 
+      <- methtp2proctype PM MT PT
+      <- methmap`shift N MM MM'
+      <- env2perm PM CM MM' W'
+      <- progtype`shift N W' W.
+
+
+oflist2perm : predmap -> oflist -> permission -> type.
+
+oflist2perm/0 : oflist2perm _ oflist/0 sharedPerm.
+
+oflist2perm/+ 
+   : oflist2perm PM (oflist/+ O T L) ((PF O) , Pi)
+      <- oflist2perm PM L Pi
+      <- nulltp2perm PM T PF.
+
+
+perm-output : predmap -> permission -> result K -> output K -> type.
+
+perm-output/expr 
+   : perm-output PM Pi (result/expr T) 
+      (output/exists ([v] (output/expr v ((PF v) , Pi))))
+      <- nulltp2perm PM T PF.
+
+
 
 

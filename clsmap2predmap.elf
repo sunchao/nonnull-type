@@ -71,7 +71,7 @@ clsmap2predmap*/0 : clsmap2predmap* _ PM clsmap`map/0 PM.
 
 clsmap2predmap*/in
    : clsmap2predmap* M PMin (clsmap`map/+ C _ CM) PMout
-      <- predmap`domain? PM C true
+      <- predmap`domain? PMin C true
       <- clsmap`shift C CM CM'
       <- clsmap2predmap* M PMin CM' PMout.
 
