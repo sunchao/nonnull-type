@@ -12,8 +12,26 @@
 #define data fldmap
 
 BEGIN_ELF
+%abbrev fldmap`leq = fldmap`eq.
+%abbrev fldmap`false-implies-leq = fldmap`false-implies-eq.
+%abbrev fldmap`leq-reflexive = fldmap`eq-reflexive.
+%abbrev fldmap`leq-transitive = fldmap`eq-transitive.
+
+
+%theorem fldmap`leq-anti-symmetric :
+        forall* {PD1} {PD2} 
+        forall  {L12: fldmap`leq PD1 PD2} {L21: fldmap`leq PD2 PD1}
+        exists  {E: fldmap`eq PD1 PD2}
+        true.
+
+- : fldmap`leq-anti-symmetric E _ E.
+
+%worlds () (fldmap`leq-anti-symmetric _ _ _).
+%total { } (fldmap`leq-anti-symmetric _ _ _).
+
 
 #include "map-base.elf"
+#include "map-leq.elf"
 #include "map-domain.elf"
 
 END_ELF

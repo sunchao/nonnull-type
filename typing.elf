@@ -41,10 +41,6 @@ nullCallTyping/arg
       <- ({o} nullCallTyping CM MM ARslt (AF o) ERslt).
 
 
-
-%%%%% Typing Rules
-
-
 nulltLit : nullTyping _ _ L (lit O) (result/expr T)
     <- oflist-lookup L O T.
 
@@ -95,11 +91,14 @@ nulltSub : nullTyping CM MM L E (result/expr T')
 %%%% Conditionals
 
 
-nulltEql : nullTyping CM MM L (eql E1 E2) result/cond
-    <- nullTyping CM MM L E2 _ 
-    <- nullTyping CM MM L E1 _.
+nulltEql
+   : nullTyping CM MM L (eql E1 E2) result/cond
+      <- nullTyping CM MM L E2 _ 
+      <- nullTyping CM MM L E1 _.
 
-nulltNot : nullTyping CM MM L C CRslt -> nullTyping CM MM L (not C) CRslt.
+nulltNot
+   :  nullTyping CM MM L (not C) CRslt
+      <- nullTyping CM MM L C CRslt.
 
 nulltAnd : nullTyping CM MM L C1 CRslt ->
     nullTyping CM MM L C2 CRslt ->

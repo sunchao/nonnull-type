@@ -6,6 +6,7 @@
 
 %%% Functor Use
 
+
 %{%
 #define WORLDS predvar | objvar
 #define data nullpred
@@ -17,11 +18,31 @@ BEGIN_ELF
 %abbrev nullpred`eq-reflexive = predicate`eq-reflexive.
 %abbrev nullpred`eq-symmetric = predicate`eq-symmetric.
 %abbrev nullpred`eq-transitive = predicate`eq-transitive.
+%abbrev nullpred`leq = nullpred`eq.
+%abbrev nullpred`false-implies-leq = predicate`false-implies-eq.
+%abbrev nullpred`leq-reflexive = predicate`eq-reflxive.
+%abbrev nullpred`leq-transitive = predicate`eq-transitive.
+
+
+%theorem nullpred`leq-anti-symmetric :
+        forall* {PD1} {PD2} 
+        forall  {L12: nullpred`leq PD1 PD2} {L21: nullpred`leq PD2 PD1}
+        exists  {E: nullpred`eq PD1 PD2}
+        true.
+
+- : nullpred`leq-anti-symmetric E _ E.
+
+%worlds () (unit`leq-anti-symmetric _ _ _).
+%total { } (unit`leq-anti-symmetric _ _ _).
+
+
 #include "map-base.elf"
+#include "map-leq.elf"
 #include "map-domain.elf"
 END_ELF
 #undef data
 %}%
+
 
 %%% Renamings
 
