@@ -1,0 +1,748 @@
+%%%%% clsmap2predmap-thms.elf
+%%%%% theorems about clsmap2predmap 
+%%%%% Chao Sun
+%%%%% Jun 30, 2010
+
+
+%%% basic properties about clsmap2predmap
+
+%%% 1. for fldmap2conj and clsmap2predmap, the predmap passed
+%%% in is always less or equal to predmap passed out.
+
+%theorem fldmap2conj-implies-predmap-leq :
+        forall* {CM} {PMin} {FM} {G} {PMout}
+        forall  {F2C: fldmap2conj CM PMin FM G PMout}
+        exists  {L: predmap`leq PMin PMout}
+        true.
+
+- : fldmap2conj-implies-predmap-leq fldmap2conj/0 PM<=PM
+     <- predmap`leq-reflexive _ PM<=PM.
+
+- : fldmap2conj-implies-predmap-leq (fldmap2conj/null F2C _) PMin<=PMout
+     <- fldmap2conj-implies-predmap-leq F2C PMin<=PMout.
+
+- : fldmap2conj-implies-predmap-leq (fldmap2conj/norm/in F2C _ _ _) PMin<=PMout
+     <- fldmap2conj-implies-predmap-leq F2C PMin<=PMout.
+
+- : fldmap2conj-implies-predmap-leq
+     (fldmap2conj/norm/out 
+	F2C (F2CF:{f:nullpred} fldmap2conj _ _ _ ([o:object] CJ f o) _)
+	([f] UD f) _ SH CM-L FS) PMin<=PMout
+     <- ({f} predmap`fresh-update-implies-leq FS (UD f) (PMin<=PME f))
+     <- ({f} fldmap2conj-implies-predmap-leq (F2CF f) (PME<=PMF f))
+     <- ({f} predmap`leq-transitive (PMin<=PME f) (PME<=PMF f) (PMin<=PMF f))
+     <- fldmap2conj-implies-predmap-leq F2C PMF<=PMout
+     <- predmap`leq-transitive (PMin<=PMF (conj2pred CJ)) PMF<=PMout PMin<=PMout.
+
+%worlds (predvar) (fldmap2conj-implies-predmap-leq _ _).
+%total  F2C (fldmap2conj-implies-predmap-leq F2C _).
+
+
+%theorem clsmap2predmap-implies-predmap-leq :
+        forall* {M} {CM} {PMin} {PMout}
+        forall  {CM2PM: clsmap2predmap* M PMin CM PMout}
+        exists  {L: predmap`leq PMin PMout}
+        true.
+
+- : clsmap2predmap-implies-predmap-leq clsmap2predmap*/0 L
+     <- predmap`leq-reflexive _ L.
+
+- : clsmap2predmap-implies-predmap-leq (clsmap2predmap*/in CM2PM _ _) L
+     <- clsmap2predmap-implies-predmap-leq CM2PM L.
+
+- : clsmap2predmap-implies-predmap-leq 
+     (clsmap2predmap*/out CM2PM
+	(F2CF: {f:nullpred} fldmap2conj _ _ _ ([o] CJ f o) _) 
+	([f] UD f) _ (predmap`domain?/out FS)) PMin<=PMout
+     <- ({f} predmap`fresh-update-implies-leq FS (UD f) (PMin<=PME f))
+     <- ({f} fldmap2conj-implies-predmap-leq (F2CF f) (PME<=PMF f))
+     <- ({f} predmap`leq-transitive (PMin<=PME f) (PME<=PMF f) (PMin<=PMF f))
+     <- clsmap2predmap-implies-predmap-leq CM2PM PMF<=PMout
+     <- predmap`leq-transitive (PMin<=PMF (conj2pred CJ)) PMF<=PMout PMin<=PMout.
+
+%worlds (predvar) (clsmap2predmap-implies-predmap-leq _ _).
+%total CM2PM (clsmap2predmap-implies-predmap-leq CM2PM _).
+
+
+%theorem predmap-equal-fldmap2conj :
+        forall* {CM} {PM} {PMin} {PMout} {FM} {G} 
+        forall  {F2C: fldmap2conj CM PMin FM G PMout}
+                {L1: predmap`leq PMin PM}
+                {L2: predmap`leq PMout PM}
+        exists  {F2C: fldmap2conj CM PM FM G PM}
+        true.
+
+- : predmap-equal-fldmap2conj fldmap2conj/0 _ _ fldmap2conj/0.
+
+- : predmap-equal-fldmap2conj (fldmap2conj/null F2C SH) L1 L2 (fldmap2conj/null F2C' SH)
+     <- predmap-equal-fldmap2conj F2C L1 L2 F2C'.
+
+- : predmap-equal-fldmap2conj (fldmap2conj/norm/in F2C FNN2P SH PM-L) L1 L2
+     (fldmap2conj/norm/in F2C' FNN2P SH PM-L'')
+     <- predmap-equal-fldmap2conj F2C L1 L2 F2C'
+     <- predmap`lookup-respects-leq PM-L L1 _ PM-L' EQ
+     <- nullpred`eq-symmetric EQ EQ'
+     <- predmap`lookup-respects-eq PM-L' predmap`eq/ nat`eq/ EQ' PM-L''.
+
+- : predmap-equal-fldmap2conj
+     (fldmap2conj/norm/out
+	F2C (F2CF:{f:nullpred} fldmap2conj _ _ _ ([o:object] CJ f o) _)
+	([f] UD f) FNN2P SH CM-L FS)
+     PMin<=PM PMout<=PM (fldmap2conj/norm/in F2C' FNN2P SH PM-L)
+     <- fldmap2conj-implies-predmap-leq F2C PMF<=PMout
+     <- predmap`leq-transitive PMF<=PMout PMout<=PM PMF<=PM
+     <- predmap-equal-fldmap2conj F2C PMF<=PM PMout<=PM F2C'
+     <- ({f} predmap`update-implies-lookup (UD f) (PME-L f))
+     <- ({f} fldmap2conj-implies-predmap-leq (F2CF f) (PME<=PMF f))
+     <- ({f} predmap`lookup-respects-leq
+	   (PME-L f) (PME<=PMF f) _ (PMF-L' f) (EQF' f))
+     <- ({f} nullpred`eq-symmetric (EQF' f) (EQF f))
+     <- ({f} predmap`lookup-respects-eq 
+	   (PMF-L' f) predmap`eq/ nat`eq/ (EQF f) (PMF-L f))
+     <- predmap`lookup-respects-leq (PMF-L (conj2pred CJ)) PMF<=PM _ PM-L' EQ'
+     <- nullpred`eq-symmetric EQ' EQ
+     <- predmap`lookup-respects-eq PM-L' predmap`eq/ nat`eq/ EQ PM-L.
+
+
+%worlds (predvar) (predmap-equal-fldmap2conj _ _ _ _).
+%total F2C (predmap-equal-fldmap2conj F2C _ _ _).
+
+
+%theorem clsmap2predmap-implies-predmap-lookup/L :
+        forall* {M} {CM} {FM} {PMin} {PMout} {C} 
+        forall  {CM2PM: clsmap2predmap* M PMin CM PMout}
+		{L: clsmap`lookup CM C FM }
+	exists  {PD} {PM-LP: predmap`lookup PMout C PD}
+	true.
+
+- : clsmap2predmap-implies-predmap-lookup/L (clsmap2predmap*/in CM2PM _ In)
+     (clsmap`lookup/= EQ) _ PMout-L
+     <- predmap`in-implies-lookup In _ PMin-L'
+     <- predmap`lookup-respects-eq PMin-L' predmap`eq/ EQ predicate`eq/ PMin-L
+     <- clsmap2predmap-implies-predmap-leq CM2PM PMin<=PMout
+     <- predmap`lookup-respects-leq PMin-L PMin<=PMout _ PMout-L _.
+
+- : clsmap2predmap-implies-predmap-lookup/L (clsmap2predmap*/in CM2PM SH In)
+     (clsmap`lookup/> LP P) _ PM-LP
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- clsmap`shift-preserves-lookup* LP SH P'' LP'
+     <- clsmap2predmap-implies-predmap-lookup/L CM2PM LP' _ PM-LP.
+
+- : clsmap2predmap-implies-predmap-lookup/L
+     (clsmap2predmap*/out CM2PM
+	(F2C: {f} fldmap2conj _ _ _ ([o] CJ f o) _)
+	([f] UD f) SH Out) 
+     (clsmap`lookup/= EQ) _ PMout-L
+     <- ({f} predmap`update-implies-lookup (UD f) (PMF'-L f))
+     <- ({f} fldmap2conj-implies-predmap-leq (F2C f) (PMF'<=PMF f))
+     <- ({f} predmap`lookup-respects-leq
+	   (PMF'-L f) (PMF'<=PMF f) _ (PMF-L' f) (EQF' f))
+     <- ({f} nullpred`eq-symmetric (EQF' f) (EQF f))
+     <- ({f} predmap`lookup-respects-eq
+	   (PMF-L' f) predmap`eq/ nat`eq/ (EQF f) (PMF-L f))
+     <- clsmap2predmap-implies-predmap-leq CM2PM PMin<=PMout
+     <- predmap`lookup-respects-leq 
+	(PMF-L (conj2pred CJ)) PMin<=PMout _ PMout-L _.
+
+- : clsmap2predmap-implies-predmap-lookup/L 
+     (clsmap2predmap*/out CM2PM
+	(F2C: {f} fldmap2conj _ _ _ ([o] CJ f o) _)
+	([f] UD f) SH Out) 
+     (clsmap`lookup/> LP P) _ PM-LP
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- clsmap`shift-preserves-lookup* LP SH P'' LP'
+     <- clsmap2predmap-implies-predmap-lookup/L CM2PM LP' _ PM-LP.
+
+%worlds (predvar) (clsmap2predmap-implies-predmap-lookup/L _ _ _ _).
+%total  CM2PM (clsmap2predmap-implies-predmap-lookup/L CM2PM _ _ _).
+
+
+%theorem clsmap2predmap-implies-predmap-lookup :
+	forall* {CM} {PM} {FM} {C}
+	forall  {CM2PM: clsmap2predmap CM PM}
+		{L: clsmap`lookup CM C FM}				  
+	exists  {PD} {L: predmap`lookup PM C PD}
+        true.
+
+- : clsmap2predmap-implies-predmap-lookup CM2PM CM-L PD PM-L
+     <- clsmap2predmap-implies-predmap-lookup/L CM2PM CM-L PD PM-L.
+
+%worlds (predvar) (clsmap2predmap-implies-predmap-lookup _ _ _ _).
+%total  {} (clsmap2predmap-implies-predmap-lookup _ _ _ _).
+
+
+%%% 2. consistency between clsmap and predmap. That is, if we have
+%%% a clsmap2predmap relation, and a class C is in the clsmap, then
+%%% we can also find entry for C in predmap. More importantly, the 
+%%% predicate in predmap is consistent with the fldmap of C.
+
+clsmap-predmap-helper : clsmap -> predmap -> nat -> nullpred -> type.
+
+clsmap-predmap-helper/
+   : clsmap-predmap-helper CM PM C (conj2pred CJ)
+      <- clsmap`lookup CM C FM
+      <- fldmap2conj CM PM FM ([o] CJ (conj2pred CJ) o) PM.
+
+clsmap-predmap* : clsmap -> predmap -> predmap -> type.
+
+clsmap-predmap*/0 : clsmap-predmap* CM PM predmap`map/0.
+
+clsmap-predmap*/+
+   : clsmap-predmap* CM PM (predmap`map/+ C P PMM)
+      <- clsmap-predmap-helper CM PM C P 
+      <- predmap`shift C PMM PMM'
+      <- clsmap-predmap* CM PM PMM'.
+
+%abbrev clsmap-predmap = [CM][PM] clsmap-predmap* CM PM PM.
+
+
+%theorem leq-preserves-clsmap-predmap-helper :
+        forall* {CM} {PM1} {PM2} {C} {P}
+        forall  {L: predmap`leq PM1 PM2}
+                {CPH1: clsmap-predmap-helper CM PM1 C P}
+        exists  {CPH2: clsmap-predmap-helper CM PM2 C P}      
+        true.
+
+- : leq-preserves-clsmap-predmap-helper L 
+     (clsmap-predmap-helper/ F2C1 CM-L) (clsmap-predmap-helper/ F2C2 CM-L)
+     <- predmap-equal-fldmap2conj F2C1 L L F2C2.
+
+%worlds () (leq-preserves-clsmap-predmap-helper _ _ _).
+%total  {} (leq-preserves-clsmap-predmap-helper _ _ _).
+
+
+%theorem leq-preserves-clsmap-predmap :
+        forall* {CM} {PM} {PM'} {M}
+        forall  {CM-PM: clsmap-predmap* CM PM M}
+                {L: predmap`leq PM PM'}
+        exists  {CM-PM': clsmap-predmap* CM PM' M}
+        true.
+
+- : leq-preserves-clsmap-predmap clsmap-predmap*/0 _ clsmap-predmap*/0.
+
+- : leq-preserves-clsmap-predmap (clsmap-predmap*/+ CM-PMM PMM-SH CPH) 
+     L (clsmap-predmap*/+ CM-PMM' PMM-SH CPH') 
+     <- leq-preserves-clsmap-predmap CM-PMM L CM-PMM'
+     <- leq-preserves-clsmap-predmap-helper L CPH CPH'.
+
+%worlds () (leq-preserves-clsmap-predmap _ _ _).
+%total CP (leq-preserves-clsmap-predmap CP _ _).
+
+
+%theorem update-preserves-clsmap-predmap* :
+        forall* {CM} {PM} {PMM} {PMM'} {C} {P}
+        forall	{CP1: clsmap-predmap* CM PM PMM}
+                {CPP: clsmap-predmap-helper CM PM C P}
+                {U:   predmap`update PMM C P PMM'}
+	exists  {CP2: clsmap-predmap* CM PM PMM'}
+	true.
+
+- : update-preserves-clsmap-predmap*
+     clsmap-predmap*/0 CPH predmap`update/0
+     (clsmap-predmap*/+ clsmap-predmap*/0 predmap`shift/0 CPH).
+				 
+- : update-preserves-clsmap-predmap*
+     (clsmap-predmap*/+ CM-PM PM-SH _) CPH
+     (predmap`update/= _) (clsmap-predmap*/+ CM-PM PM-SH CPH).
+     
+- : update-preserves-clsmap-predmap*
+     CM-PM CPH (predmap`update/< P) 
+     (clsmap-predmap*/+ CM-PM (predmap`shift/+ P'') CPH)
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''.
+
+- : update-preserves-clsmap-predmap*
+     (clsmap-predmap*/+ CM-PM PM-SH CPH-OLD) CPH-NEW
+     (predmap`update/> PM-U P) (clsmap-predmap*/+ CM-PM' PM-SH' CPH-OLD)
+     <- predmap`shift-total PM-SH'
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- predmap`shift-preserves-update* PM-U PM-SH P'' PM-SH' PM-U'
+     <- update-preserves-clsmap-predmap* CM-PM CPH-NEW PM-U' CM-PM'.
+
+%worlds () (update-preserves-clsmap-predmap* _ _ _ _).
+%total  CP (update-preserves-clsmap-predmap* CP _ _ _).
+
+
+%theorem fldmap2conj-preserves-clsmap-predmap*/L :
+        forall* {CM} {PM} {FM} {PMin} {PMout} {G} 
+        forall  {CM-PM: clsmap-predmap* CM PM PMin}
+                {F2C: fldmap2conj CM PMin FM ([r] G r) PMout}
+                {L: predmap`leq PMout PM}
+        exists  {CM-PMout: clsmap-predmap* CM PM PMout}
+        true.
+
+- : fldmap2conj-preserves-clsmap-predmap*/L CM-PM fldmap2conj/0 _ CM-PM.
+
+- : fldmap2conj-preserves-clsmap-predmap*/L CM-PM (fldmap2conj/null F2C _) L CM-PM'
+     <- fldmap2conj-preserves-clsmap-predmap*/L CM-PM F2C L CM-PM'.
+
+- : fldmap2conj-preserves-clsmap-predmap*/L 
+     CM-PMin (fldmap2conj/norm/in F2C _ _ _) L CM-PMout
+     <- fldmap2conj-preserves-clsmap-predmap*/L CM-PMin F2C L CM-PMout.
+
+- : fldmap2conj-preserves-clsmap-predmap*/L CM-PMin
+     (fldmap2conj/norm/out 
+	F2C (F2CF:{f} fldmap2conj CM _ _ ([o] CJ f o) _)
+	([f] U f) _ _ CM-L _) PMout<=PM CM-PMout
+     <- ({p} fldmap2conj-implies-predmap-leq (F2CF p) (PME<=PMF p))
+     <- fldmap2conj-implies-predmap-leq F2C PMF<=PMout
+     <- predmap`leq-transitive PMF<=PMout PMout<=PM PMF<=PM
+     <- predmap`leq-transitive (PME<=PMF (conj2pred CJ)) PMF<=PM PME<=PM
+     <- predmap-equal-fldmap2conj
+	(F2CF (conj2pred CJ)) PME<=PM PMF<=PM F2C'
+     <- update-preserves-clsmap-predmap* CM-PMin 
+	(clsmap-predmap-helper/ F2C' CM-L) (U (conj2pred CJ)) CM-PME
+     <- fldmap2conj-preserves-clsmap-predmap*/L 
+	CM-PME (F2CF (conj2pred CJ)) PMF<=PM CM-PMF
+     <- fldmap2conj-preserves-clsmap-predmap*/L
+	CM-PMF F2C PMout<=PM CM-PMout.
+
+%worlds () (fldmap2conj-preserves-clsmap-predmap*/L _ _ _ _).
+%total  F2C (fldmap2conj-preserves-clsmap-predmap*/L _ F2C _ _).
+
+
+%theorem fldmap2conj-preserves-clsmap-predmap* :
+        forall* {CM} {FM} {PM} {PM'} {PMin} {PMout} {C} {CJ} 
+        forall  {CM-L: clsmap`lookup CM C FM}
+                {L: predmap`leq PMout PM}
+                {CM-PMin: clsmap-predmap* CM PM PMin}
+                {PMin-U: predmap`update PMin C (conj2pred CJ) PM'}
+                {F2C: fldmap2conj CM PM' FM ([r] CJ (conj2pred CJ) r) PMout}
+        exists  {CM-PMout: clsmap-predmap* CM PM PMout}
+        true.
+
+- : fldmap2conj-preserves-clsmap-predmap*
+     CM-L PMout<=PM CM-PMin PMin-U F2C CM-PMout
+     <- fldmap2conj-implies-predmap-leq F2C PM'<=PMout
+     <- predmap`leq-transitive PM'<=PMout PMout<=PM PM'<=PM
+     <- predmap-equal-fldmap2conj F2C PM'<=PM PMout<=PM F2C'
+     <- update-preserves-clsmap-predmap* CM-PMin 
+	(clsmap-predmap-helper/ F2C' CM-L) PMin-U CM-PM'
+     <- fldmap2conj-preserves-clsmap-predmap*/L CM-PM' F2C PMout<=PM CM-PMout.
+
+%worlds () (fldmap2conj-preserves-clsmap-predmap* _ _ _ _ _ _).
+%total  {} (fldmap2conj-preserves-clsmap-predmap* _ _ _ _ _ _).
+
+
+%theorem fldmap2conj-preserves-clsmap-predmap :
+        forall* {CM} {FM} {PM} {PMin} {PMout} {C} {CJ}
+        forall  {CM-L: clsmap`lookup CM C FM}
+                {CM-PM: clsmap-predmap CM PMin}
+                {PM-FS: predmap`fresh PMin C}
+                {PM-U: predmap`update PMin C (conj2pred CJ) PM}
+                {F2C: fldmap2conj CM PM FM ([r] CJ (conj2pred CJ) r) PMout}
+        exists  {CM-PM': clsmap-predmap CM PMout}
+        true.      
+
+- : fldmap2conj-preserves-clsmap-predmap 
+     CM-L CM-PMin PMin-FS PMin-U F2C CM-PMout
+     <- predmap`leq-reflexive _ PMout<=PMout
+     <- predmap`fresh-update-implies-leq PMin-FS PMin-U PMin<=PM
+     <- fldmap2conj-implies-predmap-leq F2C PM<=PMout
+     <- predmap`leq-transitive PMin<=PM PM<=PMout PMin<=PMout
+     <- leq-preserves-clsmap-predmap CM-PMin PMin<=PMout CM-PM
+     <- fldmap2conj-preserves-clsmap-predmap*
+	CM-L PMout<=PMout CM-PM PMin-U F2C CM-PMout.
+
+%worlds () (fldmap2conj-preserves-clsmap-predmap _ _ _ _ _ _).
+%total  {} (fldmap2conj-preserves-clsmap-predmap _ _ _ _ _ _).
+
+
+%theorem clsmap-predmap-implies-fldmap2conj* :
+        forall* {CM} {FM} {PM} {PMin} {C} {CJ}
+        forall  {CP: clsmap-predmap* CM PM PMin}
+                {PL: predmap`lookup PMin C (conj2pred CJ)}
+                {CL: clsmap`lookup CM C FM}
+        exists  {F2C: fldmap2conj CM PM FM ([r] CJ (conj2pred CJ) r) PM}
+        true.
+     
+- : clsmap-predmap-implies-fldmap2conj*
+     (clsmap-predmap*/+ _ _ (clsmap-predmap-helper/ F2C CM-L))
+     (predmap`lookup/= C=N) CM-L' F2C'
+     <- clsmap`lookup-deterministic CM-L' CM-L clsmap`eq/ C=N FM=FM'
+     <- fldmap`eq-symmetric FM=FM' FM'=FM
+     <- fldmap2conj-respects-eq F2C clsmap`eq/ predmap`eq/ FM'=FM F2C'.
+
+- : clsmap-predmap-implies-fldmap2conj*
+     (clsmap-predmap*/+ CM-PMM SH CPH)
+     (predmap`lookup/> PMM-L P) CM-L F2C
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- predmap`shift-preserves-lookup* PMM-L SH P'' PMM-L'
+     <- clsmap-predmap-implies-fldmap2conj* CM-PMM PMM-L' CM-L F2C.
+
+%worlds () (clsmap-predmap-implies-fldmap2conj* _ _ _ _).
+%total  CP (clsmap-predmap-implies-fldmap2conj* CP _ _ _).
+
+
+%theorem clsmap-predmap-implies-fldmap2conj :
+        forall* {CM} {FM} {PM} {C} {CJ}
+        forall  {CP: clsmap-predmap CM PM}
+                {PL: predmap`lookup PM C (conj2pred CJ)}
+	        {CL: clsmap`lookup CM C FM}
+        exists  {F2C: fldmap2conj CM PM FM ([r] CJ (conj2pred CJ) r) PM}
+        true.
+
+- : clsmap-predmap-implies-fldmap2conj CP PL CL F2C
+     <- clsmap-predmap-implies-fldmap2conj* CP PL CL F2C.
+
+%worlds () (clsmap-predmap-implies-fldmap2conj _ _ _ _).
+%total  {} (clsmap-predmap-implies-fldmap2conj _ _ _ _).
+
+
+%theorem clsmap2predmap-preserves-clsmap-predmap/L :
+        forall* {CM*} {CM} {CM'} {FM} {C} 
+        forall  {L: clsmap`leq (clsmap`map/+ C FM CM) CM*}
+                {SH: clsmap`shift C CM CM'}
+        exists  {L: clsmap`leq CM' CM*}
+        true.
+
+- : clsmap2predmap-preserves-clsmap-predmap/L
+     (clsmap`leq/= CM<=CM** FM=FM* C=N) SH CM'<=CM*
+     <- clsmap`shift-respects-eq SH C=N clsmap`eq/ clsmap`eq/ SH'
+     <- clsmap`shift-left-preserves-leq* CM<=CM** SH' CM'<=CM*.
+
+- : clsmap2predmap-preserves-clsmap-predmap/L 
+     (clsmap`leq/> L1 P) SH L3
+     <- clsmap`shifts-add-converse SH P _ SH-N3 SH-N2
+     <- clsmap2predmap-preserves-clsmap-predmap/L L1 SH-N3 L2
+     <- clsmap`shift-left-preserves-leq* L2 SH-N2 L3.
+
+%worlds () (clsmap2predmap-preserves-clsmap-predmap/L _ _ _).
+%total  CL (clsmap2predmap-preserves-clsmap-predmap/L CL _ _).
+
+
+%theorem clsmap2predmap-preserves-clsmap-predmap* :
+        forall* {CM*} {CM} {PM*} {PMin} {PMout} 
+        forall  {L: clsmap`leq CM CM*}
+                {L: predmap`leq PMout PM*}
+                {CM-PM: clsmap-predmap* CM* PM* PMin}
+                {CM2PM: clsmap2predmap* CM* PMin CM PMout}
+        exists  {CM-PM: clsmap-predmap* CM* PM* PMout}
+        true.
+
+- : clsmap2predmap-preserves-clsmap-predmap* 
+     clsmap`leq/0 _ CM-PM clsmap2predmap*/0 CM-PM.
+
+- : clsmap2predmap-preserves-clsmap-predmap* CM<=CM* L CM-PM
+     (clsmap2predmap*/in CM2PM SH _) CM-PM'
+     <- clsmap2predmap-preserves-clsmap-predmap/L CM<=CM* SH CM'<=CM*
+     <- clsmap2predmap-preserves-clsmap-predmap* CM'<=CM* L CM-PM CM2PM CM-PM'.
+
+- : clsmap2predmap-preserves-clsmap-predmap* CM<=CM* PMout<=PM* CM-PMin
+     (clsmap2predmap*/out CM2PM 
+	(F2CF:{f} fldmap2conj CM _ _ ([r] CJ f r) _)
+	([f] PMin-U f) CM-SH _) CM-PMout
+     <- clsmap`lookup-respects-leq (clsmap`lookup/= nat`eq/)
+	CM<=CM* FM CM*-L' FM=FM*
+     <- fldmap`eq-symmetric FM=FM* FM*=FM
+     <- clsmap`lookup-respects-eq CM*-L' clsmap`eq/ nat`eq/ FM*=FM CM*-L
+     <- clsmap2predmap-implies-predmap-leq CM2PM PMF<=PMout
+     <- predmap`leq-transitive PMF<=PMout PMout<=PM* PMF<=PM*
+     <- fldmap2conj-preserves-clsmap-predmap* CM*-L PMF<=PM*
+	CM-PMin (PMin-U (conj2pred CJ)) (F2CF (conj2pred CJ)) CM-PMF
+     <- clsmap2predmap-preserves-clsmap-predmap/L CM<=CM* CM-SH CM'<=CM*
+     <- clsmap2predmap-preserves-clsmap-predmap*
+	CM'<=CM* PMout<=PM* CM-PMF CM2PM CM-PMout.
+	
+%worlds () (clsmap2predmap-preserves-clsmap-predmap* _ _ _ _ _).
+%total  CP (clsmap2predmap-preserves-clsmap-predmap* _ _ _ CP _).
+
+
+%theorem clsmap2predmap-preserves-clsmap-predmap :
+        forall* {CM*} {CM} {PMin} {PMout} 
+        forall  {L: clsmap`leq CM CM*}
+                {CM-PM: clsmap-predmap CM* PMin}
+                {CM2PM: clsmap2predmap* CM* PMin CM PMout}
+        exists  {CM-PM: clsmap-predmap CM* PMout}
+        true.
+
+- : clsmap2predmap-preserves-clsmap-predmap CM<=CM* CM-PMin CM2PM CM-PMout
+     <- predmap`leq-reflexive _ PMout<=PMout
+     <- clsmap2predmap-implies-predmap-leq CM2PM PMin<=PMout
+     <- leq-preserves-clsmap-predmap CM-PMin PMin<=PMout CM-PM'
+     <- clsmap2predmap-preserves-clsmap-predmap*
+	CM<=CM* PMout<=PMout CM-PM' CM2PM CM-PMout.
+
+%worlds () (clsmap2predmap-preserves-clsmap-predmap _ _ _ _).
+%total  {} (clsmap2predmap-preserves-clsmap-predmap _ _ _ _).
+
+
+%theorem clsmap2predmap-implies-fldmap2conj* :
+        forall* {CM*} {CM} {FM} {PMin} {PMout} {C} {CJ}
+        forall  {L: clsmap`leq CM CM*}
+                {CM-PM: clsmap-predmap CM* PMin}
+                {CM2PM: clsmap2predmap* CM* PMin CM PMout}
+                {PM-L: predmap`lookup PMout C (conj2pred CJ)}
+                {CM-L: clsmap`lookup CM* C FM}
+        exists  {F2C: fldmap2conj CM* PMout FM ([r] CJ (conj2pred CJ) r) PMout}
+        true.
+
+- : clsmap2predmap-implies-fldmap2conj* CM<=CM* CM-PMin CM2PM PMout-L CM-L F2C
+     <- clsmap2predmap-preserves-clsmap-predmap CM<=CM* CM-PMin CM2PM CM-PMout
+     <- clsmap-predmap-implies-fldmap2conj CM-PMout PMout-L CM-L F2C.
+     
+%worlds () (clsmap2predmap-implies-fldmap2conj* _ _ _ _ _ _).
+%total  {} (clsmap2predmap-implies-fldmap2conj* _ _ _ _ _ _).
+
+
+%theorem clsmap2predmap-implies-fldmap2conj :
+        forall* {CM} {FM} {PM} {C} {CJ}
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {PM-L: predmap`lookup PM C (conj2pred CJ)}
+	        {CM-L: clsmap`lookup CM C FM}
+        exists  {F2C: fldmap2conj CM PM FM ([r] CJ (conj2pred CJ) r) PM}
+        true.
+
+- : clsmap2predmap-implies-fldmap2conj CM2PM PM-L CM-L F2C
+     <- clsmap`leq-reflexive _ CM<=CM
+     <- clsmap2predmap-implies-fldmap2conj* 
+	CM<=CM clsmap-predmap*/0 CM2PM PM-L CM-L F2C.
+
+%worlds () (clsmap2predmap-implies-fldmap2conj _ _ _ _).
+%total  {} (clsmap2predmap-implies-fldmap2conj _ _ _ _).
+
+
+%%% 3. totality theorems
+
+%%% it seems we need this not-so-interesting lemma about nat`plus
+
+%theorem plus-ge-le :
+        forall* {N} {N1} {N2} {N3} {N4}
+        forall  {P1: nat`plus N1 N2 N}
+                {P2: nat`plus N3 N4 N}
+                {GE: nat`ge N1 N3}
+        exists  {LE: nat`ge N4 N2} 
+        true.
+
+- : plus-ge-le nat`plus/z nat`plus/z (nat`ge/= nat`eq/) (nat`ge/= nat`eq/).
+
+- : plus-ge-le (nat`plus/s P) nat`plus/z (nat`ge/> GT) (ge/> GT')
+     <- nat`succ-gt-implies-ge GT GE
+     <- plus-ge-le P nat`plus/z GE GE'
+     <- nat`ge-implies-succ-gt GE' GT'.
+
+- : plus-ge-le (nat`plus/s P1) (nat`plus/s P2) GE GE''
+     <- nat`succ-preserves-ge-converse GE GE'
+     <- plus-ge-le P1 P2 GE' GE''.
+
+%worlds () (plus-ge-le _ _ _ _).
+%total P (plus-ge-le P _ _ _).
+
+
+%theorem fldnn2perm-total* :
+        forall  {F} {N}
+        exists  {PF} {FN2P: fldnn2perm F N PF}
+        true.
+
+- : fldnn2perm-total* _ nn/yes _ fldnn2perm/yes.
+- : fldnn2perm-total* _ nn/may _ fldnn2perm/may.
+
+%worlds (predvar) (fldnn2perm-total* _ _ _ _).
+%total  {} (fldnn2perm-total* _ _ _ _).
+
+%abbrev fldnn2perm-total = fldnn2perm-total* _ _ _.
+
+
+%theorem fldmap2conj-total/L1 :
+	forall* {CM} {FM} {PMin} {S} {S'} {K} {K'} 
+ 	forall  {N} {L} {SZ: fldmap`size FM L}
+                {P: nat`plus N K' K} {LEQ: set`leq S' S}
+                {DM: clsmap`domain CM S} {DM: predmap`domain PMin S'}
+                {SZ: set`size S K} {SZ: set`size S' K'}
+                {CM-CM: clsmap-clsmap CM CM} {CM-FM: clsmap-fldmap CM FM}
+ 	exists  {PMout} {G} {Q} {DM: predmap`domain PMout Q}
+		{LEQ: set`leq Q S} {F2C: fldmap2conj CM PMin FM G PMout}
+        true.
+
+%theorem fldmap2conj-total/L2 :
+	forall* {CM} {FM} {KM} {PMin} {S} {S'} {K} {K'} {C} {B} {F} {NN}
+	forall  {N} {L} {SZ: fldmap`size FM L}
+                {P: nat`plus N K' K} {LEQ: set`leq S' S}
+                {DM: clsmap`domain CM S} {DM: predmap`domain PMin S'}
+                {SZ: set`size S K} {SZ: set`size S' K'}
+                {CM-CM: clsmap-clsmap CM CM} {CM-FM: clsmap-fldmap CM FM}
+                {CM-LP: clsmap`lookup CM C KM} {MD: predmap`domain? PMin C B}
+        exists  {PMout} {G} {Q} {DM: predmap`domain PMout Q}
+		{LEQ: set`leq Q S}		
+                {F2C: fldmap2conj CM PMin
+		       (fldmap`map/+ F (nulltp/norm C NN) FM) 
+		       ([r] G r) PMout}
+        true.
+      
+- : fldmap2conj-total/L1 _ _ fldmap`size/0 
+     _ LEQ _ DM _ _ _ clsmap-fldmap/0 _ _ _ DM LEQ fldmap2conj/0.
+
+- : fldmap2conj-total/L2 N L SZ P LEQ DM1 DM2 SZ1 SZ2 CM-CM CM-FM _
+     (predmap`domain?/in PM-LP) PMout _ Q DM-Q Q<=S
+     (fldmap2conj/norm/in F2C FN2P SH PM-LP)
+     <- fldmap`shift-total SH
+     <- fldmap`shift-preserves-size SZ SH SZ'
+     <- shift-preserves-clsmap-fldmap CM-FM SH CM-FM'
+     <- fldnn2perm-total FN2P
+     <- fldmap2conj-total/L1 N L SZ' P LEQ DM1 DM2
+	SZ1 SZ2 CM-CM CM-FM' PMout ([r] G r) Q DM-Q Q<=S F2C.
+     
+- : fldmap2conj-total/L1 N (s L) (fldmap`size/+ SZ)
+     P LEQ DM1 DM2 SZ1 SZ2 CM-CM (clsmap-fldmap/n CM-FM) PMout ([r] G r) 
+     Q DM-Q Q<=S (fldmap2conj/null F2C SH)
+     <- fldmap`shift-total SH
+     <- fldmap`shift-preserves-size SZ SH SZ'
+     <- shift-preserves-clsmap-fldmap CM-FM SH CM-FM'
+     <- fldmap2conj-total/L1 N L SZ' P LEQ DM1 DM2 
+	SZ1 SZ2 CM-CM CM-FM' PMout ([r] G r) Q DM-Q Q<=S F2C.
+     
+- : fldmap2conj-total/L1 N (s L) (fldmap`size/+ SZ) 
+     P LEQ DM1 DM2 SZ1 SZ2 CM-CM(clsmap-fldmap/+ CM-FM (clsmap`domain?/in CM-LP))
+     PMout G Q DM-Q Q<=S F2C
+     <- predmap`domain?-total MD
+     <- fldmap2conj-total/L2 N L SZ P LEQ DM1 DM2 
+	SZ1 SZ2 CM-CM CM-FM CM-LP MD PMout G Q DM-Q Q<=S F2C.
+
+- : fldmap2conj-total/L2 N L SZ N+NR=NS R<=S DM-S DM-R SZ-S SZ-R CM-CM CM-FM CM-LP
+     (predmap`domain?/out FS) PMout _ Q' DM-Q Q<=S
+     (fldmap2conj/norm/out F2C ([f] F2CF f) ([f] UD f) FN2P SH CM-LP FS)
+     <- fldmap`shift-total SH
+     <- fldmap`shift-preserves-size SZ SH SZ'
+     <- fldmap`size-total SZ-KM
+     <- shift-preserves-clsmap-fldmap CM-FM SH CM-FM'
+     <- fldnn2perm-total FN2P
+     <- lookup-implies-clsmap-fldmap CM-CM CM-LP CM-KM
+     <- predmap`domain-preserves-fresh FS DM-R FS-R
+     <- ({f} predmap`update-total (UD f))
+     <- ({f} predmap`domain-total (DM-R' f))
+     <- ({f} predmap`update-commute-domain (UD f) DM-R (DM-R' f) R+C=R')
+     <- set`not-member-update-increases-size SZ-R FS-R R+C=R' SZ-R'
+     <- set`add-total S+C=S'
+     <- clsmap`domain-preserves-lookup CM-LP DM-S S-LP
+     <- set`update-may-have-no-effect S-LP S+C=S' S=S'
+     <- set`eq-symmetric S=S' S'=S
+     <- set`add-preserves-leq* R<=S R+C=R' S+C=S' R'<=S'
+     <- set`leq-respects-eq R'<=S' set`eq/ S'=S R'<=S
+     <- set`leq-implies-size-le R'<=S SZ-R' SZ-S NS>=NR'
+     <- nat`ge-implies-plus NS>=NR' N' N'+NR'=NS
+     <- nat`plus-swap-succ-converse N'+NR'=NS L+NR=NS
+     <- nat`plus-right-cancels N+NR=NS L+NR=NS nat`eq/ nat`eq/ N=L
+     <- nat`eq-symmetric N=L L=N
+     <- nat`gt-respects-eq nat`gt/1 L=N nat`eq/ N>N'
+     <- nat`meta-gt _ _ N>N'
+     <- ({f} fldmap2conj-total/L1 _ _ SZ-KM N'+NR'=NS R'<=S DM-S (DM-R' f) SZ-S 
+	   SZ-R' CM-CM CM-KM (PMF f) ([r] CJ f r) Q (DM-R'' f) R''<=S (F2CF f))
+     <- ({f} fldmap2conj-implies-predmap-leq (F2CF f) (PME<=PMF f))
+     <- ({f} predmap`domain-preserves-leq*
+	   (PME<=PMF f) (DM-R' f) (DM-R'' f) (R'<=R''))
+     <- set`size-total SZ-R''
+     <- set`leq-implies-size-le R'<=R'' SZ-R' SZ-R'' NR''>=NR'
+     <- set`leq-implies-size-le R''<=S SZ-R'' SZ-S NS>=NR''
+     <- nat`ge-implies-plus NS>=NR'' N'' N''+NR''=NS
+     <- nat`plus-commutative N'+NR'=NS NR'+N'=NS
+     <- nat`plus-commutative N''+NR''=NS NR''+N''=NS
+     <- plus-ge-le NR''+N''=NS NR'+N'=NS NR''>=NR' N'>=N''
+     <- nat`gt-transitive-ge nat`gt/1 N'>=N'' N>N''
+     <- nat`meta-gt _ _ N>N''
+     <- fldmap2conj-total/L1
+	_ _ SZ' N''+NR''=NS R''<=S DM-S (DM-R'' (conj2pred CJ))
+	SZ-S SZ-R'' CM-CM CM-FM' PMout ([r] G r) Q' DM-Q Q<=S F2C.
+
+%worlds (predvar) 
+        (fldmap2conj-total/L1 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _)
+        (fldmap2conj-total/L2 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+%total  {(N2 N1) (L2 L1)} 
+        (fldmap2conj-total/L1 N1 L1 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _)
+        (fldmap2conj-total/L2 N2 L2 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+        
+
+%theorem clsmap2predmap-total/L1 :
+        forall* {M} {CM} {PMin} {R} {S}
+        forall  {N} {SZ: clsmap`size CM N}
+                {M-M: clsmap-clsmap M M}
+                {M-CM: clsmap-clsmap M CM}
+                {DM-S: clsmap`domain M S} 
+                {DM-R: predmap`domain PMin R}
+                {R<=S: set`leq R S}
+        exists  {PMout} {CM2PM: clsmap2predmap* M PMin CM PMout}
+        true.
+
+%theorem clsmap2predmap-total/L2 :
+        forall* {M} {CM} {CM'} {FM} {KM} {PMin} {C} {R} {S} 
+        forall  {N} {B} {SZ: clsmap`size CM N}
+                {MB: predmap`domain? PMin C B}
+                {M-LP: clsmap`lookup M C KM}
+                {M-M: clsmap-clsmap M M}
+                {SH: clsmap`shift C CM CM'}
+                {M-CM: clsmap-clsmap M CM'}
+                {M-FM: clsmap-fldmap M FM}
+                {DM-S: clsmap`domain M S}
+                {DM-R: predmap`domain PMin R}
+                {R<=S: set`leq R S}
+        exists  {PMout} 
+                {CM2PM: clsmap2predmap* M PMin
+			 (clsmap`map/+ C FM CM) PMout}       
+        true.
+		
+- : clsmap2predmap-total/L1 _ _ _ clsmap-clsmap/0 _ _ _ _ clsmap2predmap*/0.
+
+- : clsmap2predmap-total/L1 (s N) (clsmap`size/+ SZ) 
+     M-M (clsmap-clsmap/+ M-CM' SH M-FM (clsmap`domain?/in LP)) 
+     DM-S DM-R R<=S PMout CM2PM
+     <- predmap`domain?-total MB
+     <- clsmap2predmap-total/L2 N _ SZ MB LP 
+	M-M SH M-CM' M-FM DM-S DM-R R<=S PMout CM2PM.
+
+- : clsmap2predmap-total/L2 N true SZ In _ M-M SH M-CM' _ DM-S DM-R R<=S PMout 
+     (clsmap2predmap*/in CM2PM SH In)
+     <- clsmap`shift-preserves-size SZ SH SZ'
+     <- clsmap2predmap-total/L1 N SZ' M-M M-CM' DM-S DM-R R<=S PMout CM2PM.
+
+- : clsmap2predmap-total/L2 N false SZ (predmap`domain?/out FS)
+     M-LP M-M SH M-CM' M-FM DM-S DM-R R<=S PMout 
+     (clsmap2predmap*/out CM2PM ([f] F2CF f) ([f] UD f) SH (predmap`domain?/out FS))
+     <- set`add-total S+C=S'
+     <- set`size-total SZ-S
+     <- set`size-total SZ-R
+     <- clsmap`shift-preserves-size SZ SH SZ'
+     <- ({f} predmap`update-total (UD f))
+     <- ({f} predmap`domain-total (DM-R' f))
+     <- ({f} predmap`update-commute-domain (UD f) DM-R (DM-R' f) R+C=R')
+     <- predmap`domain-preserves-fresh FS DM-R FS-R
+     <- set`not-member-update-increases-size SZ-R FS-R R+C=R' SZ-R'
+     <- clsmap`domain-preserves-lookup M-LP DM-S S-LP
+     <- set`update-may-have-no-effect S-LP S+C=S' S=S'
+     <- set`eq-symmetric S=S' S'=S
+     <- set`add-preserves-leq* R<=S R+C=R' S+C=S' R'<=S'
+     <- set`leq-respects-eq R'<=S' set`eq/ S'=S R'<=S
+     <- set`leq-implies-size-le R'<=S SZ-R' SZ-S NS>=NR'
+     <- nat`ge-implies-plus NS>=NR' N' N'+NR'=NS
+     <- fldmap`size-total SZ-FM
+     <- ({f} fldmap2conj-total/L1 N' _ SZ-FM N'+NR'=NS R'<=S DM-S (DM-R' f) 
+	   SZ-S SZ-R' M-M M-FM (PMF f) ([o] CJ f o) Q (DM-Q f) Q<=S (F2CF f))
+     <- clsmap2predmap-total/L1 N SZ' M-M M-CM' DM-S (DM-Q (conj2pred CJ)) 
+	Q<=S PMout CM2PM.
+     
+%worlds (predvar) (clsmap2predmap-total/L1 _ _ _ _ _ _ _ _ _)
+           (clsmap2predmap-total/L2 _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+%total (N2 N1) (clsmap2predmap-total/L1 N1 _ _ _ _ _ _ _ _)
+          (clsmap2predmap-total/L2 N2 _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+
+%theorem clsmap2predmap-total :
+        forall* {CM}
+        forall  {CM-CM: clsmap-clsmap CM CM}
+        exists  {PM} {CM2PM: clsmap2predmap CM PM}
+        true.
+
+- : clsmap2predmap-total CM-CM PM CM2PM
+     <- clsmap`domain-total DM-S
+     <- clsmap`size-total SZ
+     <- clsmap2predmap-total/L1 
+	_ SZ CM-CM CM-CM DM-S predmap`domain/0 set`leq/0 PM CM2PM.
+
+%worlds () (clsmap2predmap-total _ _ _).
+%total  {} (clsmap2predmap-total _ _ _).
+
+
