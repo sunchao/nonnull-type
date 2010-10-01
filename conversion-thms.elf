@@ -6,6 +6,448 @@
 
 %theorem nulltp-conversion-ok :
 	forall* {PM} {CM} {MM} {L} {W} {Pi}
+                {K: kind} {E: term K} {Rslt: result K}
+	forall  {CM-L: clsmap-oflist CM L}
+		{CM-CM: clsmap-clsmap CM CM}
+		{CM-MM: clsmap-methmap CM MM}
+		{CM2PM: clsmap2predmap CM PM}		 
+		{NTYP: nullTyping CM MM L E Rslt}
+		{E2P: env2perm PM CM MM W}
+		{L2P: oflist2perm PM L Pi}
+	exists  {Out: output K} {TYP: typing W Pi E Out}
+		{P-O: perm-output PM Pi Rslt Out}
+	true.
+	
+% tLit
+- : nulltp-conversion-ok _ _ _ _ (nulltLit L) _ L2P _ 
+     (tTrans2 tObjLoc 
+	(transform/trans
+	   (transform/implies I)
+	   (transform/gen-exists _)))
+     (perm-output/expr T2P)
+   <- oflist-lookup-implies-clspred _ L L2P _ T2P I.
+ 
+% tNull
+- : nulltp-conversion-ok _ _ _ _ nulltNull _ _ _ 
+     (tTrans2 tObjLoc 
+	(transform/trans
+	   (transform/implies
+	      (implies/trans3
+		 (implies/equiv (equiv/symmetric equiv/identity))
+		 (implies/equiv equiv/commute)
+		 (implies/combine
+		    (implies/trans
+		       (implies/empty2true)
+		       (implies/nonlinear bimplies/objequal-reflexive))
+		    (implies/reflexive))))
+	   (transform/gen-exists null)))
+     (perm-output/expr nulltp2perm/null).
+
+% tLet
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltLet NTYPF NTYP) E2P L2P _
+     (tTrans2
+	(tLet
+	   TYP1
+	   (letTyping/exists ([v] 
+	      letTyping/base v
+	  	 (tTrans2 (TYP2 v)
+		    (transform/inside ([v]
+		       (transform/trans
+			  (transform/implies
+			     (implies/trans3
+				(implies/equiv equiv/associate)
+				(implies/combine (implies/equiv equiv/commute)
+				   implies/reflexive)
+				(implies/equiv 
+				   (equiv/symmetric equiv/associate))))
+			  (transform/drop))))))))
+	(transform/rem-unused))
+     (perm-output/expr T2P2)
+     <- nulltp-conversion-ok 
+	CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYP1 (perm-output/expr T2P1)
+     <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L NTYP CM-T1
+     <- ({o} nulltp-conversion-ok 
+	   (clsmap-oflist/+ CM-T1 CM-L) CM-CM CM-MM CM2PM
+	   (NTYPF o) E2P (oflist2perm/+ T2P1 L2P) _ (TYP2 o) 
+	   (perm-output/expr T2P2)).
+
+% tIf
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltIf NTYPE2 NTYPE1 NTYPC) 
+     E2P L2P _ (tTrans2 (tIf TYPC IFTYP) T) EPO
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPC E2P L2P _ TYPC CPO
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPE1 E2P L2P _ TYP1 EPO
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPE2 E2P L2P _ TYP2 EPO
+     <- conversion-helper/if TYP1 TYP2 EPO CPO _ IFTYP T.
+
+% tIfNotNull
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltIfNotNull NTYP1 NTYP2 OF-LP) E2P L2P _
+     (tIf 
+	(tTrans2 (tNot tEql notEnv/base)
+	   (transform/cond
+	      (bimplies/reflexive)
+	      (bimplies/reflexive)
+	      (implies/trans3
+		 (implies/combine implies/reflexive I1)
+		 (implies/equiv equiv/associate)
+		 (implies/combine I2 implies/reflexive))
+	      (implies/trans3
+		 (implies/combine
+		    (implies/trans
+		       (implies/nonlinear bimplies/tt)
+		       (implies/true2empty))
+		    (implies/reflexive))
+		 (implies/equiv equiv/commute)
+		 (implies/equiv equiv/identity))))
+	(ifTyping/base 
+	   (tTrans2 TYP1
+	      (transform/inside [_]
+		 (transform/implies
+		    (implies/combine
+		       (implies/reflexive)
+		       (implies/trans3
+			  (implies/combine
+			     (implies/trans
+				(implies/nonlinear bimplies/tt)
+				(implies/true2empty))
+			     (implies/reflexive))
+			  (implies/equiv equiv/commute)
+			  (implies/equiv equiv/identity))))))
+	   TYP2))
+     EPO2
+     <- oflist-lookup-implies-clsmap-nulltp CM-L OF-LP CM-T
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYP2 E2P L2P _ TYP2 EPO2
+     <- oflist-lookup-implies-clspred
+	_ OF-LP L2P _ (nulltp2perm/norm PM-LP NN2P) I1
+     <- nulltp-conversion-ok
+	(clsmap-oflist/+ CM-T CM-L) CM-CM CM-MM CM2PM NTYP1 E2P 
+	(oflist2perm/+ (nulltp2perm/norm PM-LP nn2perm/yes) L2P) _ TYP1 _
+     <- clspred-remove-cond _ _ NN2P I2.
+
+%%% tWhile 
+- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltWhile NTYPE NTYPC)
+     E2P L2P _
+     (tTrans2 
+	(tWhile (transform/reflexive) (letTyping/base null TYPC) WT DV T1)
+	T2) EPO
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPE E2P L2P _ TYPE (perm-output/expr _)
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPC E2P L2P _ TYPC CPO
+     <- conversion-helper/while
+	(tTrans2 TYPE (transform/inside ([v] transform/drop))) 
+	CPO _ _ _ _ WT DV T1 T2 EPO.
+	
+%%% tArgs/0
+- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM nulltArgs/0 E2P L2P 
+     _ tArgs0 perm-output/args/0.
+
+%%% tArgs/+
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltArgs/+ NTYP NTYPA) E2P L2P _ 
+     (tArgs1 
+	(tTrans2 
+	   (TYP)
+	   (transform/inside [v] transform/drop))
+	(letTyping/exists [v]
+	   (letTyping/base v
+	      (tArgs TYPA)))) (perm-output/args/+ APO)
+     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYP _
+     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYPA E2P L2P _ TYPA APO.
+
+	
+%%% tCallMeth
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltCallMeth MM-LP NTYPA NCTYP)
+     E2P L2P _ _ _
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPA E2P L2P _ TYPA APO
+     <- 
+
+	
+%%% tSub
+
+%%% Conditionals
+
+% tEql
+- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltEql NTYPE1 NTYPE2) 
+     E2P L2P _
+     (tEql1
+	TYPE1
+	(letTyping/exists [v1]
+	   (letTyping/base v1
+	      (tEql2
+		 TYPE2'
+		 (letTyping/exists [v2]
+		    (letTyping/base v2
+		       (tTrans2
+			  (tEql:typing _ _ (eql (lit v1) (lit v2)) _)
+			  (transform/cond
+			     (bimplies/reflexive)
+			     (bimplies/reflexive)
+			     (implies/trans3
+				(implies/combine
+				   (implies/trans
+				      (implies/nonlinear bimplies/tt)
+				      (implies/true2empty))
+				   (implies/trans5
+				      (implies/combine
+					 (REM2 v2) 
+					 (implies/combine
+					    (REM1 v1)
+					    (implies/reflexive)))
+				      (implies/equiv equiv/commute)
+				      (implies/equiv equiv/identity)
+				      (implies/equiv equiv/commute)
+				      (implies/equiv equiv/identity)))
+				(implies/equiv equiv/commute)
+				(implies/equiv equiv/identity))
+			     (implies/trans3
+				(implies/combine
+				   (implies/trans
+				      (implies/nonlinear bimplies/tt)
+				      (implies/true2empty))
+				   (implies/trans5
+				      (implies/combine
+					 (REM2 v2) 
+					 (implies/combine
+					    (REM1 v1)
+					    (implies/reflexive)))
+				      (implies/equiv equiv/commute)
+				      (implies/equiv equiv/identity)
+				      (implies/equiv equiv/commute)
+				      (implies/equiv equiv/identity)))
+				(implies/equiv equiv/commute)
+				(implies/equiv equiv/identity))))))))))
+     (perm-output/exists ([v1] (perm-output/exists ([v2] (perm-output/cond)))))
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPE1 E2P L2P _ TYPE1 (perm-output/expr NT2P1)
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPE2 E2P L2P _ TYPE2 (perm-output/expr NT2P2)
+     <- typing-frame* TYPE2 (envadd/exists ([v] (envadd/expr))) TYPE2'
+     <- clspred-implies-empty NT2P1 ([r] REM1 r)
+     <- clspred-implies-empty NT2P2 ([r] REM2 r).
+
+% tNot
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltNot NTYP) E2P L2P _ TYP' CPO'
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYP CPO
+     <- conversion-helper/not TYP CPO _ TYP' CPO'.
+
+% tAnd
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltAnd NTYP1 NTYP2) E2P L2P _
+     (tTrans2 (tAnd TYP1 AH) T) CPO4
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYP1 E2P L2P _ TYP1 CPO1
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYP2 E2P L2P _ TYP2 CPO2
+     <- conversion-helper/and CPO1 TYP2 _ Out4 AH T CPO4.
+
+
+% tRead
+- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltRead FM-LP CM-LP NTYP)
+     E2P L2P _
+     (tTrans2
+	(tRead1 
+	   TYPE
+	   (letTyping/exists [v]
+	      (letTyping/base v
+		 (tTrans
+		    (transform/trans3 
+		       (transform/implies
+			  (implies/trans3
+			     (implies/combine
+				(implies/trans4
+				   (implies/conj2combine)
+				   (implies/combine
+				      (implies/trans
+					 (implies/nonlinear bimplies/tt)
+					 (implies/true2empty))
+				      (IMP v))
+				   (implies/equiv equiv/commute)
+				   (implies/equiv equiv/identity))
+				(implies/equiv EQV))
+			     (IMP2 v)
+			     (implies/combine 
+				(implies/equiv (equiv/symmetric equiv/one))
+				(implies/reflexive))))
+		       (transform/skolem) 
+		       (transform/inside 
+			  ([r] 
+			     (transform/implies
+				(implies/trans
+				   (implies/combine
+				      (implies/equiv equiv/distribute)
+				      (implies/reflexive))
+				   (implies/equiv
+				      (equiv/symmetric equiv/associate)))))))
+		    (letTyping/exists 
+		       ([r] 
+			  (letTyping/base null
+			     (tRead:typing _ _ (read (lit v) _) _))))
+		    (transform/inside
+		       ([r] 
+			  (transform/implies
+			     (implies/trans8
+				(implies/equiv equiv/associate)
+				(implies/combine
+				   (implies/trans5
+				      (implies/equiv
+					 (equiv/symmetric equiv/distribute))
+				      (implies/equiv equiv/one)
+				      (implies/combine
+					 (implies/reflexive)
+					 (DUP r))
+				      (implies/equiv equiv/associate)
+				      (implies/combine
+					 (implies/pack r) (implies/reflexive)))
+				   (implies/reflexive))
+				(implies/equiv
+				   (equiv/symmetric equiv/associate))
+				(implies/combine
+				   (implies/reflexive)
+				   (implies/equiv equiv/roll2))
+				(implies/equiv equiv/associate)
+				(implies/combine
+				   (implies/linear-modus-ponens) 
+				   (implies/reflexive))
+				(implies/equiv equiv/roll2)
+				(implies/combine
+				   (implies/reflexive)
+				   (implies/equiv EQV))))))))))
+	(transform/rem-unused))
+     (perm-output/expr (nulltp2perm/norm PM-FLP NN2P))
+     <- nulltp-conversion-ok 
+	CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYPE
+	(perm-output/expr (nulltp2perm/norm PM-LP nn2perm/yes))
+     <- writeshared-can-move-front L2P _ EQV
+     <- lookup-fldperm CM2PM PM-LP CM-LP FM-LP _ _ _ FNN2P PM-FLP IMP
+     <- get-precise-exists FNN2P PM-FLP FF NN2P IMP2
+     <- clspred-can-be-duplicated (nulltp2perm/norm PM-FLP NN2P) DUP.
+
+% % tWrite
+% - : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM
+%      (nulltWrite FM-LP CM-LP NTYPE2 NTYPE1) E2P L2P _ 
+%      (tTrans2
+% 	(tWrite1
+% 	   TYPE1
+% 	   (letTyping/exists [v]
+% 	      (letTyping/base v
+% 		 (tWrite2
+% 		    TYPE2'
+% 		    (letTyping/exists [v']
+% 		       (letTyping/base v'
+% 			  (tTrans
+% 			     (transform/trans3
+% 				(transform/implies
+% 				   (implies/trans3
+% 				      (implies/combine
+% 					 (implies/trans4
+% 					    (implies/conj2combine)
+% 					    (implies/combine
+% 					       (implies/trans
+% 						  (implies/nonlinear bimplies/tt)
+% 						  (implies/true2empty))
+% 					       (IMP v))
+% 					    (implies/equiv equiv/commute)
+% 					    (implies/equiv equiv/identity))
+% 					 (implies/trans3
+% 					    (implies/equiv equiv/commute)
+% 					    (implies/combine
+% 					       (implies/equiv EQV)
+% 					       (implies/reflexive))
+% 					    (implies/equiv
+% 					       (equiv/symmetric equiv/associate))))
+% 				      (IMP2 v)
+% 				      (implies/combine
+% 					 (implies/equiv (equiv/symmetric equiv/one))
+% 					 (implies/reflexive))))
+% 				(transform/skolem)
+% 				(transform/inside
+% 				   ([r]
+% 				      (transform/implies
+% 					 (implies/trans
+% 					    (implies/combine
+% 					       (implies/equiv equiv/one)
+% 					       (implies/reflexive))
+% 					    (implies/equiv 
+% 					       (equiv/symmetric equiv/associate)))
+% 					 ))))
+% 			     (letTyping/exists
+% 				([r]
+% 				   (letTyping/base null
+% 				      (tWrite:typing _ _ (write (lit v) _ (lit v')) _))))
+% 			     (transform/trans
+% 				(transform/inside
+% 				   ([r]
+% 				      (transform/implies
+% 					 (implies/trans10
+% 					    (implies/combine
+% 					       (implies/reflexive)
+% 					       (implies/trans3
+% 						  (implies/combine
+% 						     (REM r)
+% 						     (implies/combine
+% 							(implies/reflexive)
+% 							(implies/equiv
+% 							   equiv/commute)))
+% 						  (implies/equiv equiv/commute)
+% 						  (implies/equiv equiv/identity)))
+% 					    (implies/combine
+% 					       (implies/reflexive)
+% 					       (implies/equiv equiv/roll2))
+% 					    (implies/equiv equiv/associate)
+% 					    (implies/combine
+% 					       (implies/trans3
+% 						  (implies/combine
+% 						     (implies/reflexive)
+% 						     (DUP v'))
+% 						  (implies/equiv equiv/associate)
+% 						  (implies/combine
+% 						     (implies/pack v')
+% 						     (implies/reflexive)))
+% 					       (implies/reflexive))
+% 					    (implies/equiv 
+% 					       (equiv/symmetric equiv/associate))
+% 					    (implies/combine
+% 					       (implies/reflexive)
+% 					       (implies/equiv equiv/roll2))
+% 					    (implies/equiv equiv/associate)
+% 					    (implies/combine
+% 					       (implies/linear-modus-ponens)
+% 					       (implies/reflexive))
+% 					    (implies/equiv equiv/roll2)
+% 					    (implies/combine
+% 					       (implies/reflexive)
+% 					       (implies/equiv (equiv/symmetric EQV)))
+% 					    ))))
+% 				(transform/rem-unused)))))))))
+% 	(transform/rem-unused))
+%      (perm-output/expr NT2P2)
+%      <- nulltp-conversion-ok
+% 	CM-L CM-CM CM-MM CM2PM NTYPE1 E2P L2P _ TYPE1 
+% 	(perm-output/expr (nulltp2perm/norm PM-LP1 nn2perm/yes))
+%      <- nulltp-conversion-ok 
+% 	CM-L CM-CM CM-MM CM2PM NTYPE2 E2P L2P _ TYPE2 
+% 	(perm-output/expr NT2P)
+%      <- typing-frame* TYPE2 (envadd/exists ([v] envadd/expr)) TYPE2'
+%      <- move-writeshared L2P _ EQV
+%      <- lookup-fldperm CM2PM PM-LP1 CM-LP FM-LP _ _ _ FNN2P PM-FLP IMP
+%      <- get-precise-exists FNN2P PM-FLP _ NN2P IMP2
+%      <- rem-fldform NT2P ([r] REM r)
+%      <- dup-fldform NT2P2 ([v] DUP v).
+
+
+%theorem nulltp-conversion-ok :
+	forall* {PM} {CM} {MM} {L} {W} {Pi}
                 {K: kind} {E: term K} {Rslt : result K}
 	forall  {CM-L: clsmap-oflist CM L}
 		{CM-CM: clsmap-clsmap CM CM}
@@ -17,83 +459,6 @@
 	exists  {Out: output K} {TYP: typing W Pi E Out}
 		{P-O: perm-output PM Pi Rslt Out}
 	true.
-	 
-
-- : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltRead FM-LP CM-LP NTYP)
-     E2P L2P _
-     (tTrans2
-	(tRead1 
-	   TYPE
-	   (letTyping/exists [v]
-	      (letTyping/base v
-		 (tTrans
-		    (transform/trans3
-		       (transform/implies
-			  (implies/trans7 %{ (PF v) (WS, Pi) }%
-			     (implies/combine (IMP v) (implies/equiv EQV))
-			     (implies/equiv (equiv/symmetric equiv/associate))
-			     (implies/combine %{ (NS v) (WS ((PF v) Pi)) }%
-				implies/reflexive (implies/equiv equiv/roll2))
-			     (implies/equiv equiv/associate)
-			     (implies/combine implies/carve implies/reflexive)
-			     (implies/equiv (equiv/symmetric equiv/associate))
-			     (implies/combine %{ (FP o) (EC ((PF v) Pi)) }%
-				(implies/equiv (equiv/symmetric equiv/one))
-				(implies/reflexive))))
-		       (transform/skolem)
-		       (transform/inside 
-			  ([r]
-			     (transform/implies
-				(implies/trans
-				   (implies/combine
-				      (implies/equiv equiv/distribute)
-				      (implies/reflexive))
-				   (implies/equiv 
-				      (equiv/symmetric equiv/associate)))))))
-		    (letTyping/exists 
-		       ([r] 
-			  (letTyping/base null
-			     (tRead:typing _ _ (read (lit v) _) _))))
-		    (transform/inside
-		       ([r]
-			  (transform/trans3
-			     (transform/implies
-				(implies/trans8
-				   (implies/equiv equiv/associate)
-				   (implies/combine
-				      (implies/trans4
-					 (implies/equiv
-					    (equiv/symmetric equiv/distribute))
-					 (implies/equiv equiv/one)
-					 (implies/combine
-					    (implies/reflexive) 
-					    (implies/duplicate))
-					 (implies/equiv equiv/associate))
-				      (implies/reflexive))
-				   (implies/equiv (equiv/symmetric equiv/associate))
-				   (implies/combine
-				      (implies/pack r)
-				      (implies/equiv equiv/roll2))
-				   (implies/equiv equiv/associate)
-				   (implies/combine %{ WS ((FF r) ((PF v) Pi)) }%
-				      (implies/linear-modus-ponens)
-				      (implies/reflexive)) 
-				   (implies/equiv equiv/roll3)
-				   (implies/combine 
-				      (implies/reflexive)
-				      (implies/equiv equiv/roll2))))
-			     (transform/drop)
-			     (transform/implies
-				(implies/combine
-				   (implies/reflexive)
-				   (implies/equiv (equiv/symmetric EQV)))))))))))
-	(transform/rem-unused)) 
-     (perm-output/expr (nulltp2perm/norm MCP MCD))
-     <- nulltp-conversion-ok 
-	CM-L CM-CM CM-MM CM2PM NTYP E2P L2P _ TYPE (perm-output/expr T2P)
-     <- move-writeshared L2P _ EQV
-     <- dup-fldperm T2P CM-LP FM-LP _ PD PM
-	(make-field-perm/ MCP) (make-field-pred/out MCD _) IMP.
 
 
 - : nulltp-conversion-ok _ _ _ _ (nulltLit L) _ L2P _ 
@@ -102,7 +467,7 @@
 	   (transform/implies IMP)
 	   (transform/gen-exists _)))
      (perm-output/expr T2P)
-     <- dup-oflist-clspred _ L L2P _ T2P IMP.
+     <- oflist-lookup-implies-clspred _ L L2P _ T2P IMP.
      
 - : nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM (nulltLet NTYPF NTYP)
      E2P L2P _ 

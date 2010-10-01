@@ -24,7 +24,6 @@ result/args/0 : result argsk.
 result/args/+ : nulltp -> result argsk -> result argsk.
 
 
-
 %%%%% Typing Rules
 
 
@@ -87,9 +86,7 @@ nulltSub : nullTyping CM MM L E (result/expr T')
     <- nullTyping CM MM L E (result/expr T).
 
 
-
 %%%% Conditionals
-
 
 nulltEql
    : nullTyping CM MM L (eql E1 E2) result/cond
@@ -97,8 +94,7 @@ nulltEql
       <- nullTyping CM MM L E1 _.
 
 nulltNot
-   :  nullTyping CM MM L (not C) CRslt
-      <- nullTyping CM MM L C CRslt.
+   : nullTyping CM MM L (not C) CRslt <- nullTyping CM MM L C CRslt.
 
 nulltAnd : nullTyping CM MM L C1 CRslt ->
     nullTyping CM MM L C2 CRslt ->
@@ -107,13 +103,11 @@ nulltAnd : nullTyping CM MM L C1 CRslt ->
 
 %%%% Function Calls
 
-
 nulltArgs/0 : nullTyping CM MM L args/0 result/args/0.
 
 nulltArgs/+ : nullTyping CM MM L E (result/expr T) ->
     nullTyping CM MM L A ARslt -> 
     nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt).
-
 
 nulltCallConst : 
     clsmap`lookup CM C FM ->
@@ -130,16 +124,13 @@ nulltCallMeth :
     nullTyping CM MM L (call M A) Rslt.
 
 
-
 %%%%% Method Typing
-
 
 methtpmatch : clsmap -> methmap -> oflist -> func -> methtp -> type.
  
 methtpmatch/base 
    : methtpmatch CM MM L (func/0 E) (methtp/base T')
-      <- nullTyping CM MM L E (result/expr T)
-      <- subtype T T'.
+      <- nullTyping CM MM L E (result/expr T).
 		   
 methtpmatch/args 
    : methtpmatch CM MM L (func/+ F) (methtp/arg MTF T)
@@ -147,7 +138,7 @@ methtpmatch/args
 
 
 %%%%% Constructor Typing
-
+ 
 constyping : nat -> set -> clsmap -> methmap -> 
 	oflist -> (object -> expr) -> type.
     
@@ -174,9 +165,10 @@ constypematch/base : constyping C S CM MM L E ->
     constypematch C S CM MM L ([t] func/0 (E t)) ([t] methtp/base T).
 
 constypematch/args 
-   : constypematch C S CM MM L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
-      <- ({o} constypematch C S CM MM (oflist/+ o T L) 
-	    ([t] (F t o)) ([t] (CTF t o))).
+   : constypematch
+      C S CM MM L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
+      <- ({o} constypematch
+	    C S CM MM (oflist/+ o T L)  ([t] (F t o)) ([t] (CTF t o))).
 
 
 %%%%% Program Typing
