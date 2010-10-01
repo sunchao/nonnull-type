@@ -9,8 +9,14 @@
 nn2perm : nn -> (nullpred -> object -> permission) -> type.
 
 nn2perm/yes : nn2perm nn/yes
-	([p][o] unitperm (nonlinear
-		(conj (nestInShared o) (predcall p (predargs/1 o))))).
+	([p][o] 
+	   (unitperm 
+	      (nonlinear 
+		 (conj
+		    (neg (objequal o null))
+		    (conj
+		       (nestInShared o) 
+		       (predcall p (predargs/1 o))))))).
 
 nn2perm/may : nn2perm nn/may
 	([p][o] unitperm (conditional (objequal o null)
@@ -33,7 +39,8 @@ fldmap2perm/+
 
 nulltp2perm : predmap -> nulltp -> (object -> permission) -> type.
 
-nulltp2perm/null : nulltp2perm _ nulltp/null ([o] null-perm o).
+nulltp2perm/null
+   : nulltp2perm _ nulltp/null ([r] unitperm (nonlinear (objequal r null))).
 
 nulltp2perm/norm
    : nulltp2perm PM (nulltp/norm C NN) (PF PD)
@@ -57,12 +64,12 @@ methtp2proctype*/arg
       <- nulltp2perm PM T PF
       <- ({o} methtp2proctype* PM (Pi , (PF o)) (MTF o) (PTF o)).
 
-
 constp2proctype* : predmap -> fldmap -> permission -> 
 	(object -> methtp) -> (object -> proctype) -> type.
 
-%abbrev constp2proctype = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
-
+%abbrev constp2proctype 
+   = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
+	
 constp2proctype*/base 
    : constp2proctype* PM FM Pi ([t] methtp/base T)
       ([t] proctype/base (sharedPerm , Pi , (F t))
@@ -71,7 +78,8 @@ constp2proctype*/base
       <- nulltp2perm PM T PF.
 
 constp2proctype*/arg 
-   : constp2proctype* PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
+   : constp2proctype* 
+      PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
       <- nulltp2perm PM T PF
       <- ({o} constp2proctype* PM FM (Pi , (PF o)) ([t] CTF t o) ([t] PTF t o)).
 
@@ -79,9 +87,6 @@ constp2proctype*/arg
 env2perm : predmap -> clsmap -> methmap -> progtype -> type.
 
 env2perm/0 : env2perm _ _ methmap`map/0 progtype`map/0.
-
-
-%%% this is tedius - it should have another way of doing this
 
 % constructor
 env2perm/c 
@@ -118,11 +123,37 @@ oflist2perm/+
 
 perm-output : predmap -> permission -> result K -> output K -> type.
 
-perm-output/expr 
+perm-output/exists
+   : perm-output PM Pi Rslt (output/exists ([v] Out v))
+      <- ({v:object} perm-output PM Pi Rslt (Out v)).
+		      
+perm-output/expr
    : perm-output PM Pi (result/expr T) 
       (output/exists ([v] (output/expr v ((PF v) , Pi))))
       <- nulltp2perm PM T PF.
 
+perm-output/cond : perm-output _ Pi result/cond (output/cond _ Pi Pi).
+	    
+perm-output/args/0
+   : perm-output PM Pi result/args/0 (output/args/0 Pi).
+
+perm-output/args/+ 
+   : perm-output PM Pi (result/args/+ T Rslt)
+      (output/exists ([v] (output/args/+ v Out)))
+      <- perm-output PM Pi Rslt Out.
 
 
+%%% Theorems
 
+%theorem nn2perm-total :
+        forall {NN}
+        exists {PF} {NN2P: nn2perm NN PF}
+        true.
+
+- : nn2perm-total nn/may _ nn2perm/may.
+
+- : nn2perm-total nn/yes _ nn2perm/yes.
+
+%worlds () (nn2perm-total _ _ _).
+%total  {} (nn2perm-total _ _ _).
+ 
