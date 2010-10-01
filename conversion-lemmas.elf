@@ -1,47 +1,43 @@
 %%%%% conversion-lemmas.elf
+%%%%% lemmas used for proving theorems in conversion-thms.elf
 %%%%% Chao Sun
 %%%%% July 19, 2010
 
-%theorem move-writeshared :
+
+%theorem writeshared-can-move-front :
 	forall* {PM} {L} {Pi}
-	forall  {CV-L: oflist2perm PM L Pi}
-	exists  {Pi'} {EQ: equiv Pi (sharedPerm , Pi')}
+	forall  {L2P: oflist2perm PM L Pi}
+	exists  {Pi'} {EV: equiv Pi (sharedPerm , Pi')}
 	true.
 		      
-- : move-writeshared oflist2perm/0 empty EQ
-     <- equiv-symmetric equiv/identity EQ.
+- : writeshared-can-move-front oflist2perm/0 empty EV
+     <- equiv-symmetric equiv/identity EV.
 
-- : move-writeshared (oflist2perm/+ _ L2P) _ EQ3
-     <- move-writeshared L2P _ EQ
+- : writeshared-can-move-front (oflist2perm/+ _ L2P) _ EV3
+     <- writeshared-can-move-front L2P _ EV
      <- equiv-transitive 
-	(equiv/combine equiv/reflexive EQ) (equiv/associate) EQ1
-     <- equiv-transitive EQ1 (equiv/combine equiv/commute equiv/reflexive) EQ2
-     <- equiv-transitive EQ2 (equiv/symmetric equiv/associate) EQ3.
+	(equiv/combine equiv/reflexive EV) (equiv/associate) EV1
+     <- equiv-transitive EV1 (equiv/combine equiv/commute equiv/reflexive) EV2
+     <- equiv-transitive EV2 (equiv/symmetric equiv/associate) EV3.
 	      
-%worlds () (move-writeshared L2P %{=>}% Pi' EQ).
-%total L2P (move-writeshared L2P %{=>}% Pi' EQ).
+%worlds () (writeshared-can-move-front _ _ _).
+%total L2P (writeshared-can-move-front L2P _ _).
 
 
-%theorem dup-clspred :
+%theorem clspred-can-be-duplicated :
 	forall* {PM} {T} {PF}
 	forall  {T2P: nulltp2perm PM T PF}
-	exists  {IMP: {o} implies (PF o) ((PF o) , (PF o))}
+	exists  {I: {o} implies (PF o) ((PF o) , (PF o))}
         true.
 
-- : dup-clspred
+- : clspred-can-be-duplicated
+     (nulltp2perm/null) ([_] implies/duplicate).
+
+- : clspred-can-be-duplicated
      (nulltp2perm/norm _ nn2perm/yes)
      ([v] implies/duplicate).
 
-- : dup-clspred (nulltp2perm/null)
-     ([v] (implies/trans
-	     (implies/cond-inner 
-		(bimplies/reflexive)
-		(bimplies/reflexive)
-		(implies/equiv (equiv/symmetric equiv/identity)) 
-		(implies/duplicate))
-	     (implies/cond-distribute))).
-
-- : dup-clspred 
+- : clspred-can-be-duplicated 
      (nulltp2perm/norm _ nn2perm/may)
      ([v] (implies/trans
 	     (implies/cond-inner 
@@ -51,77 +47,525 @@
 		(implies/duplicate))
 	     (implies/cond-distribute))).
 
-%worlds () (dup-clspred T2P %{=>}% IMP).
-%total  {} (dup-clspred T2P %{=>}% IMP).
+%worlds () (clspred-can-be-duplicated _ _).
+%total  {} (clspred-can-be-duplicated _ _).
 
 
-%theorem dup-oflist-clspred :
+%theorem oflist-lookup-implies-clspred :
         forall* {PM} {L} {T} {Pi}
-	forall  {O} {LP: oflist-lookup L O T}
+	forall  {O} {LL: oflist-lookup L O T}
 		{L2P: oflist2perm PM L Pi}
         exists  {PF} {T2P: nulltp2perm PM T PF}
-		{IMP: implies Pi ((PF O) , Pi)}
+		{I: implies Pi ((PF O) , Pi)}
         true.
 
-- : dup-oflist-clspred O (oflist-lookup/=)
+- : oflist-lookup-implies-clspred O (oflist-lookup/=)
      (oflist2perm/+ T2P L2P) _ T2P
      (implies/trans
-	(implies/combine (IMP O) implies/reflexive)
+	(implies/combine (I O) implies/reflexive)
 	(implies/equiv (equiv/symmetric equiv/associate)))
-     <- dup-clspred T2P IMP.
+     <- clspred-can-be-duplicated T2P I.
 
-- : dup-oflist-clspred O (oflist-lookup/!= L)
+- : oflist-lookup-implies-clspred O (oflist-lookup/!= L)
      (oflist2perm/+ _ L2P) _ T2P
      (implies/trans4
-	(implies/combine implies/reflexive IMP)
+	(implies/combine implies/reflexive I)
 	(implies/equiv equiv/associate)
 	(implies/combine (implies/equiv equiv/commute)
 	   (implies/reflexive))
 	(implies/equiv (equiv/symmetric equiv/associate)))
-     <- dup-oflist-clspred O L L2P _ T2P IMP.
+     <- oflist-lookup-implies-clspred O L L2P _ T2P I.
 
-%worlds () (dup-oflist-clspred O LP L2P PF T2P %{=>}% IMP).
-%total  LP (dup-oflist-clspred O LP L2P PF T2P %{=>}% IMP).
+%worlds () (oflist-lookup-implies-clspred _ _ _ _ _ _).
+%total  LP (oflist-lookup-implies-clspred _ LP _ _ _ _).
 
-%theorem dup-fldperm/L :
-        forall* {CM} {PM} {FM} {C} {F} {G} {FC} {FNN}
-        forall  {CM2PM: clsmap2predmap CM PM}
-		{CM-LP: clsmap`lookup CM C FM}
-	 	{FM-LP: fldmap`lookup FM F (nulltp/norm FC FNN)}	  
-	exists  {PM1} {PM2} {PF} {PD} 
-                {F2C: fldmap2conj CM PM1 FM ([o] G o) PM2}
-		{PM-LP: predmap`lookup PM FC PD}  
-		{IMP: {o} implies (unitperm (nonlinear (G o)))
-		       (combine 
-			  (unitperm (nonlinear (nested (PF PD o) null own)))
-			  (unitperm (nonlinear (G o))))}
+
+%theorem clspred-remove-cond :
+        forall* {NN} {PF}
+        forall  {PD} {O} {NP: nn2perm NN PF}
+        exists  {I: implies
+		     (unitperm
+			(nonlinear (neg (objequal O null))) , (PF PD O))
+		     (unitperm
+			(nonlinear
+			   (conj (neg (objequal O null))
+			      (conj (nestInShared O) 
+				 (predcall PD (predargs/1 O)))))) }
+	true.		
+
+- : clspred-remove-cond _ _ nn2perm/yes	
+     (implies/trans3
+	(implies/combine
+	   (implies/trans
+	      (implies/nonlinear bimplies/tt)
+	      (implies/true2empty))
+	   (implies/reflexive))
+	(implies/equiv equiv/commute)
+	(implies/equiv equiv/identity)).
+
+- : clspred-remove-cond _ _ nn2perm/may
+     (implies/trans4
+	(implies/combine
+	   (implies/duplicate)
+	   (implies/cond-neg))
+	(implies/equiv (equiv/symmetric equiv/associate))
+	(implies/combine implies/reflexive implies/cond-elim)
+	(implies/combine2conj)).
+
+%worlds () (clspred-remove-cond _ _ _ _).
+%total  {} (clspred-remove-cond _ _ _ _).
+
+
+%theorem clspred-implies-empty :
+        forall* {PM} {PF} {T} 
+        forall  {T2P: nulltp2perm PM T PF}
+        exists  {I: {r} implies (PF r) empty}
 	true.
 
-- : dup-fldperm/L (clsmap2predmap*/in CM2PM SH In) (clsmap`lookup/= _) FM-L
-     <-
+- : clspred-implies-empty
+     nulltp2perm/null
+     ([_] implies/trans
+	(implies/nonlinear (bimplies/tt)) 
+	(implies/true2empty)).
 
-- : dup-fldperm/L (clsmap2predmap*/out CM2PM ([f] F2C f) ([f] UD f) SH Out)
-     (clsmap`lookup/= EQ) (fldmap`lookup/= EQF) _ _ _ _ 
-     (F2C
-		 
+- : clspred-implies-empty
+     (nulltp2perm/norm _ nn2perm/yes)
+     ([r] (implies/trans
+	     (implies/nonlinear bimplies/tt)
+	     (implies/true2empty))).
 
-%theorem dup-fldperm :
-	forall* {CM} {PM} {FM} {FF} {C} {F} {FC} {FNN}
+- : clspred-implies-empty
+     (nulltp2perm/norm _ nn2perm/may)
+     ([r] implies/trans
+	(implies/cond-inner
+	   (bimplies/reflexive)
+	   (bimplies/reflexive)
+	   (implies/reflexive)
+	   (implies/trans
+	      (implies/nonlinear bimplies/tt)
+	      (implies/true2empty)))
+	(implies/cond-equal)).
+
+%worlds () (clspred-implies-empty _ _).
+%total  {} (clspred-implies-empty _ _).
+                
+
+%theorem lookup-fldperm/LL :
+        forall* {PM} {NN} {C} {F} {G} 
+        forall  {V:void}
+        exists  {PF} {PD} {F2P: fldnn2perm F NN PF}
+                {L: predmap`lookup PM C PD}
+                {I: {o} implies (unitperm (nonlinear (G o)))
+		       (unitperm (nonlinear (nested (PF PD o) null own)))}
+        true.
+
+%worlds () (lookup-fldperm/LL _ _ _ _ _ _).
+%total  {} (lookup-fldperm/LL _ _ _ _ _ _).
+
+
+%theorem lookup-fldperm/L :
+        forall* {CM} {PM} {FM} {G} {F} {C} {NN}
+        forall  {F2C: fldmap2conj CM PM FM ([r] G r) PM}
+                {L: fldmap`lookup FM F (nulltp/norm C NN)}
+        exists  {PF} {PD} {FN2P: fldnn2perm F NN PF}
+                {L: predmap`lookup PM C PD}
+                {I: {o} implies (unitperm (nonlinear (G o)))
+			  (unitperm (nonlinear (nested (PF PD o) null own)))}
+        true.
+
+- : lookup-fldperm/L (fldmap2conj/null F2C FM-SH) 
+     (fldmap`lookup/> FM-L P) PF PD FNN2P PM-L I
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- fldmap`shift-preserves-lookup* FM-L FM-SH P'' FM-L'
+     <- lookup-fldperm/L F2C FM-L' PF PD FNN2P PM-L I.
+
+- : lookup-fldperm/L (fldmap2conj/norm/in _ FNN2P _ PM-L) 
+     (fldmap`lookup/= _) _ _ FNN2P PM-L 
+     ([o] implies/trans3
+	(implies/conj2combine)
+	(implies/combine
+	   (implies/reflexive)
+	   (implies/trans
+	      (implies/nonlinear bimplies/tt)
+	      (implies/true2empty)))
+	(implies/equiv equiv/identity)).
+
+- : lookup-fldperm/L (fldmap2conj/norm/in F2C _ FM-SH _)
+     (fldmap`lookup/> FM-L P) PF PD FNN2P PM-L
+     ([o] implies/trans4
+	(implies/conj2combine)
+	(implies/combine 
+	   (implies/trans
+	      (implies/nonlinear bimplies/tt)
+	      (implies/true2empty))
+	   (I o))
+	(implies/equiv equiv/commute)
+	(implies/equiv equiv/identity))
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- fldmap`shift-preserves-lookup* FM-L FM-SH P'' FM-L'
+     <- lookup-fldperm/L F2C FM-L' PF PD FNN2P PM-L I.
+
+- : lookup-fldperm/L 
+     (fldmap2conj/norm/out F2C
+	(F2CF:{f} fldmap2conj _ _ _ ([r] CJ f r) _) 
+	([f] PM-U f) _ _ _ PM-FS) _ PF PD FNN2P PM-L I
+     <- predmap`size-total SZ-PM
+     <- predmap`fresh-update-increases-size
+	SZ-PM PM-FS (PM-U (conj2pred CJ)) SZ-PME
+     <- fldmap2conj-implies-predmap-leq (F2CF (conj2pred CJ)) PME<=PMF
+     <- predmap`size-total SZ-PMF
+     <- predmap`leq-implies-size-le PME<=PMF SZ-PME SZ-PMF SZ-PMF>=PME
+     <- fldmap2conj-implies-predmap-leq F2C PMF<=PM
+     <- predmap`leq-implies-size-le PMF<=PM SZ-PMF SZ-PM SZ-PM>=PMF
+     <- nat`ge-transitive SZ-PM>=PMF SZ-PMF>=PME SZ-PM>=PME
+     <- nat`ge-transitive-gt SZ-PM>=PME nat`gt/1 SZ-PM>PM
+     <- nat`gt-anti-reflexive SZ-PM>PM F
+     <- lookup-fldperm/LL F PF PD FNN2P PM-L I.
+
+%worlds () (lookup-fldperm/L _ _ _ _ _ _ _).
+%total  F2C (lookup-fldperm/L F2C _ _ _ _ _ _).
+
+
+% TODO: null case should be handled here
+
+%theorem lookup-fldperm :
+	forall* {CM} {PM} {FM} {C} {D} {F} {CJ} {NN}
 	forall  {CM2PM: clsmap2predmap CM PM}
-		{T2P: nulltp2perm PM (nulltp/norm C nn/yes) FF}
+		{PM-L: predmap`lookup PM C (conj2pred CJ)}
 		{CM-L: clsmap`lookup CM C FM}
-		{FM-L: fldmap`lookup FM F (nulltp/norm FC FNN)}
-	exists  {PF} {PD}
-		{NN2P: nn2perm FNN PF}	
-		{PM-L: predmap`lookup PM FC PD}	
-		{IMP: {o} implies (FF o)
-		       ((unitperm (nonlinear (nested (PF PD o) null own))) ,
-			  (FF o))}
+                {FM-L: fldmap`lookup FM F (nulltp/norm D NN)}
+	exists  {PF} {PD} 
+                {F2C: fldmap2conj CM PM FM (CJ (conj2pred CJ)) PM}
+                {FNN2P: fldnn2perm F NN PF}
+                {PM-L: predmap`lookup PM D PD}
+		{I: {o} implies 
+		       (unitperm
+			  (nonlinear (predcall (conj2pred CJ) (predargs/1 o))))
+		       (unitperm (nonlinear ((nested (PF PD o) null own))))}
 	true.
 
-- : dup-fldperm (clsmap2predmap*/in CM2PM SH In)
-     (nulltp2perm/norm PM-L nn2perm/yes) CM-L FM-L PF PD NN2P PM-LF
-     <- clsmap
+- : lookup-fldperm CM2PM PM-L CM-L FM-L PF PD F2C FNN2P PM-L' 
+     ([o] implies/trans 
+	(implies/nonlinear
+	   (bimplies/trans
+	      (bimplies/predcall/Y/inline)
+	      (bimplies/trans
+		 (bimplies/predcall/+/inline o)
+		 (bimplies/predcall/0/inline))))
+	(I o))
+     <- clsmap2predmap-implies-fldmap2conj CM2PM PM-L CM-L F2C
+     <- lookup-fldperm/L F2C FM-L PF PD FNN2P PM-L' I.
+
+%worlds () (lookup-fldperm _ _ _ _ _ _ _ _ _ _).
+%total  {} (lookup-fldperm _ _ _ _ _ _ _ _ _ _).
+
+
+%theorem get-precise-exists :
+        forall* {PM} {PF} {PD} {F} {C} {NN} {Pi}
+        forall  {FNN2P: fldnn2perm F NN PF}
+                {PM-L: predmap`lookup PM C PD}
+        exists  {FF} {NN2P: nn2perm NN FF}
+                {I: {o} implies
+		       (combine 
+			  (unitperm 
+			     (nonlinear
+				(nested (PF PD o) null own)))
+			  (sharedPerm , Pi))
+		       (combine
+			  (unitperm 
+			     (precise-exists o F 
+				([r] (FF PD r))))
+			  (combine
+			     (unitperm
+				(encumbered 
+				   (unitperm
+				      (precise-exists o F
+					 ([r] (FF PD r))))
+				   (sharedPerm)))
+			     (Pi)))}
+	true.       
+				 
+- : get-precise-exists
+     fldnn2perm/yes _ _ nn2perm/yes
+     ([o] implies/trans3
+	(implies/equiv equiv/associate)
+	(implies/combine implies/carve implies/reflexive)
+	(implies/equiv (equiv/symmetric equiv/associate))).
+
+- : get-precise-exists 
+     fldnn2perm/may _ _ nn2perm/may
+     ([o] implies/trans3
+	(implies/equiv equiv/associate)
+	(implies/combine implies/carve implies/reflexive)
+	(implies/equiv (equiv/symmetric equiv/associate))).
+
+%worlds () (get-precise-exists _ _ _ _ _).
+%total  {} (get-precise-exists _ _ _ _ _).
+
+
+%%% conversion helper theorems
+
+%theorem conversion-helper/and/L :
+        forall* {PM} {G} {Pi} {Rslt} {Out1}
+        forall  {CPO: perm-output PM Pi Rslt Out1}
+        exists  {Out2} {Out3} 
+                {AH2: andHelp2 G Out1 Pi Out2}
+                {T: transform Out2 Out3}
+                {CPO: perm-output PM Pi Rslt Out3}
+        true.
+
+- : conversion-helper/and/L
+     perm-output/cond _ _ andHelp2/base 
+     (transform/cond
+	(bimplies/reflexive)
+	(bimplies/reflexive)
+	(implies/reflexive)
+	(implies/cond-equal))
+     perm-output/cond.
+
+- : conversion-helper/and/L 
+     (perm-output/exists ([v] (CPO1 v)))
+     (output/exists ([v] (Out2 v)))
+     (output/exists ([v] (Out3 v)))
+     (andHelp2/exists ([v] AH2 v))
+     (transform/inside ([v] (T v)))
+     (perm-output/exists ([v] (CPO3 v)))
+     <- ({v:object} conversion-helper/and/L
+	   (CPO1 v) (Out2 v) (Out3 v) (AH2 v) (T v) (CPO3 v)).
+
+%worlds (objvar) (conversion-helper/and/L _ _ _ _ _ _).
+%total CPO (conversion-helper/and/L CPO _ _ _ _ _).
+
+
+%theorem conversion-helper/and :
+        forall* {W} {Pi} {PM} {Out1} {Out2} {C}
+        forall  {CPO: perm-output PM Pi result/cond Out1}
+                {TYP: typing W Pi C Out2}
+        exists  {Out3} {Out4} 
+                {AH: andHelp1 W Out1 C Out3} 
+                {T: transform Out3 Out4}
+                {CPO: perm-output PM Pi result/cond Out4}
+        true.
+
+- : conversion-helper/and
+     perm-output/cond TYP Out3 Out4 (andHelp1/base TYP AH2) T CPO
+     <- conversion-helper/and/L perm-output/cond Out3 Out4 AH2 T CPO.
+
+- : conversion-helper/and
+     (perm-output/exists ([v] CPO v)) TYP (output/exists ([v] Out3 v))
+     (output/exists ([v] Out4 v)) (andHelp1/exists ([v] (AH1 v)))
+     (transform/inside ([v] T v)) (perm-output/exists ([v] CPO' v))
+     <- ({v} conversion-helper/and
+	   (CPO v) TYP (Out3 v) (Out4 v) (AH1 v) (T v) (CPO' v)).
+
+%worlds (objvar) (conversion-helper/and _ _ _ _ _ _ _).
+%trustme %total CPO (conversion-helper/and CPO _ _ _ _ _ _).
+
+
+%theorem conversion-helper/not/L :
+        forall* {PM} {Pi} {Out}
+        forall  {CPO: perm-output PM Pi result/cond Out}
+        exists  {Out'} {N: notEnv Out Out'}
+		{CPO: perm-output PM Pi result/cond Out'}		    
+        true.
+
+- : conversion-helper/not/L
+     perm-output/cond _ notEnv/base perm-output/cond.
+
+- : conversion-helper/not/L (perm-output/exists ([v] CPO v)) 
+     (output/exists ([v] Out' v)) (notEnv/exists ([v] NV v))
+     (perm-output/exists ([v] CPO' v))
+     <- ({v:object} conversion-helper/not/L (CPO v) (Out' v) (NV v) (CPO' v)).
      
-		
-		
+%worlds (objvar) (conversion-helper/not/L _ _ _ _).
+%total C (conversion-helper/not/L C _ _ _).
+
+
+%theorem conversion-helper/not :
+        forall* {W} {PM} {Pi} {C} {COut} 
+        forall  {TYP: typing W Pi C COut}
+                {CPO: perm-output PM Pi result/cond COut}
+        exists  {COut'} {TYP: typing W Pi (not C) COut'}
+                {CPO: perm-output PM Pi result/cond COut'}
+        true.
+
+- : conversion-helper/not TYP CPO Out (tNot TYP NV) CPO'
+     <- conversion-helper/not/L CPO Out NV CPO'.
+
+%worlds () (conversion-helper/not _ _ _ _ _).
+%total  {} (conversion-helper/not _ _ _ _ _).
+
+
+%theorem conversion-helper/if :
+        forall* {W} {PM} {Pi} {E1} {E2} 
+                {COut} {EOut:output exprk} {CRslt:result condk} {ERslt} 
+        forall  {TYP: typing W Pi E1 EOut}
+                {TYP: typing W Pi E2 EOut}
+                {EPO: perm-output PM Pi ERslt EOut}
+                {CPO: perm-output PM Pi CRslt COut}
+        exists  {EOut'} {TYP: ifTyping W COut E1 E2 EOut'}
+                {T: transform EOut' EOut}
+        true.
+
+- : conversion-helper/if
+     TYP1 TYP2 P-O perm-output/cond _ 
+     (ifTyping/base TYP1 TYP2) transform/reflexive.
+
+- : conversion-helper/if
+     TYP1 TYP2 EPO (perm-output/exists ([v] CPO v))
+     (output/exists ([v] EOut v)) (ifTyping/exists ([v] IFT v)) 
+     (transform/trans
+	(transform/inside ([v] T v))
+	(transform/rem-unused))
+     <- ({v:object} conversion-helper/if
+	TYP1 TYP2 EPO (CPO v) (EOut v) (IFT v) (T v)).
+
+%worlds (objvar) (conversion-helper/if _ _ _ _ _ _ _).
+%total  (PO) (conversion-helper/if _ _ _ PO _ _ _).
+
+
+%theorem conversion-helper/while :
+	forall* {PM} {W} {Pi} {Cout} {E} 
+	forall  {TYP: typing W Pi E (output/exists ([v] (output/expr v Pi)))}
+                {CPO: perm-output PM Pi result/cond Cout}
+	exists  {Out1} {Out2} {Out3} {Out4}
+                {WT: whileTyping W Cout E Out1 Out2}
+                {D: discard-value Out1 Out4}
+		{T: transform Out4 (output/expr null Pi)}	    
+		{T: transform Out2 Out3}		    
+                {EPO: perm-output PM Pi (result/expr nulltp/null) Out3}
+        true.
+
+- : conversion-helper/while TYP perm-output/cond _ _ _ _
+     (whileTyping/base TYP)
+     (discard-value/exists ([v] (discard-value/base)))
+     (transform/rem-unused)
+     (transform/trans
+	(transform/implies
+	   (implies/trans3
+	      (implies/equiv (equiv/symmetric equiv/identity))
+	      (implies/equiv equiv/commute)
+	      (implies/combine 
+		 (implies/trans
+		    (implies/empty2true)
+		    (implies/nonlinear bimplies/objequal-reflexive))
+		 (implies/reflexive))))
+	(transform/gen-exists null))
+     (perm-output/expr nulltp2perm/null).
+
+- : conversion-helper/while TYP (perm-output/exists ([v] CPO v)) _ _ _ _
+     (whileTyping/exists ([v] WT v))
+     (discard-value/exists ([v] DV v))
+     (transform/trans (transform/inside ([v] T1 v)) (transform/rem-unused))
+     (transform/inside ([v] T2 v))
+     (perm-output/exists ([v] EPO v))
+     <- ({v:object} conversion-helper/while TYP (CPO v) _ _ _ _ 
+	   (WT v) (DV v) (T1 v) (T2 v) (EPO v)).
+	   
+%worlds (objvar) (conversion-helper/while _ _ _ _ _ _ _ _ _ _ _).
+%total  CPO (conversion-helper/while _ CPO _ _ _ _ _ _ _ _ _).    
+
+
+%theorem conversion-helper/subL :
+        forall* {NN1} {NN2}
+	        {PF1} {PF2} {PD1} {PD2}
+        forall  {SUB: nn`subtype NN1 NN2}
+		{EQ: nullpred`eq PD1 PD2}		   
+	        {NN2P: nn2perm NN1 ([p][r] PF1 p r)}
+		{NN2P: nn2perm NN2 ([p][r] PF2 p r)}
+	exists  {T: {r} implies (PF1 PD1 r) (PF2 PD2 r)}
+ 	true.
+		   
+- : conversion-helper/subL nn`subtype/ref nullpred`eq/
+     NN2P NN2P ([_] implies/reflexive).
+
+- : conversion-helper/subL nn`subtype/my nullpred`eq/
+     nn2perm/yes nn2perm/may 
+     ([_] (implies/trans
+       (implies/conj2combine) (implies/cond-intro-neg))).
+
+%worlds () (conversion-helper/subL _ _ _ _ _).
+%total SB (conversion-helper/subL SB _ _ _ _).
+
+
+%theorem conversion-helper/sub :
+	forall* {PM} {T} {T'} {PF} {PF'}
+	forall  {SUB: subtype T T'}
+	        {T2P: nulltp2perm PM T PF}
+		{T2P: nulltp2perm PM T' PF'}
+        exists  {T: transform
+		     (output/exists ([r] (output/expr r (PF r))))
+		     (output/exists ([r] (output/expr r (PF' r)))) }
+	true.			  
+
+- : conversion-helper/sub 
+     subtype/uu nulltp2perm/null nulltp2perm/null transform/reflexive.
+
+- : conversion-helper/sub
+     subtype/uo nulltp2perm/null (nulltp2perm/norm _ nn2perm/may)
+     (transform/inside [r]
+	(transform/implies
+	   (implies/trans
+	      (implies/equiv
+		 (equiv/symmetric equiv/identity))
+	      (implies/cond-intro)))).
+
+- : conversion-helper/sub
+     (subtype/oo NN1<=NN2)
+     (nulltp2perm/norm (PM-LP1) NN2P1) 
+     (nulltp2perm/norm (PM-LP2) NN2P2)
+     (transform/inside [r] (transform/implies (I r)))
+     <- predmap`lookup-deterministic PM-LP1 PM-LP2 predmap`eq/ nat`eq/ EQ
+     <- conversion-helper/subL NN1<=NN2 EQ NN2P1 NN2P2 I.
+			  
+%worlds () (conversion-helper/sub _ _ _ _).
+%total SB (conversion-helper/sub SB _ _ _).
+
+
+%theorem conversion-helper/call :
+        forall* {PM} {CM} {MM} {MT} {W} {PT} {Pi} {Pi'} {Q}
+                {ARslt} {AOut} {AOut'} {Rslt} {Out} {Out'}
+	forall  {CM2PM: clsmap2predmap CM PM}
+                {EQV: equiv Pi (sharedPerm , Pi')}
+                {MT2P: methtp2proctype* PM Q MT PT}
+	        {NCTYP: nullCallTyping CM MM ARslt MT Rslt}
+                {APO: perm-output PM Pi ARslt AOut}
+	exists  {T: transform AOut AOut'}
+		{CTYP: callTyping W AOut' PT Out}	
+                {T: transform Out Out'}
+                {PO: perm-output PM Pi Rslt Out'}
+	true.	   
+
+- : conversion-helper/call CM2PM EQV (methtp2proctype*/base T2P) 
+     nullCallTyping/call perm-output/args/0
+     (transform/args/0 
+	(implies/trans
+	   (implies/equiv EQV)
+	   (implies/combine
+	      (implies/equiv (equiv/symmetric equiv/identity))
+	      (implies/reflexive))))
+     (callTyping/call (envadd/exists ([_] envadd/expr)))
+     (transform/inside [_]
+	(transform/implies
+	   (implies/trans3
+	      (implies/equiv equiv/associate)
+	      (implies/combine
+		 (implies/trans
+		    (implies/equiv equiv/commute)
+		    (implies/equiv (equiv/symmetric EQV)))
+		 (implies/reflexive))
+	      (implies/equiv equiv/commute))))
+     (perm-output/expr T2P).
+
+- : conversion-helper/call CM2PM EQV (methtp2proctype*/arg ([v] MT2P v) T2P)
+     (nullCallTyping/arg ([v] NCTYP v)) (perm-output/args/+ APO) 
+     (transform/inside ([v] (transform/args/+ (TA v))))
+     (callTyping/exists ([v] (callTyping/arg v (CTYP v))))
+     (transform/inside ([v] (T v))) (perm-output/exists ([v] PO v))
+     <- ({v} conversion-helper/call
+	   CM2PM EQV (MT2P v) (NCTYP v) APO (TA v) (CTYP v) (T v) (PO v)).
+
+%worlds (objvar) (conversion-helper/call _ _ _ _ _ _ _ _ _).
+%total M2P (conversion-helper/call _ _ M2P _ _ _ _ _ _).
