@@ -53,10 +53,13 @@ methtp2proctype* : predmap -> permission -> methtp -> proctype -> type.
 %abbrev methtp2proctype = [PM][MT][PT] methtp2proctype* PM empty MT PT.
 
 
+%%% added Pi into the output
+%%% it turns out we need this to prove the totality of conversion
+
 methtp2proctype*/base 
    : methtp2proctype* PM Pi (methtp/base T) 
       (proctype/base (sharedPerm , Pi)
-	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
+	 (output/exists ([ret] (output/expr ret (sharedPerm , (Pi , (PF ret)))))))
       <- nulltp2perm PM T PF.
 
 methtp2proctype*/arg
@@ -123,10 +126,13 @@ oflist2perm/+
 
 perm-output : predmap -> permission -> result K -> output K -> type.
 
-perm-output/exists
-   : perm-output PM Pi Rslt (output/exists ([v] Out v))
+perm-output/exists* 
+   : {Out: gterm objectk -> output condk} 
+      perm-output PM Pi Rslt (output/exists ([v] Out v))
       <- ({v:object} perm-output PM Pi Rslt (Out v)).
-		      
+		   
+%abbrev perm-output/exists = [PO] perm-output/exists* _ PO.
+   
 perm-output/expr
    : perm-output PM Pi (result/expr T) 
       (output/exists ([v] (output/expr v ((PF v) , Pi))))
