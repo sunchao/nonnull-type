@@ -31,6 +31,7 @@ END_ELF
 
 
 %{%
+#define WORLDS objvar
 #define data methtp
 BEGIN_ELF
 %abbrev methtp`eq = eq.

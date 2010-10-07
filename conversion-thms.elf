@@ -156,7 +156,7 @@
 
 %%% tArgs/+
 - : nulltp-conversion-ok
-     CM-L CM-CM CM-MM CM2PM (nulltArgs/+ NTYP NTYPA) MM2W L2P _ 
+     CM-L CM-CM CM-MM CM2PM (nulltArgs/+ NTYPA NTYP) MM2W L2P _ 
      (tArgs1 
 	(tTrans2 
 	   (TYP)
@@ -172,9 +172,12 @@
 - : nulltp-conversion-ok
      CM-L CM-CM CM-MM CM2PM (nulltCallMeth NTYPC NTYPA MM-LP CM-FS) MM2W L2P _
      (tTrans2 (tCall W-LP TYPA TYPC) TO) PO
-     <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP _ W-LP MT2PT
-     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
-     <- conversion-helper/call/L2 CM2PM MM2W L2P NTYPA NTYPC MT2PT APO _ _ _ TA TYPC TO PO.
+     <- methmap2progtype-implies-methtp2proctype
+	MM2W CM-FS MM-LP _ W-LP MT2PT
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
+     <- conversion-helper/call
+	CM2PM MM2W L2P NTYPA NTYPC MT2PT APO _ _ _ TA TYPC TO PO.
 
 	
 %%% tSub

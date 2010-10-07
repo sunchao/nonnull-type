@@ -47,21 +47,17 @@ nulltp2perm/norm
       <- nn2perm NN PF
       <- predmap`lookup PM C PD.
 
-methtp2proctype* : predmap -> permission -> methtp -> proctype -> type.
+methtp2proctype : predmap -> methtp -> proctype -> type.
 
-%abbrev methtp2proctype = [PM][MT][PT] methtp2proctype* PM empty MT PT.
-
-
-methtp2proctype*/base 
-   : methtp2proctype* PM Pi (methtp/base T) 
-      (proctype/base (sharedPerm , Pi)
+methtp2proctype/base 
+   : methtp2proctype PM (methtp/base T) 
+      (proctype/base sharedPerm 
 	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
       <- nulltp2perm PM T PF.
 
-methtp2proctype*/arg
-   : methtp2proctype* PM Pi (methtp/arg MTF T) (proctype/arg PTF)
-      <- nulltp2perm PM T PF
-      <- ({o} methtp2proctype* PM (Pi , (PF o)) (MTF o) (PTF o)).
+methtp2proctype/arg
+   : methtp2proctype PM (methtp/arg MTF _) (proctype/arg PTF)
+      <- ({o} methtp2proctype PM (MTF o) (PTF o)).
 
 constp2proctype* : predmap -> fldmap -> permission -> 
 	(object -> methtp) -> (object -> proctype) -> type.
@@ -141,13 +137,10 @@ perm-output/args/0
 perm-output/args/+ 
    : perm-output PM Pi  (result/args/+ T Rslt)
       (output/exists ([v] (output/args/+ v Out)))
-      <- nulltp2perm PM T PF
-      <- ({o} perm-output PM ((PF o) , Pi) Rslt Out).
-
+      <- perm-output PM Pi Rslt Out.
 
 
 %%% basic theorems
-
 
 %%% theorems about totality
 
@@ -162,6 +155,20 @@ perm-output/args/+
 %worlds (objvar) (nn2perm-total _ _ _).
 %total  {} (nn2perm-total _ _ _).
 
+
+%theorem nn2perm-deterministic :
+        forall* {NN1} {NN2} {FF1} {FF2}
+        forall  {NN2P1: nn2perm NN1 FF1}
+                {NN2P2: nn2perm NN2 FF2}
+                {NNEQ: nn`eq NN1 NN2}
+        exists  {EQ: {p}{o} permission`eq (FF1 p o) (FF2 p o)}
+        true.
+
+- : nn2perm-deterministic nn2perm/yes nn2perm/yes _ ([_][_] permission`eq/).
+- : nn2perm-deterministic nn2perm/may nn2perm/may _ ([_][_] permission`eq/).
+
+%worlds (objvar) (nn2perm-deterministic _ _ _ _).
+%total  {} (nn2perm-deterministic _ _ _ _).
 
 %theorem clsmap-nulltp-implies-nulltp2perm :
 	forall* {CM} {PM} {T}
@@ -193,50 +200,83 @@ perm-output/args/+
 
 - : nulltp2perm-respects-eq T2P predmap`eq/ nulltp`eq/ ([_] permission`eq/) T2P.
 
-%worlds () (nulltp2perm-respects-eq _ _ _ _ _).
+%worlds (objvar) (nulltp2perm-respects-eq _ _ _ _ _).
 %total  {} (nulltp2perm-respects-eq _ _ _ _ _).
+
+
+%theorem nulltp2perm-deterministic/L :
+        forall* {PF1:nullpred -> object -> permission} {PF2} {PD1} {PD2} 
+        forall  {FEQ: {p}{o} permission`eq (PF1 p o) (PF2 p o)}
+                {PEQ: predicate`eq PD1 PD2}
+        exists  {PEQ: {o} permission`eq (PF1 PD1 o) (PF2 PD2 o)}
+        true.
+
+- : nulltp2perm-deterministic/L
+     ([_][_] permission`eq/) predicate`eq/ ([_] permission`eq/).
+
+%worlds (objvar) (nulltp2perm-deterministic/L _ _ _).
+%total  {} (nulltp2perm-deterministic/L _ _ _).
+
 
 %theorem nulltp2perm-deterministic :
         forall* {PM1} {PM2} {T1} {T2} {PF1} {PF2}
-        forall* {T2P1: nulltp2perm PM1 T1 PF1}
+        forall  {T2P1: nulltp2perm PM1 T1 PF1}
                 {T2P2: nulltp2perm PM2 T2 PF2}
                 {MEQ: predmap`eq PM1 PM2}
                 {TEQ: nulltp`eq T1 T2}
-
-                
-%theorem methtp2proctype-total/L :
-	forall* {CM} {PM} {MT}
-        forall  {Pi} {CM2PM: clsmap2predmap CM PM}
-                {CM-MT: clsmap-methtp CM MT}
-	exists  {PT} {MT2PT: methtp2proctype* PM Pi MT PT}  			  
+	exists  {PEQ: {o} permission`eq (PF1 o) (PF2 o)}
         true.
+			      
+- : nulltp2perm-deterministic
+     nulltp2perm/null nulltp2perm/null _ _ ([_] permission`eq/).
 
-- : methtp2proctype-total/L _
-     CM2PM (clsmap-methtp/base CM-T) _ (methtp2proctype*/base T2P)
-     <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T _ T2P.
+- : nulltp2perm-deterministic
+     (nulltp2perm/norm PM-L1 NN2P1)
+     (nulltp2perm/norm PM-L2 NN2P2)
+     predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- predmap`lookup-deterministic
+	PM-L1 PM-L2 predmap`eq/ nat`eq/ EQ
+     <- nn2perm-deterministic NN2P1 NN2P2 nn`eq/ FFEQ
+     <- nulltp2perm-deterministic/L
+	([p][o] FFEQ p o) EQ ([o] PFEQ o).
 
-- : methtp2proctype-total/L Pi CM2PM 
-     (clsmap-methtp/arg ([o] CM-MT o) CM-T) (proctype/arg PT)
-     (methtp2proctype*/arg MT2PT T2P)
-     <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T PF T2P
-     <- ({o} methtp2proctype-total/L (Pi , (PF o)) CM2PM (CM-MT o) (PT o) (MT2PT o)).
-
-%worlds (objvar) (methtp2proctype-total/L _ _ _ _ _).
-%total  CM-MT (methtp2proctype-total/L _ _ CM-MT _ _).
+%worlds (objvar) (nulltp2perm-deterministic _ _ _ _ _).
+%total  {} (nulltp2perm-deterministic _ _ _ _ _).
 
 
-%theorem methtp2proctype-total :
-	forall* {CM} {PM} {MT}
-        forall  {CM2PM: clsmap2predmap CM PM}
-                {CM-MT: clsmap-methtp CM MT}
-	exists  {PT} {MT2PT: methtp2proctype PM MT PT}  			  
-        true.
+% %theorem methtp2proctype-total/L :
+% 	forall* {CM} {PM} {MT}
+%         forall  {Pi} {CM2PM: clsmap2predmap CM PM}
+%                 {CM-MT: clsmap-methtp CM MT}
+% 	exists  {PT} {MT2PT: methtp2proctype PM Pi MT PT}  			  
+%         true.
 
-- : methtp2proctype-total CM2PM CM-MT PT MT2PT
-     <- methtp2proctype-total/L empty CM2PM CM-MT PT MT2PT.
+% - : methtp2proctype-total/L _
+%      CM2PM (clsmap-methtp/base CM-T) _ (methtp2proctype/base T2P)
+%      <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T _ T2P.
 
-%worlds () (methtp2proctype-total _ _ _ _).
-%total  {} (methtp2proctype-total _ _ _ _).
+% - : methtp2proctype-total/L Pi CM2PM 
+%      (clsmap-methtp/arg ([o] CM-MT o) CM-T) (proctype/arg PT)
+%      (methtp2proctype*/arg MT2PT T2P)
+%      <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T PF T2P
+%      <- ({o} methtp2proctype-total/L (Pi , (PF o)) CM2PM (CM-MT o) (PT o) (MT2PT o)).
+
+% %worlds (objvar) (methtp2proctype-total/L _ _ _ _ _).
+% %total  CM-MT (methtp2proctype-total/L _ _ CM-MT _ _).
+
+
+% %theorem methtp2proctype-total :
+% 	forall* {CM} {PM} {MT}
+%         forall  {CM2PM: clsmap2predmap CM PM}
+%                 {CM-MT: clsmap-methtp CM MT}
+% 	exists  {PT} {MT2PT: methtp2proctype PM MT PT}  		       
+%         true.
+
+% - : methtp2proctype-total CM2PM CM-MT PT MT2PT
+%      <- methtp2proctype-total/L empty CM2PM CM-MT PT MT2PT.
+
+% %worlds (objvar) (methtp2proctype-total _ _ _ _).
+% %total  {} (methtp2proctype-total _ _ _ _).
 
 
 %%% theorem about methmap2progtype
@@ -247,24 +287,24 @@ perm-output/args/+
         exists  {PT} {MT2PT: methtp2proctype PM MT PT}
         true.
 
-%worlds () (false-implies-methtp2proctype _ _ _).
+%worlds (objvar) (false-implies-methtp2proctype _ _ _).
 %total  {} (false-implies-methtp2proctype _ _ _).
 
 
-%theorem methtp2proctype-respects-eq* :
-        forall* {PM1} {PM2} {Pi1} {Pi2} {MT1} {MT2} {PT1} {PT2}
-        forall  {MT2PT: methtp2proctype* PM1 Pi1 MT1 PT1}
-                {MEQ: predmap`eq PM1 PM2}
-                {PEQ: permission`eq Pi1 Pi2}
-                {MTEQ: methtp`eq MT1 MT2}
-                {PTEQ: proctype`eq PT1 PT2}
-        exists  {MT2PT: methtp2proctype* PM2 Pi2 MT2 PT2}
-        true.
+% %theorem methtp2proctype-respects-eq* :
+%         forall* {PM1} {PM2} {Pi1} {Pi2} {MT1} {MT2} {PT1} {PT2}
+%         forall  {MT2PT: methtp2proctype PM1 Pi1 MT1 PT1}
+%                 {MEQ: predmap`eq PM1 PM2}
+%                 {PEQ: permission`eq Pi1 Pi2}
+%                 {MTEQ: methtp`eq MT1 MT2}
+%                 {PTEQ: proctype`eq PT1 PT2}
+%         exists  {MT2PT: methtp2proctype* PM2 Pi2 MT2 PT2}
+%         true.
 
-- : methtp2proctype-respects-eq* M2P predmap`eq/ permission`eq/ methtp`eq/ proctype`eq/ M2P.
+% - : methtp2proctype-respects-eq* M2P predmap`eq/ permission`eq/ methtp`eq/ proctype`eq/ M2P.
 
-%worlds () (methtp2proctype-respects-eq* _ _ _ _ _ _).
-%total  {} (methtp2proctype-respects-eq* _ _ _ _ _ _).
+% %worlds (objvar) (methtp2proctype-respects-eq* _ _ _ _ _ _).
+% %total  {} (methtp2proctype-respects-eq* _ _ _ _ _ _).
 
 
 %theorem methtp2proctype-respects-eq :
@@ -329,7 +369,7 @@ perm-output/args/+
      <- nat`ne-symmetric (nat`ne/< GT) NE
      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
 
-%worlds () (methmap2progtype-implies-methtp2proctype _ _ _ _ _ _).
+%worlds (objvar) (methmap2progtype-implies-methtp2proctype _ _ _ _ _ _).
 %total MM2W (methmap2progtype-implies-methtp2proctype MM2W _ _ _ _ _).
 
 
