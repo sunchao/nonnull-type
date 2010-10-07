@@ -34,7 +34,7 @@
      <- fldmap2conj-implies-predmap-leq F2C PMF<=PMout
      <- predmap`leq-transitive (PMin<=PMF (conj2pred CJ)) PMF<=PMout PMin<=PMout.
 
-%worlds (predvar) (fldmap2conj-implies-predmap-leq _ _).
+%worlds (predvar | objvar) (fldmap2conj-implies-predmap-leq _ _).
 %total  F2C (fldmap2conj-implies-predmap-leq F2C _).
 
 
@@ -60,7 +60,7 @@
      <- clsmap2predmap-implies-predmap-leq CM2PM PMF<=PMout
      <- predmap`leq-transitive (PMin<=PMF (conj2pred CJ)) PMF<=PMout PMin<=PMout.
 
-%worlds (predvar) (clsmap2predmap-implies-predmap-leq _ _).
+%worlds (predvar | objvar) (clsmap2predmap-implies-predmap-leq _ _).
 %total CM2PM (clsmap2predmap-implies-predmap-leq CM2PM _).
 
 
@@ -104,7 +104,7 @@
      <- predmap`lookup-respects-eq PM-L' predmap`eq/ nat`eq/ EQ PM-L.
 
 
-%worlds (predvar) (predmap-equal-fldmap2conj _ _ _ _).
+%worlds (predvar | objvar) (predmap-equal-fldmap2conj _ _ _ _).
 %total F2C (predmap-equal-fldmap2conj F2C _ _ _).
 
 
@@ -155,7 +155,7 @@
      <- clsmap`shift-preserves-lookup* LP SH P'' LP'
      <- clsmap2predmap-implies-predmap-lookup/L CM2PM LP' _ PM-LP.
 
-%worlds (predvar) (clsmap2predmap-implies-predmap-lookup/L _ _ _ _).
+%worlds (predvar | objvar) (clsmap2predmap-implies-predmap-lookup/L _ _ _ _).
 %total  CM2PM (clsmap2predmap-implies-predmap-lookup/L CM2PM _ _ _).
 
 
@@ -169,8 +169,9 @@
 - : clsmap2predmap-implies-predmap-lookup CM2PM CM-L PD PM-L
      <- clsmap2predmap-implies-predmap-lookup/L CM2PM CM-L PD PM-L.
 
-%worlds (predvar) (clsmap2predmap-implies-predmap-lookup _ _ _ _).
+%worlds (predvar | objvar) (clsmap2predmap-implies-predmap-lookup _ _ _ _).
 %total  {} (clsmap2predmap-implies-predmap-lookup _ _ _ _).
+
 
 
 %%% 2. consistency between clsmap and predmap. That is, if we have
@@ -209,7 +210,7 @@ clsmap-predmap*/+
      (clsmap-predmap-helper/ F2C1 CM-L) (clsmap-predmap-helper/ F2C2 CM-L)
      <- predmap-equal-fldmap2conj F2C1 L L F2C2.
 
-%worlds () (leq-preserves-clsmap-predmap-helper _ _ _).
+%worlds (objvar) (leq-preserves-clsmap-predmap-helper _ _ _).
 %total  {} (leq-preserves-clsmap-predmap-helper _ _ _).
 
 
@@ -227,7 +228,7 @@ clsmap-predmap*/+
      <- leq-preserves-clsmap-predmap CM-PMM L CM-PMM'
      <- leq-preserves-clsmap-predmap-helper L CPH CPH'.
 
-%worlds () (leq-preserves-clsmap-predmap _ _ _).
+%worlds (objvar) (leq-preserves-clsmap-predmap _ _ _).
 %total CP (leq-preserves-clsmap-predmap CP _ _).
 
 
@@ -262,7 +263,7 @@ clsmap-predmap*/+
      <- predmap`shift-preserves-update* PM-U PM-SH P'' PM-SH' PM-U'
      <- update-preserves-clsmap-predmap* CM-PM CPH-NEW PM-U' CM-PM'.
 
-%worlds () (update-preserves-clsmap-predmap* _ _ _ _).
+%worlds (objvar) (update-preserves-clsmap-predmap* _ _ _ _).
 %total  CP (update-preserves-clsmap-predmap* CP _ _ _).
 
 
@@ -300,7 +301,7 @@ clsmap-predmap*/+
      <- fldmap2conj-preserves-clsmap-predmap*/L
 	CM-PMF F2C PMout<=PM CM-PMout.
 
-%worlds () (fldmap2conj-preserves-clsmap-predmap*/L _ _ _ _).
+%worlds (objvar) (fldmap2conj-preserves-clsmap-predmap*/L _ _ _ _).
 %total  F2C (fldmap2conj-preserves-clsmap-predmap*/L _ F2C _ _).
 
 
@@ -323,7 +324,7 @@ clsmap-predmap*/+
 	(clsmap-predmap-helper/ F2C' CM-L) PMin-U CM-PM'
      <- fldmap2conj-preserves-clsmap-predmap*/L CM-PM' F2C PMout<=PM CM-PMout.
 
-%worlds () (fldmap2conj-preserves-clsmap-predmap* _ _ _ _ _ _).
+%worlds (objvar) (fldmap2conj-preserves-clsmap-predmap* _ _ _ _ _ _).
 %total  {} (fldmap2conj-preserves-clsmap-predmap* _ _ _ _ _ _).
 
 
@@ -374,7 +375,7 @@ clsmap-predmap*/+
      <- predmap`shift-preserves-lookup* PMM-L SH P'' PMM-L'
      <- clsmap-predmap-implies-fldmap2conj* CM-PMM PMM-L' CM-L F2C.
 
-%worlds () (clsmap-predmap-implies-fldmap2conj* _ _ _ _).
+%worlds (objvar) (clsmap-predmap-implies-fldmap2conj* _ _ _ _).
 %total  CP (clsmap-predmap-implies-fldmap2conj* CP _ _ _).
 
 
@@ -389,7 +390,7 @@ clsmap-predmap*/+
 - : clsmap-predmap-implies-fldmap2conj CP PL CL F2C
      <- clsmap-predmap-implies-fldmap2conj* CP PL CL F2C.
 
-%worlds () (clsmap-predmap-implies-fldmap2conj _ _ _ _).
+%worlds (objvar) (clsmap-predmap-implies-fldmap2conj _ _ _ _).
 %total  {} (clsmap-predmap-implies-fldmap2conj _ _ _ _).
 
 
@@ -448,7 +449,7 @@ clsmap-predmap*/+
      <- clsmap2predmap-preserves-clsmap-predmap*
 	CM'<=CM* PMout<=PM* CM-PMF CM2PM CM-PMout.
 	
-%worlds () (clsmap2predmap-preserves-clsmap-predmap* _ _ _ _ _).
+%worlds (objvar) (clsmap2predmap-preserves-clsmap-predmap* _ _ _ _ _).
 %total  CP (clsmap2predmap-preserves-clsmap-predmap* _ _ _ CP _).
 
 
@@ -467,7 +468,7 @@ clsmap-predmap*/+
      <- clsmap2predmap-preserves-clsmap-predmap*
 	CM<=CM* PMout<=PMout CM-PM' CM2PM CM-PMout.
 
-%worlds () (clsmap2predmap-preserves-clsmap-predmap _ _ _ _).
+%worlds (objvar) (clsmap2predmap-preserves-clsmap-predmap _ _ _ _).
 %total  {} (clsmap2predmap-preserves-clsmap-predmap _ _ _ _).
 
 
@@ -485,7 +486,7 @@ clsmap-predmap*/+
      <- clsmap2predmap-preserves-clsmap-predmap CM<=CM* CM-PMin CM2PM CM-PMout
      <- clsmap-predmap-implies-fldmap2conj CM-PMout PMout-L CM-L F2C.
      
-%worlds () (clsmap2predmap-implies-fldmap2conj* _ _ _ _ _ _).
+%worlds (objvar) (clsmap2predmap-implies-fldmap2conj* _ _ _ _ _ _).
 %total  {} (clsmap2predmap-implies-fldmap2conj* _ _ _ _ _ _).
 
 
@@ -502,7 +503,7 @@ clsmap-predmap*/+
      <- clsmap2predmap-implies-fldmap2conj* 
 	CM<=CM clsmap-predmap*/0 CM2PM PM-L CM-L F2C.
 
-%worlds () (clsmap2predmap-implies-fldmap2conj _ _ _ _).
+%worlds (objvar) (clsmap2predmap-implies-fldmap2conj _ _ _ _).
 %total  {} (clsmap2predmap-implies-fldmap2conj _ _ _ _).
 
 

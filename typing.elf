@@ -105,24 +105,30 @@ nulltAnd : nullTyping CM MM L C1 CRslt ->
 
 nulltArgs/0 : nullTyping CM MM L args/0 result/args/0.
 
-nulltArgs/+ : nullTyping CM MM L E (result/expr T) ->
-    nullTyping CM MM L A ARslt -> 
-    nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt).
+nulltArgs/+ 
+   : nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt)
+      <- nullTyping CM MM L E (result/expr T)
+      <- ({o} nullTyping CM MM (oflist/+ o T L) A ARslt).
 
-nulltCallConst : 
-    clsmap`lookup CM C FM ->
-    methmap`lookup MM C MT ->
-    nullTyping CM MM L A ARslt ->
-    nullCallTyping CM MM ARslt MT Rslt ->
-    fldmap`domain FM S ->				   
-    nullTyping CM MM L (call C (args/+ (alloc C S set/0) A)) Rslt.
-    
-nulltCallMeth : 
-    methmap`lookup MM M MT -> 			  
-    nullTyping CM MM L A ARslt ->
-    nullCallTyping CM MM ARslt MT Rslt ->
-    nullTyping CM MM L (call M A) Rslt.
+%  : nullTyping CM MM L E (result/expr T) ->
+%     nullTyping CM MM L A ARslt -> 
+%     nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt).
 
+nulltCallConst
+   : nullTyping CM MM L (call C (args/+ (alloc C S set/0) A)) Rslt
+      <- clsmap`lookup CM C FM
+      <- methmap`lookup MM C MT
+      <- nullTyping CM MM L A ARslt
+      <- nullCallTyping CM MM ARslt MT Rslt
+      <- fldmap`domain FM S.
+
+nulltCallMeth
+   : nullTyping CM MM L (call M A) Rslt
+      <- clsmap`fresh CM M
+      <- methmap`lookup MM M MT
+      <- nullTyping CM MM L A ARslt 
+      <- nullCallTyping CM MM ARslt MT Rslt.
+		 
 
 %%%%% Method Typing
 

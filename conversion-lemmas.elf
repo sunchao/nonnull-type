@@ -542,102 +542,79 @@
                 {L2P: oflist2perm PM L Pi}
                 {NTYP: nullTyping CM MM L E (result/expr T)}
                 {T2P: nulltp2perm PM T ([o] PF o)}
-        exists  {I: {o:object} implies Pi (Pi , (PF o))}
+        exists  {I: {o} implies Pi (Pi , (PF o))}
         true.
 
 %worlds (objvar) (typing-oflist-equiv _ _ _ _ _).
 %trustme %total {} (typing-oflist-equiv _ _ _ _ _).
 
 
-%%% we need more information about Pi, that is, given
-%%% nulltp2perm PM T PF, we have Pi => (Pi, (PF o))
+%%% We need more information about Pi, that is, given
+%%% nulltp2perm PM T PF, we have Pi => (Pi, (PF o)).
+%%% This is why the theorem typing-oflist-imply came from.
+%%% Also, it is best if we could get the equiv Pi (Pi1, Pi2)
+%%% relation. However, I found no way to do this, so I have
+%%% to put implication in both direction instead.
 
-%theorem conversion-helper/call :
+
+%theorem conversion-helper/call/L :
         forall* {PM} {CM} {MM} {MT} {PT} 
-                {Pi} {Pi1} {Pi2} {Pi3} {W}
-                {ARslt} {Rslt} {AOut} {L} {A}
+                {Pi} {Pi1} {Pi2} {W} {T}
+                {ARslt} {AOut} {L} {A}
 	forall  {CM2PM: clsmap2predmap CM PM}
 		{E2P: env2perm PM CM MM W}		   
 		{L2P: oflist2perm PM L Pi}   
-                {I1: implies Pi (Pi1 , Pi2)}
-                {I2: implies (Pi1 , Pi2) Pi}
-                {EQV: equiv Pi2 (sharedPerm , Pi3)}
+                {I1: implies Pi (Pi1 , Pi)}
+                {I2: implies (Pi1 , Pi) Pi}
+                {EQV: equiv Pi (sharedPerm , Pi2)}
 		{NTYPA: nullTyping CM MM L A ARslt}
-	        {NCTYP: nullCallTyping CM MM ARslt MT Rslt}
+	        {NCTYP: nullCallTyping CM MM ARslt MT (result/expr T)}
 	        {MT2PT: methtp2proctype* PM Pi1 MT PT}
                 {APO: perm-output PM Pi ARslt AOut}
-	exists  {AOut'} {Out} {Out'}
-                {T: transform AOut AOut'}
-		{CTYP: callTyping W AOut' PT Out}	
-                {T: transform Out Out'}
-                {PO: perm-output PM Pi Rslt Out'}
+	exists  {AOut'} {Out} {PF}
+                {TA: transform AOut AOut'}
+% 		{T2P: nulltp2perm PM T ([o] PF o)}		     
+		{CTYP: callTyping W AOut' PT Out}
+                {TE: transform Out 
+			(output/exists [r] (output/expr r (Pi , (PF r))))}
 	true.	   
 
-- : {PM:predmap} {CM:clsmap} {MM:methmap} {MT:gterm objectk -> methtp}
-     {PT:gterm objectk -> proctype} {Pi:permission}
-     {Pi1:permission}
-     {PF:gterm objectk -> permission}
-     {Pi2:permission} {Pi3:permission} {W:progtype}
-     {ARslt:result argsk} {AOut:output argsk} {L:oflist} {A:term argsk}
-     {CM2PM:clsmap2predmap* CM predmap`map/0 CM PM} {E2P:env2perm PM CM MM W}
-     {L2P:oflist2perm PM L Pi}
-     {I3:{x:gterm objectk} implies Pi (combine Pi (PF x))}
-     {I1:implies Pi (combine Pi1 Pi2)} {I4:{x:gterm objectk} implies (PF x) empty}
-     {I2:implies (combine Pi1 Pi2) Pi}
-     {EQV:equiv Pi2 (sharedPerm) Pi3)}
-     {NTYPA:nullTyping CM MM L A ARslt}
-     {NCTYP:{x:gterm objectk}
-	    nullCallTyping CM MM ARslt (MT x) (result/expr nulltp/null)}
-     {MT2PT:{x:gterm objectk} methtp2proctype* PM (combine Pi1 (PF x)) (MT x) (PT x)}
-     {APO:perm-output PM Pi ARslt AOut} {AOut':gterm objectk -> output argsk}
-     {Out:gterm objectk -> output exprk}
-     {T:{o:gterm objectk} transform AOut (AOut' o)}
-     {CTYP:{o:gterm objectk} callTyping W (AOut' o) (PT o) (Out o)}
-     {T2:{o:gterm objectk}
-	    transform (Out o)
-	    (output/exists
-	       ([v:gterm objectk]
-		  output/expr v
-		  (combine
-		     (unitperm (nonlinear (objequal v (object/ z)))) Pi)))}
-   |- {o:gterm objectk}
-         conversion-helper/call CM2PM E2P L2P
-            (implies/trans
-                (implies/trans (I3 o)
-                    (implies/combine I1 (implies/equiv equiv/reflexive)))
-                (implies/trans
-                    (implies/trans
-                        (implies/equiv (equiv/symmetric equiv/associate))
-                        (implies/combine (implies/equiv equiv/reflexive)
-                            (implies/equiv equiv/commute)))
-                    (implies/equiv equiv/associate)))
-            (implies/trans
-                (implies/combine
-                    (implies/trans
-                        (implies/combine (implies/equiv equiv/reflexive) (I4 o))
-                        (implies/equiv equiv/identity))
-                    (implies/equiv equiv/reflexive))
-                I2)
-            EQV NTYPA (NCTYP o) (MT2PT o) APO (AOut' o) (Out o)
-            (output/exists
-                ([v:gterm objectk]
-                    output/expr v
-                       (combine (unitperm (nonlinear (objequal v (object/ z))))
-                           Pi)))
-            (T o) (CTYP o) (T2 o) (perm-output/expr nulltp2perm/null),
+- : conversion-helper/call/L _ _ _ I _ EQV
+     nulltArgs/0 nullCallTyping/call (methtp2proctype*/base T2P)
+     perm-output/args/0 _ _ _
+     (transform/args/0
+	(implies/trans4
+	   (I)
+	   (implies/combine 
+	      (implies/reflexive)
+	      (implies/equiv EQV))
+	   (implies/equiv equiv/associate)
+	   (implies/combine
+	      (implies/equiv equiv/commute)
+	      (implies/reflexive))))
+     (callTyping/call (envadd/exists ([_] (envadd/expr))))
+     (transform/inside [r]
+	(transform/implies
+	   (implies/trans
+	      (implies/equiv equiv/associate)
+	      (implies/combine
+		 (implies/trans
+		    (implies/equiv equiv/commute)
+		    (implies/equiv (equiv/symmetric EQV)))
+		 (implies/reflexive))))).
 
-- : conversion-helper/call CM2PM E2P L2P I1 I2 EQV
-     (nulltArgs/+ NTYPE NTYPA) (nullCallTyping/arg ([o] NCTYP o))
+- : conversion-helper/call/L CM2PM E2P L2P I1 I2 EQV
+     (nulltArgs/+ NTYPE NTYPA)
+     (nullCallTyping/arg ([o] NCTYP o))
      (methtp2proctype*/arg ([o] MT2PT o) T2P)
-     (perm-output/args/+ PO) 
-     %{=>}% _ _ _ 
-     (transform/inside ([o] (transform/args/+ TA)))
+     (perm-output/args/+ APO) _ _ _
+     (transform/inside ([o] (transform/args/+ (TA o)))) 
+%      (FT2P2 (object/ nat`z))
      (callTyping/exists ([o] (callTyping/arg o (CTYP o))))
-     (transform/trans (transform/inside ([o] (T o))) (transform/rem-unused)) 
-     EPO
+     (transform/trans (transform/inside [r] (TE r)) (transform/rem-unused))
      <- typing-oflist-equiv CM2PM L2P NTYPE T2P ([o] I3 o)
      <- clspred-implies-empty T2P ([o] I4 o)
-     <- ({o:object} conversion-helper/call
+     <- ({o} conversion-helper/call/L
 	   CM2PM E2P L2P 
 	   (implies/trans5
 	      (I3 o) 
@@ -657,41 +634,159 @@
 		    (implies/equiv equiv/identity))
 		 (implies/reflexive))
 	      (I2))
-	   EQV NTYPA (NCTYP o) (MT2PT o) PO AOut' Out Out'
-	   TA (CTYP o) (T o) EPO).
+	   EQV NTYPA (NCTYP o) (MT2PT o) APO 
+	   _ _ _ (TA o) (CTYP o) (TE o)).
 
-- : conversion-helper/call _ _ _ I1 I2 EQV
-     nulltArgs/0 nullCallTyping/call (methtp2proctype*/base T2P)
-     perm-output/args/0 _ _ _
-     (transform/args/0
-	(implies/trans4
-	   (I1)
-	   (implies/combine 
-	      (implies/reflexive)
-	      (implies/equiv EQV))
-	   (implies/equiv equiv/associate)
-	   (implies/combine
-	      (implies/equiv equiv/commute)
-	      (implies/reflexive))))
-     (callTyping/call (envadd/exists ([_] (envadd/expr))))
-     (transform/inside [_]
+%worlds (objvar) (conversion-helper/call/L  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total  NCTYP (conversion-helper/call/L _ _ _ _ _ _ NCTYP _ _ _ _ _ _ _ _ _).
+
+
+%%% Main theorem: in this case, Pi1 is empty
+
+%theorem conversion-helper/call :
+        forall* {PM} {CM} {MM} {MT} {PT} {Pi} {W}
+                {ARslt} {T} {AOut} {L} {A} 
+	forall  {PF} {CM2PM: clsmap2predmap CM PM}
+		{E2P: env2perm PM CM MM W}		   
+		{L2P: oflist2perm PM L Pi}   
+		{NTYPA: nullTyping CM MM L A ARslt}
+	        {NCTYP: nullCallTyping CM MM ARslt MT (result/expr T)}
+		{T2P: nulltp2perm PM T PF}		   
+	        {MT2PT: methtp2proctype PM MT PT}
+                {APO: perm-output PM Pi ARslt AOut}
+	exists  {AOut'} {Out} {Out'}
+                {TA: transform AOut AOut'}
+		{CTYP: callTyping W AOut' PT Out}
+		{TE: transform Out Out'}
+                {PO: perm-output PM Pi (result/expr T) Out'}		   
+	true.	   
+     
+- : {PM:predmap} {CM:clsmap} {MM:methmap} {MT:methtp} {PT:proctype}
+     {Pi:permission} {Pi2:permission} {W:progtype}
+     {T:nulltp} {ARslt:result argsk} {AOut:output argsk} {L:oflist}
+     {A:term argsk} {CM2PM:clsmap2predmap* CM map/0 CM PM}
+     {E2P:env2perm PM CM MM W} {L2P:oflist2perm PM L Pi}
+     {EQV:equiv Pi (combine (sharedPerm) Pi2)}
+     {NTYPA:nullTyping CM MM L A ARslt}
+     {NCTYP:nullCallTyping CM MM ARslt MT (result/expr T)}
+     {MT2PT:methtp2proctype* PM empty MT PT} {APO:perm-output PM Pi ARslt AOut}
+     {AOut':output argsk} {PF:gterm objectk -> permission}
+     {TA:transform AOut AOut'}
+     {CTYP:callTyping W AOut' PT
+	     (output/exists
+		([v:gterm objectk]
+		   output/expr v
+		   (combine Pi2
+		      (combine
+			 (unitperm
+			    (basic (object/ z) (s z) (object/ z)))
+			 (PF v)))))}
+     {T2P:nulltp2perm PM T ([x:gterm objectk] PF x)}
+     conversion-helper/call
+     PF CM2PM E2P L2P NTYPA NCTYP T2P MT2PT APO AOut'
+     (output/exists
+	([v:gterm objectk]
+	   output/expr v
+	   (combine Pi2 (combine (sharedPerm) (PF v)))))
+     (output/exists
+	([v:gterm objectk] output/expr v (combine (PF v) Pi)))
+     TA CTYP
+     (transform/inside [ret]
 	(transform/implies
-	   (implies/trans5
+	   (implies/trans3
 	      (implies/equiv equiv/associate)
 	      (implies/combine
 		 (implies/trans
 		    (implies/equiv equiv/commute)
 		    (implies/equiv (equiv/symmetric EQV)))
 		 (implies/reflexive))
+	      (implies/equiv equiv/commute))))
+     (perm-output/expr T2P)
+     <- writeshared-can-move-front L2P Pi2 EQV
+     <- conversion-helper/call/L CM2PM E2P L2P 
+	(implies/equiv
+	   (equiv/transitive
+	      (equiv/symmetric equiv/identity)
+	      (equiv/commute)))
+	(implies/equiv
+	   (equiv/transitive
+	      (equiv/commute)
+	      (equiv/identity)))
+	EQV NTYPA NCTYP MT2PT APO AOut'
+	(output/exists
+	   ([v:gterm objectk]
+	      output/expr v
+	      (combine Pi2 (combine (sharedPerm) (PF v))))) 
+	TA CTYP.
+
+%worlds () (conversion-helper/call _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total  {} (conversion-helper/call _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+
+      conversion-helper/call/L CM2PM E2P L2P
+         (implies/equiv
+             (equiv/transitive (equiv/symmetric equiv/identity) equiv/commute))
+         (implies/equiv (equiv/transitive equiv/commute equiv/identity)) EQV
+         NTYPA NCTYP MT2PT APO AOut'
+         (output/exists
+             ([v:gterm objectk]
+                 output/expr v
+                    (combine Pi2
+                        (combine
+                            (sharedPerm)
+                            (PF v)))))
+         TA CTYP
+         -> writeshared-can-move-front L2P Pi2 EQV
+         -> conversion-helper/call ([x:gterm objectk] PF x) CM2PM E2P L2P NTYPA
+               NCTYP T2P MT2PT APO AOut'
+               (output/exists
+                   ([v:gterm objectk]
+                       output/expr v
+                          (combine Pi2
+                              (combine
+                                  (unitperm
+                                      (basic (object/ z) (s z) (object/ z)))
+                                  (PF v)))))
+               (output/exists
+                   ([v:gterm objectk] output/expr v (combine (PF v) Pi))) TA
+               CTYP
+               (transform/inside
+                   ([ret:gterm objectk]
+                       transform/implies
+                          (implies/trans
+                              (implies/trans (implies/equiv equiv/associate)
+                                  (implies/combine
+                                      (implies/trans
+                                          (implies/equiv equiv/commute)
+                                          (implies/equiv (equiv/symmetric EQV)))
+                                      (implies/equiv equiv/reflexive)))
+                              (implies/equiv equiv/commute))))
+               (perm-output/expr T2P).
+
+
+- : conversion-helper/call
+     PF CM2PM E2P L2P NTYPA NCTYP T2P MT2PT APO _ _ _
+     TA CTYP
+     (transform/inside [ret]
+	(transform/implies
+	   (implies/trans3
 	      (implies/equiv equiv/associate)
 	      (implies/combine
 		 (implies/trans
 		    (implies/equiv equiv/commute)
-		    (I2))
+		    (implies/equiv (equiv/symmetric EQV)))
 		 (implies/reflexive))
 	      (implies/equiv equiv/commute))))
-     (perm-output/expr T2P).
-
-
-%worlds (objvar) (conversion-helper/call _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
-%total  NCTYP (conversion-helper/call _ _ _ _ _ _ _ NCTYP _ _ _ _ _ _ _ _ _).
+     (perm-output/expr T2P)
+     <- writeshared-can-move-front L2P Pi2 EQV
+     <- conversion-helper/call/L 
+	CM2PM E2P L2P 
+	(implies/equiv
+	   (equiv/transitive
+	      (equiv/symmetric equiv/identity)
+	      (equiv/commute)))
+	(implies/equiv
+	   (equiv/transitive
+	      (equiv/commute)
+	      (equiv/identity)))
+	EQV NTYPA NCTYP MT2PT APO _ _ TA CTYP.

@@ -224,7 +224,7 @@ clsmap2predmap*/out
 
 - : fldmap2conj-respects-eq F2C clsmap`eq/ predmap`eq/ fldmap`eq/ F2C.
 
-%worlds () (fldmap2conj-respects-eq _ _ _ _ _).
+%worlds (objvar) (fldmap2conj-respects-eq _ _ _ _ _).
 %total {} (fldmap2conj-respects-eq _ _ _ _ _).
 
 

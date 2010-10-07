@@ -92,40 +92,6 @@
 %total MM-LP (lookup-implies-clsmap-methtp _ MM-LP _).
 
 
-% %theorem lookup-implies-clsmap-constp/L :
-% 	forall* {CMM} {CM} {FM} {C} {CNT}
-% 	forall  {CM-CM: clsmap-clsmap CMM CM}
-% 		{CM-LP: clsmap`lookup CM C (clstp/ CNT FM)}
-% 	exists  {CM-CT: clsmap-methtp CMM CNT}
-% 	true.
-				 
-
-% - : lookup-implies-clsmap-constp/L (clsmap-clsmap/+ _ _ _ CM-CT) 
-%      (clsmap`lookup/= N1=N2) CM-CT.
-
-% - : lookup-implies-clsmap-constp/L (clsmap-clsmap/+ CM-CM _ _ _)
-%      (clsmap`lookup/> CM-LP _) CM-CT
-%      <- lookup-implies-clsmap-constp/L CM-CM CM-LP CM-CT.
-
-% %worlds (objvar) (lookup-implies-clsmap-constp/L _ _ _).
-% %total CM-LP (lookup-implies-clsmap-constp/L _ CM-LP _).
-
-
-% %theorem lookup-implies-clsmap-constp :
-% 	forall* {CM} {FM} {C} {CNT}
-% 	forall  {CM-CM: clsmap-clsmap CM CM}
-% 		{CM-LP: clsmap`lookup CM C (clstp/ CNT FM)}
-% 	exists  {CM-CT: clsmap-methtp CM CNT}
-% 	true.
-
-% - : lookup-implies-clsmap-constp CM-CM CM-LP CM-CT
-%      <- lookup-implies-clsmap-constp/L CM-CM CM-LP CM-CT.
-
-% %worlds (objvar) (lookup-implies-clsmap-constp _ _ _).
-% %total  {} (lookup-implies-clsmap-constp _ _ _).
-
-
-
 %theorem oflist-lookup-implies-clsmap-nulltp :
         forall* {CM} {L} {O} {T}
         forall  {CM-L: clsmap-oflist CM L} 
@@ -181,6 +147,19 @@
 %total   CM-MT   (clsmap-methtp-implies-clsmap-nulltp CM-MT _ _).
 
 
+%theorem clsmap-nulltp-implies-lookup : 
+	forall* {CM} {C} {NN}
+	forall  {CM-T: clsmap-nulltp CM (nulltp/norm C NN)}
+	exists  {FM} {L: clsmap`lookup CM C FM}		 
+	true.
+
+- : clsmap-nulltp-implies-lookup (clsmap-nulltp/norm IN) FM L
+     <- clsmap`in-implies-lookup IN FM L.
+
+%worlds () (clsmap-nulltp-implies-lookup _ _ _).
+%total  {} (clsmap-nulltp-implies-lookup _ _ _).
+
+				 
 %theorem typing-implies-clsmap-nulltp :
         forall* {CM} {MM} {L} {E} {T} 
         forall  {CM-CM: clsmap-clsmap CM CM}
@@ -214,7 +193,6 @@
 	   CM-CM CM-MM (clsmap-oflist/+ CM-T1 CM-L) (TYPF o) 
 	   (clsmap-nulltp/norm (clsmap`domain?/in (CM-LP)))).
 
-
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L 
      (nulltIf TYP _ _) CM-T
      <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
@@ -229,15 +207,14 @@
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltSub TYP CM-T' _) CM-T'.
 
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
-     (nulltCallMeth MM-LP _ CTYP) CM-T
+     (nulltCallMeth CTYP _ MM-LP _) CM-T
      <- lookup-implies-clsmap-methtp CM-MM MM-LP CM-MT
      <- clsmap-methtp-implies-clsmap-nulltp CM-MT CTYP CM-T.
 
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
-     (nulltCallConst CM-LP MM-LP TYP CTYP _) CM-T
+     (nulltCallConst _ CTYP TYP MM-LP CM-LP) CM-T
      <- lookup-implies-clsmap-methtp CM-MM MM-LP CM-MT
      <- clsmap-methtp-implies-clsmap-nulltp CM-MT CTYP CM-T.
-
 
 %worlds (objvar) (typing-implies-clsmap-nulltp _ _ _ _ _).
 %total  TYP (typing-implies-clsmap-nulltp _ _ _ TYP _).
