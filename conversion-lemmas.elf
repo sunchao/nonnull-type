@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id$
+%%%%% $Id: conversion-lemmas.elf,v 1.6 2010/10/12 20:44:17 csun Exp csun $
 %%%%% Created at July 19, 2010
 
 
@@ -650,4 +650,45 @@
 %worlds (objvar) (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 %total  {} (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 
+
+%theorem typing-alloc :
+        forall* {PM} {CM} {MM} {FM} {W} {C} {S} {PF} 
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+                {CM-LP: clsmap`lookup CM C FM}
+                {FM-DM: fldmap`domain FM S}
+                {FM2P: fldmap2perm FM ([o] (PF o))}
+        exists  {TYP: typing W empty (alloc C S set/0) 
+		       (output/exists ([r] (output/expr r (PF r))))}
+        true.
+
+- : typing-alloc _ _ _ fldmap`domain/0 fldmap2perm/0
+     (tTrans2
+	(tAlloc ([o] allocFields/0)) 
+	(transform/inside [r]
+	   (transform/implies 
+	      (implies/equiv equiv/identity)))).
+
+- : typing-alloc CM2PM MM2W CM-LP (fldmap`domain/+ FM-DM) (fldmap2perm/+ FM-SH FM2P)
+
+%worlds () (typing-alloc _ _ _ _ _ _).
+%total  FD (typing-alloc _ _ _ FD _ _).
+
+
+%theorem conversion-helper/callconst/L :
+        forall* {PM} {CM} {MM} {W} 
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+                {L2P: oflist2perm PM L Pi}
+                {T2P: nulltp2perm PM T PF}
+		{I: implies Pi (Pi1 , Pi)}
+                {EQV: equiv Pi (sharedPerm , Pi2)}
+                {NTYPA: nullTyping CM MM L A ARslt}
+                {NTYPC: nullCallTyping CM MM ARslt (methtp/arg CTF T) Rslt}
+        exists  {AOut'}
+                {CT2PT: constp2proctype* PM Pi1 FM CTF PTF}
+                {CTYP: callTyping W AOut' (proctype/arg PTF) Out}
+                {T: transform Out
+		     (output/exists ([r] (output/expr r ((PF r) , Pi))))}
+        true.
 

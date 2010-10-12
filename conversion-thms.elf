@@ -1,9 +1,29 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% Chao Sun
-%%%%% July 15, 2010
+%%%%% $Id$
 
 
+%theorem methtpmatch-implies-proctypematch :
+        forall* {CM} {MM} {PM} {MT} {W} {L} {F} {M}
+        forall  {CM-L: clsmap-oflist CM L}
+                {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+                {MM-LP: methmap`lookup MM M MT}
+                {MC: methtpmatch CM MM L F MT}
+        exists  {PT} {W-LP: progtype`lookup W M PT}
+                {PC: proctypematch W F PT}
+        true.                
+                
+- : methtypematch-implies-proctypematch
+     CM-L CM-CM CM-MM CM2PM MM2W MM-LP (methtpmatch/base NTYP) _ W-LP (proctypematch/base TYP)
+     <- oflist2perm-total _ L2P
+     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYP MM2W L2P _ TYP PO
+
+     
+
+                
 %theorem nulltp-conversion-ok :
 	forall* {PM} {CM} {MM} {L} {W} {Pi}
                 {K: kind} {E: term K} {Rslt: result K}
@@ -176,10 +196,20 @@
 	MM2W CM-FS MM-LP _ W-LP MT2PT
      <- nulltp-conversion-ok
 	CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
-     <- conversion-helper/call
+     <- conversion-helper/callmeth
 	CM2PM MM2W L2P NTYPA NTYPC MT2PT APO _ _ _ TA TYPC TO PO.
 
-	
+%%% tCallConst
+- : nulltp-conversion-ok
+     CM-L CM-CM CM-MM CM2PM (nulltCallConst FM-D NTYPC NTYPA MM-LP CM-LP) MM2W L2P _
+     _ _
+     <- methmap2progtype-implies-constp2proctype
+	MM2P CM-LP MM-LP _ W-LP CT2PT
+     <- nulltp-conversion-ok
+	CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
+     <- conversion-helper/callconst
+	CM2PM MM2W L2P NTYPA NTYPC CT2PT APO _ _ _ TA TYPC TO PO. 
+
 %%% tSub
 
 %%% Conditionals

@@ -1,6 +1,6 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id$
+%%%%% $Id: conversion.elf,v 1.7 2010/10/12 20:47:14 csun Exp csun $
 
 %abbrev null-perm = [o] unitperm 
 	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
@@ -26,14 +26,16 @@ nn2perm/may : nn2perm nn/may
 
 fldmap2perm : fldmap -> (object -> permission) -> type.
 
-fldmap2perm/0 
-   : fldmap2perm fldmap`map/0 ([t] (unitperm (basic t all null))).
+% fldmap2perm/0 
+%    : fldmap2perm fldmap`map/0 ([o] (unitperm (basic o all null))).
+
+fldmap2perm/0 : fldmap2perm fldmap`map/0 ([o] empty).
 
 fldmap2perm/+ 
    : fldmap2perm (fldmap`map/+ F _ FM) 
-      ([t] (Pi t) , (unitperm (basic t F null)))
+      ([o] (unitperm (basic o F null)) , (Pi o))
       <- fldmap`shift F FM FM'
-      <- fldmap2perm FM Pi.
+      <- fldmap2perm FM' Pi.
 
 
 nulltp2perm : predmap -> nulltp -> (object -> permission) -> type.
@@ -48,6 +50,8 @@ nulltp2perm/norm
 
 methtp2proctype* : predmap -> permission -> methtp -> proctype -> type.
 
+%abbrev methtp2proctype = [PM][MT][PT] methtp2proctype* PM empty MT PT.
+
 methtp2proctype*/base 
    : methtp2proctype* PM Pi (methtp/base T) 
       (proctype/base (sharedPerm , Pi)
@@ -59,42 +63,26 @@ methtp2proctype*/arg
       <- nulltp2perm PM T PF
       <- ({o} methtp2proctype* PM ((PF o) , Pi) (MTF o) (PTF o)).
 
-%abbrev methtp2proctype = [PM][MT][PT] methtp2proctype* PM empty MT PT.
 
+constp2proctype* : predmap -> fldmap -> permission -> 
+	(object -> methtp) -> (object -> proctype) -> type.
 
-% constp2proctype* : predmap -> fldmap -> permission -> 
-% 	(object -> methtp) -> (object -> proctype) -> type.
-
-
-% %abbrev constp2proctype 
-%    = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
+%abbrev constp2proctype 
+   = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
 	
-% constp2proctype*/base 
-%    : constp2proctype* PM FM Pi ([t] methtp/base T)
-%       ([t] proctype/base (sharedPerm , Pi , (F t))
-% 	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
-%       <- fldmap2perm FM F
-%       <- nulltp2perm PM T PF.
-
-% constp2proctype*/arg 
-%    : constp2proctype* 
-%       PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
-%       <- nulltp2perm PM T PF
-%       <- ({o} constp2proctype* PM FM (Pi , (PF o)) ([t] CTF t o) ([t] PTF t o)).
-
-constp2proctype : predmap -> fldmap -> (object -> methtp) -> (object -> proctype) -> type.
-
-constp2proctype/base 
-   : constp2proctype PM FM ([t] methtp/base T)
-      ([t] proctype/base (sharedPerm , (F t))
+constp2proctype*/base 
+   : constp2proctype* PM FM Pi ([t] methtp/base T)
+      ([t] proctype/base (sharedPerm , (Pi , (F t)))
 	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
       <- fldmap2perm FM F
       <- nulltp2perm PM T PF.
 
-constp2proctype/arg 
-   : constp2proctype
-      PM FM ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
-      <- ({o} constp2proctype PM FM ([t] CTF t o) ([t] PTF t o)).
+constp2proctype*/arg 
+   : constp2proctype* 
+      PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
+      <- nulltp2perm PM T PF
+      <- ({o} constp2proctype* PM FM (Pi , (PF o)) ([t] CTF t o) ([t] PTF t o)).
+
 
 %%% convert a methmap to a progtype 
 

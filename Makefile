@@ -9,7 +9,7 @@ HAND = block.elf nonnull.elf nulltp.elf subtype.elf oflist.elf typing.elf consis
 			 conversion-lemmas.elf conversion-thms.elf 
 CSRC = clsmap.cpp fldmap.cpp methmap.cpp predmap.cpp
 
-RELEASE = shared-fj.tgz
+RELEASE = nonnull-type.tgz
 
 CLEANFILES = ${GEN} ${SUBDIRS} ${RELEASE}
 SRC = ${META} ${CSRC} ${HELP} ${HAND} 
