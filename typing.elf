@@ -1,7 +1,7 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% Chao Sun
-%%%%% February, 2010
+%%%%% $Id$
+%%%%% Created at February, 2010
 
 
 %%% Result for Type Inference
@@ -108,11 +108,7 @@ nulltArgs/0 : nullTyping CM MM L args/0 result/args/0.
 nulltArgs/+ 
    : nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt)
       <- nullTyping CM MM L E (result/expr T)
-      <- nullTyping CM MM L A ARslt.
-
-%  : nullTyping CM MM L E (result/expr T) ->
-%     nullTyping CM MM L A ARslt -> 
-%     nullTyping CM MM L (args/+ E A) (result/args/+ T ARslt).
+      <- ({o} nullTyping CM MM (oflist/+ o T L) A ARslt).
 
 nulltCallConst
    : nullTyping CM MM L (call C (args/+ (alloc C S set/0) A)) Rslt
