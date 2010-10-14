@@ -1,6 +1,6 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id: conversion.elf,v 1.8 2010/10/12 23:32:47 csun Exp $
+%%%%% $Id: conversion.elf,v 1.9 2010/10/14 02:13:39 csun Exp csun $
 
 %abbrev null-perm = [o] unitperm 
 	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
@@ -69,8 +69,9 @@ constp2proctype : predmap -> fldmap ->
 
 constp2proctype/ 
    : constp2proctype PM FM ([t] MTF t) ([t] PTF t)
-      <- fldmap2perm FM ([t] FPF t)
-      <- ({t} methtp2proctype* PM (FPF t) (MTF t) (PTF t)).
+      <- fldmap`domain FM S
+      <- ({t} allocFields t S (OS t))
+      <- ({t} methtp2proctype* PM (OS t) (MTF t) (PTF t)).
 
 
 % %abbrev constp2proctype 
