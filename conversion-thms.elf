@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id$
+%%%%% $Id: conversion-thms.elf,v 1.5 2010/10/12 23:33:19 csun Exp csun $
 
 
 %theorem methtpmatch-implies-proctypematch :
@@ -16,14 +16,7 @@
                 {PC: proctypematch W F PT}
         true.                
                 
-- : methtypematch-implies-proctypematch
-     CM-L CM-CM CM-MM CM2PM MM2W MM-LP (methtpmatch/base NTYP) _ W-LP (proctypematch/base TYP)
-     <- oflist2perm-total _ L2P
-     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYP MM2W L2P _ TYP PO
 
-     
-
-                
 %theorem nulltp-conversion-ok :
 	forall* {PM} {CM} {MM} {L} {W} {Pi}
                 {K: kind} {E: term K} {Rslt: result K}
@@ -192,23 +185,33 @@
 - : nulltp-conversion-ok
      CM-L CM-CM CM-MM CM2PM (nulltCallMeth NTYPC NTYPA MM-LP CM-FS) MM2W L2P _
      (tTrans2 (tCall W-LP TYPA TYPC) TO) PO
-     <- methmap2progtype-implies-methtp2proctype
-	MM2W CM-FS MM-LP _ W-LP MT2PT
-     <- nulltp-conversion-ok
-	CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
+     <- lookup-implies-clsmap-methtp CM-MM MM-LP CM-MT
+     <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP _ W-LP _
+     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
      <- conversion-helper/callmeth
-	CM2PM MM2W L2P NTYPA NTYPC MT2PT APO _ _ _ TA TYPC TO PO.
+	CM2PM MM2W CM-MT L2P NTYPA NTYPC APO _ _ _ _ _ TA TYPC TO PO.
+
+
+%%% typing W Pi A AOut -> typing W Pi (args/+ (alloc C S set/0) A) AOut'
+%%% ({t} nullCallTyping CM MM ARslt (MTF t) Rslt)
+%%% perm-output PM Pi ARslt AOut
+%%% 
+%%% ({t} callTyping W (AOut'' t) (PTF t) (Out t)) ->
+%%% callTyping W (output/exists ([t] (output/args/+ t (AOut'' t)))) 
+%%%     (progtype/arg PTF) (output/exists ([t] (output/expr t (Out t))))
+%%%
+%%% perm-output PM Pi Rslt Out
 
 %%% tCallConst
 - : nulltp-conversion-ok
-     CM-L CM-CM CM-MM CM2PM (nulltCallConst FM-D NTYPC NTYPA MM-LP CM-LP) MM2W L2P _
+     CM-L CM-CM CM-MM CM2PM (nulltCallConst FM-D ([o] NTYPC o) NTYPA MM-LP CM-LP) MM2W L2P _
      _ _
-     <- methmap2progtype-implies-constp2proctype
-	MM2P CM-LP MM-LP _ W-LP CT2PT
-     <- nulltp-conversion-ok
-	CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
-     <- conversion-helper/callconst
-	CM2PM MM2W L2P NTYPA NTYPC CT2PT APO _ _ _ TA TYPC TO PO. 
+     <- lookup-implies-clsmap-methtp CM-MM MM-LP (clsmap-methtp/arg ([o] CM-MTF o) CM-T)
+     <- methmap2progtype-implies-constp2proctype MM2P CM-LP MM-LP _ W-LP _
+     <- nulltp-conversion-ok CM-L CM-CM CM-MM CM2PM NTYPA MM2W L2P _ TYPA APO
+     <- ({o} conversion-helper/callmeth CM2PM MM2W (CM-MTF o) L2P NTYPA
+	   (NTYPC o) APO _ _ _ _ (CT2PT o) (TA o) (TYPC o) (TO o) (PO o))
+     <- 
 
 %%% tSub
 

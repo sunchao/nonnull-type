@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id$
+%%%%% $Id: typing.elf,v 1.7 2010/10/12 20:48:05 csun Exp $
 %%%%% Created at February, 2010
 
 
@@ -113,9 +113,9 @@ nulltArgs/+
 nulltCallConst
    : nullTyping CM MM L (call C (args/+ (alloc C S set/0) A)) Rslt
       <- clsmap`lookup CM C FM
-      <- methmap`lookup MM C MT
+      <- methmap`lookup MM C (methtp/arg MTF T)
       <- nullTyping CM MM L A ARslt
-      <- nullCallTyping CM MM ARslt MT Rslt
+      <- ({t} nullCallTyping CM MM ARslt (MTF t) Rslt)
       <- fldmap`domain FM S.
 
 nulltCallMeth
@@ -167,10 +167,9 @@ constypematch/base : constyping C S CM MM L E ->
     constypematch C S CM MM L ([t] func/0 (E t)) ([t] methtp/base T).
 
 constypematch/args 
-   : constypematch
-      C S CM MM L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
-      <- ({o} constypematch
-	    C S CM MM (oflist/+ o T L)  ([t] (F t o)) ([t] (CTF t o))).
+   : constypematch C S CM MM L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
+      <- ({o} constypematch C S CM MM (oflist/+ o T L)  ([t] (F t o)) ([t] (CTF t o))).
+	    
 
 
 %%%%% Program Typing
