@@ -184,7 +184,6 @@
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
      (nulltWrite FM-LP CM-LP TYP _) CM-T
      <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
-     
 
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltLet TYPF TYP) 
      (clsmap-nulltp/norm (clsmap`domain?/in CM-LP))
@@ -211,10 +210,10 @@
      <- lookup-implies-clsmap-methtp CM-MM MM-LP CM-MT
      <- clsmap-methtp-implies-clsmap-nulltp CM-MT CTYP CM-T.
 
-% - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
-%      (nulltCallConst _ ([o] CTYP o) TYP MM-LP CM-LP) CM-T
-%      <- lookup-implies-clsmap-methtp CM-MM MM-LP CM-MT
-%      <- ({o} clsmap-methtp-implies-clsmap-nulltp CM-MT (CTYP o) CM-T).
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
+     (nulltCallConst _ ([o] CTYP o) TYP MM-LP CM-LP) CM-T
+     <- lookup-implies-clsmap-methtp CM-MM MM-LP (clsmap-methtp/arg ([t] CM-MTF t) _)
+     <- ({o} clsmap-methtp-implies-clsmap-nulltp (CM-MTF o) (CTYP o) CM-T).
 
 %worlds (objvar) (typing-implies-clsmap-nulltp _ _ _ _ _).
-%trustme %total  TYP (typing-implies-clsmap-nulltp _ _ _ TYP _).
+%total  TYP (typing-implies-clsmap-nulltp _ _ _ TYP _).

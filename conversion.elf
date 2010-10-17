@@ -1,6 +1,6 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id: conversion.elf,v 1.9 2010/10/14 02:13:39 csun Exp csun $
+%%%%% $Id: conversion.elf,v 1.10 2010/10/14 22:25:34 csun Exp csun $
 
 %abbrev null-perm = [o] unitperm 
 	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
@@ -11,10 +11,8 @@ nn2perm/yes : nn2perm nn/yes
 	([p][o] 
 	   (unitperm 
 	      (nonlinear 
-		 (conj
-		    (neg (objequal o null))
-		    (conj
-		       (nestInShared o) 
+		 (conj (neg (objequal o null))
+		    (conj (nestInShared o) 
 		       (predcall p (predargs/1 o))))))).
 
 nn2perm/may : nn2perm nn/may
@@ -309,7 +307,7 @@ perm-output/args/+
         exists  {PTF} {CT2PT: constp2proctype PM FM CTF PTF}
         true.
 				
-%worlds () (false-implies-constp2proctype _ _ _).
+%worlds (objvar) (false-implies-constp2proctype _ _ _).
 %total  {} (false-implies-constp2proctype _ _ _).
   
 
@@ -357,7 +355,7 @@ perm-output/args/+
 
 - : constp2proctype-respects-eq C2P predmap`eq/ fldmap`eq/ ([_] methtp`eq/) proctype`eq/ C2P.
      
-%worlds () (constp2proctype-respects-eq _ _ _ _ _ _).
+%worlds (objvar) (constp2proctype-respects-eq _ _ _ _ _ _).
 %total  {} (constp2proctype-respects-eq _ _ _ _ _ _).
 
 
@@ -462,5 +460,5 @@ perm-output/args/+
      <- nat`ne-symmetric (nat`ne/< GT) NE
      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
 
-%worlds () (methmap2progtype-implies-constp2proctype _ _ _ _ _ _).
+%worlds (objvar) (methmap2progtype-implies-constp2proctype _ _ _ _ _ _).
 %total MM2W (methmap2progtype-implies-constp2proctype MM2W _ _ _ _ _).

@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.7 2010/10/12 20:48:05 csun Exp $
+%%%%% $Id: typing.elf,v 1.8 2010/10/14 02:13:35 csun Exp csun $
 %%%%% Created at February, 2010
 
 
@@ -46,17 +46,17 @@ nulltLit : nullTyping _ _ L (lit O) (result/expr T)
 nulltNull : nullTyping _ _ _ (lit null) (result/expr nulltp/null).
 
 nulltRead 
-   : nullTyping CM MM L (read E F) (result/expr T)
+   : nullTyping CM MM L (read E F) (result/expr (nulltp/norm N NN))
       <- nullTyping CM MM L E (result/expr (nulltp/norm C nn/yes))
       <- clsmap`lookup CM C FM
-      <- fldmap`lookup FM F T.
+      <- fldmap`lookup FM F (nulltp/norm N NN).
 
 nulltWrite
-   : nullTyping CM MM L (write E1 F E2) (result/expr T)
+   : nullTyping CM MM L (write E1 F E2) (result/expr (nulltp/norm N NN))
       <- nullTyping CM MM L E1 (result/expr (nulltp/norm C nn/yes))
-      <- nullTyping CM MM L E2 (result/expr T)
+      <- nullTyping CM MM L E2 (result/expr (nulltp/norm N NN))
       <- clsmap`lookup CM C FM
-      <- fldmap`lookup FM F T.
+      <- fldmap`lookup FM F (nulltp/norm N NN).
 
 nulltLet 
    : nullTyping CM MM L (let E F) Rslt
@@ -81,7 +81,7 @@ nulltIfNotNull
       <- nullTyping CM MM (oflist/+ O (nulltp/norm C nn/yes) L) E1 Rslt.
 
 nulltSub : nullTyping CM MM L E (result/expr T')
-    <- subtype T T'
+    <- sub T T'
     <- clsmap-nulltp CM T'
     <- nullTyping CM MM L E (result/expr T).
 

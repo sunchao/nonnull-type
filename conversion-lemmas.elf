@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id: conversion-lemmas.elf,v 1.9 2010/10/14 22:25:38 csun Exp csun $
+%%%%% $Id: conversion-lemmas.elf,v 1.10 2010/10/15 05:54:47 csun Exp csun $
 %%%%% Created at July 19, 2010
 
 
@@ -83,20 +83,21 @@
 
 
 %theorem clspred-remove-cond :
-        forall* {NN} {PF}
-        forall  {PD} {O} {NP: nn2perm NN PF}
-        exists  {I: implies
+        forall* {NN} {PF} {PM} {C} {PD}
+        forall  {PM-LP: predmap`lookup PM C PD}
+                {NN2P: nn2perm NN PF}
+        exists  {I: {o} implies
 		     (unitperm
-			(nonlinear (neg (objequal O null))) , (PF PD O))
+			(nonlinear (neg (objequal o null))) , (PF PD o))
 		     (unitperm
 			(nonlinear
-			   (conj (neg (objequal O null))
-			      (conj (nestInShared O) 
-				 (predcall PD (predargs/1 O)))))) }
+			   (conj (neg (objequal o null))
+			      (conj (nestInShared o) 
+				 (predcall PD (predargs/1 o)))))) }
 	true.		
 
-- : clspred-remove-cond _ _ nn2perm/yes	
-     (implies/trans3
+- : clspred-remove-cond _ nn2perm/yes	
+     ([o] implies/trans3
 	(implies/combine
 	   (implies/trans
 	      (implies/nonlinear bimplies/tt)
@@ -105,8 +106,8 @@
 	(implies/equiv equiv/commute)
 	(implies/equiv equiv/identity)).
 
-- : clspred-remove-cond _ _ nn2perm/may
-     (implies/trans4
+- : clspred-remove-cond _ nn2perm/may
+     ([o] implies/trans4
 	(implies/combine
 	   (implies/duplicate)
 	   (implies/cond-neg))
@@ -114,8 +115,8 @@
 	(implies/combine implies/reflexive implies/cond-elim)
 	(implies/combine2conj)).
 
-%worlds (objvar) (clspred-remove-cond _ _ _ _).
-%total  {} (clspred-remove-cond _ _ _ _).
+%worlds (objvar) (clspred-remove-cond _ _ _).
+%total {} (clspred-remove-cond _ _ _).
 
 
 %theorem clspred-implies-empty :
@@ -307,7 +308,6 @@
 %total  {} (get-precise-exists _ _ _ _ _).
 
 
-
 %%% conversion helper theorems
 
 %theorem clsmap-nulltp-implies-nulltp2perm :
@@ -329,6 +329,54 @@
 %worlds (objvar) (clsmap-nulltp-implies-nulltp2perm _ _ _ _).
 %total  CM-T (clsmap-nulltp-implies-nulltp2perm _ CM-T _ _).
      
+
+%theorem conversion-helper/write :
+        forall* {W} {Pi} {E1} {E2} {PF1} {PF2}
+        forall  {TYP1: typing W Pi E1 (output/exists [r1] (output/expr r1 ((PF1 r1) , Pi)))}
+                {TYP2: typing W Pi E2 (output/exists [r2] (output/expr r2 ((PF2 r2) , Pi)))}
+        exists  {TYP3: {r1} typing W ((PF1 r1) , Pi) E2
+			(output/exists [r2] (output/expr r2 ((PF1 r1) , ((PF2 r2) , Pi))))}
+        true.
+
+- : conversion-helper/write TYP1 TYP2 TYP3
+     <- ({r1} typing-frame* TYP2 (envadd/exists [r2] (envadd/expr)) (TYP3 r1)).
+
+%worlds (objvar) (conversion-helper/write _ _ _).
+%total  {} (conversion-helper/write _ _ _).
+
+
+%theorem conversion-helper/write2/L :
+	forall* {PF1} {PD1} {PD2} {PF2:nullpred -> object -> permission} 
+        forall  {IMP: {o} implies (PF1 PD1 o) (combine (PF1 PD1 o) (PF1 PD1 o))}
+		{EQ: {p}{o} permission`eq (PF1 p o) (PF2 p o)} 		       
+                {EQ: predicate`eq PD1 PD2}
+        exists  {IMP: {o} implies (PF1 PD1 o) (combine (PF2 PD2 o) (PF1 PD1 o))}
+        true.
+
+- : conversion-helper/write2/L I ([_][_] permission`eq/) predicate`eq/ I.
+
+%worlds (objvar) (conversion-helper/write2/L _ _ _ _).
+%total  {} (conversion-helper/write2/L _ _ _ _).
+
+
+%theorem conversion-helper/write2 :
+        forall* {PF:nullpred -> object -> permission} {PD} {Pi} {C} {NN} {PM} 
+        forall  {NN2P: nn2perm NN ([p][o] PF p o)}
+                {PM-FLP: predmap`lookup PM C PD}
+                {T2P: nulltp2perm PM (nulltp/norm C NN) Pi}
+        exists  {IMP: {o} implies (Pi o) (combine (PF PD o) (Pi o))}
+        true.
+
+- : conversion-helper/write2
+     NN2P2 PM-FLP2 (nulltp2perm/norm PM-FLP1 NN2P1) IMP2
+     <- predmap`lookup-deterministic PM-FLP1 PM-FLP2 predmap`eq/ nat`eq/ PDEQ
+     <- nn2perm-deterministic NN2P1 NN2P2 nn`eq/ NNEQ
+     <- clspred-can-be-duplicated (nulltp2perm/norm PM-FLP1 NN2P1) IMP1
+     <- conversion-helper/write2/L IMP1 NNEQ PDEQ IMP2.
+
+%worlds (objvar) (conversion-helper/write2 _ _ _ _).
+%total  {} (conversion-helper/write2 _ _ _ _).
+
 
 %theorem conversion-helper/and/L :
         forall* {PM} {G} {Pi} {Rslt} {Out1}
@@ -496,41 +544,36 @@
      ([_] (implies/trans
        (implies/conj2combine) (implies/cond-intro-neg))).
 
-%worlds () (conversion-helper/subL _ _ _ _ _).
+%worlds (objvar) (conversion-helper/subL _ _ _ _ _).
 %total SB (conversion-helper/subL SB _ _ _ _).
 
 
 %theorem conversion-helper/sub :
 	forall* {PM} {T} {T'} {PF} {PF'}
-	forall  {SUB: subtype T T'}
+	forall  {SUB: sub T T'}
 	        {T2P: nulltp2perm PM T PF}
-		{T2P: nulltp2perm PM T' PF'}
-        exists  {T: transform
-		     (output/exists ([r] (output/expr r (PF r))))
-		     (output/exists ([r] (output/expr r (PF' r)))) }
+                {T2P: nulltp2perm PM T' PF'}
+        exists  {T: {o} implies (PF o) (PF' o)}
 	true.			  
 
 - : conversion-helper/sub 
-     subtype/uu nulltp2perm/null nulltp2perm/null transform/reflexive.
+     sub/uu nulltp2perm/null nulltp2perm/null ([_] implies/reflexive).
 
 - : conversion-helper/sub
-     subtype/uo nulltp2perm/null (nulltp2perm/norm _ nn2perm/may)
-     (transform/inside [r]
-	(transform/implies
-	   (implies/trans
-	      (implies/equiv
-		 (equiv/symmetric equiv/identity))
-	      (implies/cond-intro)))).
+     sub/uo nulltp2perm/null (nulltp2perm/norm _ nn2perm/may)
+     ([_] implies/trans
+	(implies/equiv
+	   (equiv/symmetric equiv/identity))
+	(implies/cond-intro)).
 
 - : conversion-helper/sub
-     (subtype/oo NN1<=NN2)
+     (sub/oo NN1<=NN2)
      (nulltp2perm/norm (PM-LP1) NN2P1) 
-     (nulltp2perm/norm (PM-LP2) NN2P2)
-     (transform/inside [r] (transform/implies (I r)))
+     (nulltp2perm/norm (PM-LP2) NN2P2) I
      <- predmap`lookup-deterministic PM-LP1 PM-LP2 predmap`eq/ nat`eq/ EQ
-     <- conversion-helper/subL NN1<=NN2 EQ NN2P1 NN2P2 I.
+     <- conversion-helper/subL NN1<=NN2 EQ NN2P1 NN2P2 ([o] I o).
 			  
-%worlds () (conversion-helper/sub _ _ _ _).
+%worlds (objvar) (conversion-helper/sub _ _ _ _).
 %total SB (conversion-helper/sub SB _ _ _).
 
 
@@ -638,8 +681,41 @@
 	      (equiv/commute)))
 	EQV NTYPC APO _ MT2PT _ TA _ CTYP TE.
      
-%worlds () (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%worlds (objvar) (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 %total  {} (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+
+%theorem fldmap-domain-implies-allocfields/L :
+        forall* {FM} {S}
+        forall  {N} {SZ: fldmap`size FM N} {FM-DM: fldmap`domain FM S}
+        exists  {OS} {AF: {t} allocFields t S (OS t)}
+        true.
+
+- : fldmap-domain-implies-allocfields/L z _ fldmap`domain/0 _ ([_] allocFields/0).
+     
+- : fldmap-domain-implies-allocfields/L (s N) (fldmap`size/+ SZ)
+     (fldmap`domain/+ FM-DM) _ ([t] allocFields/+ SH (AF t))
+     <- fldmap`shift-total FM-SH
+     <- fldmap`shift-preserves-size SZ FM-SH SZ'
+     <- fldmap`shift-preserves-domain FM-DM FM-SH _ SH FM-DM'
+     <- fldmap-domain-implies-allocfields/L N SZ' FM-DM' _ ([t] AF t).
+	
+%worlds (objvar) (fldmap-domain-implies-allocfields/L _ _ _ _ _).
+%total (N) (fldmap-domain-implies-allocfields/L N _ _ _ _).
+
+
+%theorem fldmap-domain-implies-allocfields :
+        forall* {FM} {S}
+        forall  {DM: fldmap`domain FM S}
+        exists  {OS} {AF: {t} allocFields t S (OS t)}
+        true.
+
+- : fldmap-domain-implies-allocfields DM OS ([t] AF t)
+     <- fldmap`size-total SZ
+     <- fldmap-domain-implies-allocfields/L _ SZ DM OS ([t] AF t).
+
+%worlds (objvar) (fldmap-domain-implies-allocfields _ _ _).
+%total  {} (fldmap-domain-implies-allocfields _ _ _).
 
 
 %theorem envadd-alloc-fields :
@@ -748,4 +824,3 @@
 %worlds (objvar) (conversion-helper/callconst/L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 %total A (conversion-helper/callconst/L _ _ _ _ _ _ _ A _ _ _ _ _ _ _).
 
-     
