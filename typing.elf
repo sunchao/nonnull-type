@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.8 2010/10/14 02:13:35 csun Exp csun $
+%%%%% $Id: typing.elf,v 1.9 2010/10/17 23:29:01 csun Exp csun $
 %%%%% Created at February, 2010
 
 
@@ -64,10 +64,10 @@ nulltLet
       <- ({x} nullTyping CM MM (oflist/+ x T L) (F x) Rslt).
 
 nulltIf 
-   : nullTyping CM MM L (if C E1 E2) Rslt
-      <- nullTyping CM MM L C _
-      <- nullTyping CM MM L E1 Rslt
-      <- nullTyping CM MM L E2 Rslt.
+   : nullTyping CM MM L (if C E1 E2) (result/expr T)
+      <- nullTyping CM MM L C result/cond
+      <- nullTyping CM MM L E1 (result/expr T)
+      <- nullTyping CM MM L E2 (result/expr T).
 
 nulltWhile 
    : nullTyping CM MM L (while C E) (result/expr nulltp/null)

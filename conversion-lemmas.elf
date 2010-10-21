@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id: conversion-lemmas.elf,v 1.10 2010/10/15 05:54:47 csun Exp csun $
+%%%%% $Id: conversion-lemmas.elf,v 1.11 2010/10/17 23:29:06 csun Exp csun $
 %%%%% Created at July 19, 2010
 
 
@@ -308,6 +308,41 @@
 %total  {} (get-precise-exists _ _ _ _ _).
 
 
+
+%theorem output/expr-format :
+        forall* {PM} {Out} {PF} {Pi} {T} 
+        forall  {PO: perm-output PM Pi (result/expr T) Out}
+                {T2P: nulltp2perm PM T ([o] PF o)}
+        exists  {E: environment`eq Out (output/exists [o] (output/expr o ((PF o) , Pi)))}
+                {PO: perm-output PM Pi (result/expr T)
+		      (output/exists [o] (output/expr o ((PF o) , Pi)))}
+        true.
+
+- : output/expr-format (perm-output/expr T2P1) T2P2 EEQ (perm-output/expr T2P2)
+     <- nulltp2perm-deterministic T2P1 T2P2 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- ({o} combine-preserves-eq (PFEQ o) permission`eq/ (PEQ o))
+     <- ({o} output/expr-preserves-eq object`eq/ (PEQ o) (EQ o))
+     <- output/exists-preserves-eq EQ EEQ.
+
+%worlds (objvar) (output/expr-format _ _ _ _).
+%total  {} (output/expr-format _ _ _ _).
+
+
+% %theorem output/expr-format-converse :
+%         forall* {PM} {Out} {PF} {Pi} {T} 
+%         forall  {PO: perm-output PM Pi (result/expr T) Out}
+%         exists  {E: environment`eq Out (output/exists [o] (output/expr o ((PF o) , Pi)))}
+%                 {PO: perm-output PM Pi (result/expr T)
+% 		      (output/exists [o] (output/expr o ((PF o) , Pi)))}
+%                 {T2P: nulltp2perm PM T ([o] PF o)}
+%         true.
+
+% - : output/expr-format-converse (perm-output/expr T2P) environment`eq/ (perm-output/expr T2P) T2P.
+
+% %worlds (objvar) (output/expr-format-converse _ _ _ _).
+% %total  {} (output/expr-format-converse _ _ _ _).
+
+
 %%% conversion helper theorems
 
 %theorem clsmap-nulltp-implies-nulltp2perm :
@@ -377,6 +412,33 @@
 %worlds (objvar) (conversion-helper/write2 _ _ _ _).
 %total  {} (conversion-helper/write2 _ _ _ _).
 
+
+%theorem conversion-helper/let/L :
+        forall* {PM} {T} {PF} 
+        forall  {T2PF: {x:object} nulltp2perm PM T ([v] PF v)}
+        exists  {T2P: nulltp2perm PM T ([v] PF v)}
+        true.
+
+- : conversion-helper/let/L ([_] nulltp2perm/null) nulltp2perm/null.
+
+%worlds (objvar) (conversion-helper/let/L _ _).
+%trustme %total  T2PF (conversion-helper/let/L T2PF _).
+
+
+%theorem conversion-helper/let :
+        forall* {PM} {PF:object -> permission} {Pi} {PF1} {PF2} {PF3} {Rslt}
+        forall  {PO: {x} perm-output PM ((PF x) , Pi) Rslt 
+		      (output/exists [o] (output/expr o ((PF1 o) , ((PF2 x o) , (PF3 o)))))}
+        exists  {PO: perm-output PM Pi Rslt
+		      (output/exists [o] (output/expr o ((PF1 o) , (PF3 o))))}
+        true.
+
+- : conversion-helper/let ([x] perm-output/expr (T2PF x)) (perm-output/expr T2P)
+     <- conversion-helper/let/L T2PF T2P.
+
+
+%worlds (objvar) (conversion-helper/let _ _).
+%total  {} (conversion-helper/let _ _).
 
 %theorem conversion-helper/and/L :
         forall* {PM} {G} {Pi} {Rslt} {Out1}
@@ -578,24 +640,23 @@
 
 
 %theorem conversion-helper/callmeth/L :
-        forall* {PM} {CM} {MM} {MT} {Pi} {Pi1} {Pi2}
+        forall* {PM} {CM} {MM} {MT} {PT} {Pi} {Pi1} {Pi2}
                 {ARslt} {AOut} {W} {T} {PF}
 	forall  {CM2PM: clsmap2predmap CM PM}
-		{MM2W: methmap2progtype PM CM MM W}		   
-		{T2P: nulltp2perm PM T PF}			 
+		{MM2W: methmap2progtype PM CM MM W} 
+                {T2P: nulltp2perm PM T PF}		   
                 {I: implies Pi (Pi1 , Pi)}
 		{EQV: equiv Pi (sharedPerm , Pi2)}			 
 	        {NTYPC: nullCallTyping CM MM ARslt MT (result/expr T)}
                 {APO: perm-output PM Pi ARslt AOut}
-	exists  {PT} {MT2PT: methtp2proctype* PM Pi1 MT PT}
-                {AOut'} {TA: transform AOut AOut'}
+                {MT2PT: methtp2proctype* PM Pi1 MT PT}
+	exists  {AOut'} {TA: transform AOut AOut'}
 		{Out} {CTYP: callTyping W AOut' PT Out}	
 		{TE: transform Out (output/exists ([r] (output/expr r ((PF r) , Pi))))}
 	true.	   
-
 - : conversion-helper/callmeth/L
-     CM2PM MM2W T2P I EQV nullCallTyping/call perm-output/args/0
-     %{=>}% _ (methtp2proctype*/base T2P) 
+     CM2PM MM2W T2P1 I EQV nullCallTyping/call perm-output/args/0
+     (methtp2proctype*/base T2P2) %{=>}% 
      _ (transform/args/0
 	(implies/trans4
 	   (I)
@@ -603,20 +664,25 @@
 	   (implies/equiv equiv/roll2)
 	   (implies/equiv equiv/associate)))
      _ (callTyping/call (envadd/exists ([_] envadd/expr))) 
-     (transform/inside [_]
+     (transform/inside [o]
 	(transform/implies
-	   (implies/trans4
+	   (implies/trans5
 	      (implies/equiv equiv/roll2)
 	      (implies/equiv equiv/associate)
 	      (implies/combine
 		 (implies/equiv (equiv/symmetric EQV))
 		 (implies/reflexive))
-	      (implies/equiv equiv/commute)))).
+	      (implies/equiv equiv/commute)
+	      (implies/combine
+		 (implies/equiv (EQV2 o)) 
+		 (implies/reflexive)))))
+     <- nulltp2perm-deterministic T2P2 T2P1 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- ({o} permission`eq-implies-equiv (PFEQ o) (EQV2 o)).
 
 - : conversion-helper/callmeth/L
-     CM2PM MM2W T2POut I EQV (nullCallTyping/arg ([o] NTYPC o))
-     (perm-output/args/+ ([o] APO o) T2P) %{=>}% 
-     _ (methtp2proctype*/arg ([o] MT2PT o) T2P) 
+     CM2PM MM2W T2Pout I EQV (nullCallTyping/arg ([o] NTYPC o))
+     (perm-output/args/+ ([o] APO o) T2P1) 
+     (methtp2proctype*/arg ([o] MT2PT2 o) T2P2) %{=>}% 
      _ (transform/inside ([o] (transform/args/+ (TA o))))
      _ (callTyping/exists ([o] (callTyping/arg o (CTYP o))))
      (transform/trans
@@ -632,10 +698,14 @@
 			  (implies/equiv equiv/commute)
 			  (implies/equiv equiv/identity)))))))
 	(transform/rem-unused))
-     <- clspred-can-be-duplicated T2P ([o] DP o)
-     <- clspred-implies-empty T2P ([o] EP o)
+     <- clspred-can-be-duplicated T2P1 ([o] DP o)
+     <- clspred-implies-empty T2P1 ([o] EP o)
+     <- nulltp2perm-deterministic T2P2 T2P1 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- ({o} combine-preserves-eq (PFEQ o) permission`eq/ (PEQ o))
+     <- ({o} methtp2proctype-respects-eq*
+	   (MT2PT2 o) predmap`eq/ (PEQ o) methtp`eq/ proctype`eq/ (MT2PT1 o))
      <- ({o} conversion-helper/callmeth/L
-	   CM2PM MM2W T2POut
+	   CM2PM MM2W T2Pout
 	   (implies/trans4
 	      (implies/combine (DP o) I)
 	      (implies/equiv (equiv/symmetric equiv/associate))
@@ -644,33 +714,105 @@
 	   (equiv/transitive 
 	      (equiv/combine equiv/reflexive EQV)
 	      (equiv/roll2)) %{ Now the new 'Pi2' is ((PF o) , Pi2) }%
-	   (NTYPC o) (APO o) _ (MT2PT o) _ (TA o) _ (CTYP o) (TE o)).
+	   (NTYPC o) (APO o) (MT2PT1 o) _ (TA o) _ (CTYP o) (TE o)).
 
-%worlds (objvar) (conversion-helper/callmeth/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
-%total NTYPA (conversion-helper/callmeth/L _ _ _ _ _ _ NTYPA _ _ _ _ _ _ _).
+%worlds (objvar) (conversion-helper/callmeth/L _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total NTYPA (conversion-helper/callmeth/L _ _ _ _ _ _ NTYPA _ _ _ _ _ _).
+
+% %theorem conversion-helper/callmeth/L :
+%         forall* {PM} {CM} {MM} {MT} {Pi} {Pi1} {Pi2}
+%                 {ARslt} {AOut} {W} {T} {PF}
+% 	forall  {CM2PM: clsmap2predmap CM PM}
+% 		{MM2W: methmap2progtype PM CM MM W}		   
+% 		{T2P: nulltp2perm PM T PF}			 
+%                 {I: implies Pi (Pi1 , Pi)}
+% 		{EQV: equiv Pi (sharedPerm , Pi2)}			 
+% 	        {NTYPC: nullCallTyping CM MM ARslt MT (result/expr T)}
+%                 {APO: perm-output PM Pi ARslt AOut}
+% 	exists  {PT} {MT2PT: methtp2proctype* PM Pi1 MT PT}
+%                 {AOut'} {TA: transform AOut AOut'}
+% 		{Out} {CTYP: callTyping W AOut' PT Out}	
+% 		{TE: transform Out (output/exists ([r] (output/expr r ((PF r) , Pi))))}
+% 	true.	   
+
+% - : conversion-helper/callmeth/L
+%      CM2PM MM2W T2P I EQV nullCallTyping/call perm-output/args/0
+%      %{=>}% _ (methtp2proctype*/base T2P) 
+%      _ (transform/args/0
+% 	(implies/trans4
+% 	   (I)
+% 	   (implies/combine implies/reflexive (implies/equiv EQV))
+% 	   (implies/equiv equiv/roll2)
+% 	   (implies/equiv equiv/associate)))
+%      _ (callTyping/call (envadd/exists ([_] envadd/expr))) 
+%      (transform/inside [_]
+% 	(transform/implies
+% 	   (implies/trans4
+% 	      (implies/equiv equiv/roll2)
+% 	      (implies/equiv equiv/associate)
+% 	      (implies/combine
+% 		 (implies/equiv (equiv/symmetric EQV))
+% 		 (implies/reflexive))
+% 	      (implies/equiv equiv/commute)))).
+
+% - : conversion-helper/callmeth/L
+%      CM2PM MM2W T2POut I EQV (nullCallTyping/arg ([o] NTYPC o))
+%      (perm-output/args/+ ([o] APO o) T2P) %{=>}% 
+%      _ (methtp2proctype*/arg ([o] MT2PT o) T2P) 
+%      _ (transform/inside ([o] (transform/args/+ (TA o))))
+%      _ (callTyping/exists ([o] (callTyping/arg o (CTYP o))))
+%      (transform/trans
+% 	(transform/inside [r]
+% 	   (transform/trans
+% 	      (TE r)
+% 	      (transform/inside [o]
+% 		 (transform/implies
+% 		    (implies/combine 
+% 		       (implies/reflexive)
+% 		       (implies/trans3
+% 			  (implies/combine (EP r) implies/reflexive)
+% 			  (implies/equiv equiv/commute)
+% 			  (implies/equiv equiv/identity)))))))
+% 	(transform/rem-unused))
+%      <- clspred-can-be-duplicated T2P ([o] DP o)
+%      <- clspred-implies-empty T2P ([o] EP o)
+%      <- ({o} conversion-helper/callmeth/L
+% 	   CM2PM MM2W T2POut
+% 	   (implies/trans4
+% 	      (implies/combine (DP o) I)
+% 	      (implies/equiv (equiv/symmetric equiv/associate))
+% 	      (implies/combine implies/reflexive (implies/equiv equiv/roll2))
+% 	      (implies/equiv equiv/associate))
+% 	   (equiv/transitive 
+% 	      (equiv/combine equiv/reflexive EQV)
+% 	      (equiv/roll2)) %{ Now the new 'Pi2' is ((PF o) , Pi2) }%
+% 	   (NTYPC o) (APO o) _ (MT2PT o) _ (TA o) _ (CTYP o) (TE o)).
+
+% %worlds (objvar) (conversion-helper/callmeth/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+% %total NTYPA (conversion-helper/callmeth/L _ _ _ _ _ _ NTYPA _ _ _ _ _ _ _).
 
 
 %%% Main theorem: in this case, Pi1 is empty
 
 %theorem conversion-helper/callmeth :
-        forall* {PM} {CM} {MM} {MT} {Pi} {W}
-                {ARslt} {Rslt} {AOut} {L} 
+        forall* {PM} {CM} {MM} {MT} {PT} {Pi} {W}
+                {ARslt} {T} {AOut} {L} 
 	forall  {CM2PM: clsmap2predmap CM PM}
 		{MM2W: methmap2progtype PM CM MM W}		   
                 {CM-MT: clsmap-methtp CM MT}
 		{L2P: oflist2perm PM L Pi}   
-	        {NTYPC: nullCallTyping CM MM ARslt MT Rslt}
+	        {NTYPC: nullCallTyping CM MM ARslt MT (result/expr T)}
                 {APO: perm-output PM Pi ARslt AOut}
-	exists  {PT} {MT2PT: methtp2proctype PM MT PT}
-                {AOut'} {T: transform AOut AOut'}
+                {MT2PT: methtp2proctype PM MT PT}
+	exists  {AOut'} {TA: transform AOut AOut'}
 		{Out} {CTYP: callTyping W AOut' PT Out}
-		{Out'} {T: transform Out Out'}
-                {PO: perm-output PM Pi Rslt Out'}		   
+		{PF} {TS: transform Out (output/exists ([r] (output/expr r ((PF r) , Pi))))}
+		{T2P: nulltp2perm PM T ([r] PF r)}		       
 	true.	   
 
 - : conversion-helper/callmeth
-     CM2PM MM2W CM-MT L2P NTYPC APO
-     %{=>}% _ MT2PT _ TA _ CTYP _ TE (perm-output/expr T2P)
+     CM2PM MM2W CM-MT L2P NTYPC APO MT2PT
+     %{=>}% _ TA _ CTYP _ TS T2P
      <- writeshared-can-move-front L2P _ EQV
      <- clsmap-methtp-implies-clsmap-nulltp CM-MT NTYPC CM-T
      <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T _ T2P
@@ -679,10 +821,10 @@
 	   (equiv/transitive 
 	      (equiv/symmetric equiv/identity)
 	      (equiv/commute)))
-	EQV NTYPC APO _ MT2PT _ TA _ CTYP TE.
+	EQV NTYPC APO MT2PT _ TA _ CTYP TS.
      
-%worlds (objvar) (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
-%total  {} (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%worlds (objvar) (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total  {} (conversion-helper/callmeth _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 
 
 %theorem fldmap-domain-implies-allocfields/L :
@@ -743,7 +885,7 @@
 
 %theorem conversion-helper/callconst/L :
         forall* {CM} {PM} {MM} {W} {Pi} {Pi2} {Pi1}
-                {OS:object -> permission} 
+                {OS:object -> permission} {PTF}
                 {OA} {OA'} {RA} {MTF} {T} {PF}
         forall  {CM2PM: clsmap2predmap CM PM}
                 {MM2W: methmap2progtype PM CM MM W}
@@ -753,17 +895,16 @@
                 {EQV: equiv Pi (sharedPerm , Pi2)}
                 {APO: perm-output PM Pi RA OA}
                 {NTYP: {t} nullCallTyping CM MM RA (MTF t) (result/expr T)}
-        exists  {PTF} {CT2PT: {t} methtp2proctype* PM (Pi1 t) (MTF t) (PTF t)}
-                {OA''} {TA: {t} transform (OA' t) (OA'' t)}
+                {CT2PT: {t} methtp2proctype* PM (Pi1 t) (MTF t) (PTF t)}
+        exists  {OA''} {TA: {t} transform (OA' t) (OA'' t)}
                 {OP} {CTYP: {t} callTyping W (OA'' t) (PTF t) OP}
                 {TE: transform OP (output/exists [rt] (output/expr rt ((PF rt) , Pi))) }
         true.
 
-- : conversion-helper/callconst/L _ _ T2P
+- : conversion-helper/callconst/L _ _ T2P1
      ([t] envadd/args/0) ([t] IMP t) EQV perm-output/args/0
-     ([t] nullCallTyping/call)
+     ([t] nullCallTyping/call) ([t] methtp2proctype*/base (T2P2 t))
      %{=>}% 
-     _ ([t] methtp2proctype*/base T2P)
      _ ([t] transform/args/0
 	  (implies/trans4
 	     (IMP t)
@@ -775,19 +916,24 @@
      _ ([t] callTyping/call (envadd/exists [rt] (envadd/expr)))
      (transform/inside [rt]
 	(transform/implies
-	   (implies/trans4
+	   (implies/trans5
 	      (implies/equiv equiv/roll2)
 	      (implies/equiv equiv/associate)
 	      (implies/combine
 		 (implies/equiv (equiv/symmetric EQV))
 		 (implies/reflexive))
-	      (implies/equiv equiv/commute)))).
+	      (implies/equiv equiv/commute)
+	      (implies/combine
+		 (implies/equiv (EQV2 rt))
+		 (implies/reflexive)))))
+     <- nulltp2perm-deterministic T2P2 T2P1 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- ({o} permission`eq-implies-equiv (PFEQ o) (EQV2 o)).
 
 - : conversion-helper/callconst/L
      CM2PM MM2W RT2P ([t] (envadd/exists [o] (envadd/args/+ (EA t o)))) I EQV
-     (perm-output/args/+ ([o] APO o) T2P)
-     ([t] nullCallTyping/arg ([o] (NCTYP t o))) %{=>}% 
-     _ ([t] methtp2proctype*/arg (CT2PT t) T2P) 
+     (perm-output/args/+ ([o] APO o) T2P1)
+     ([t] nullCallTyping/arg ([o] (NCTYP t o)))  
+     ([t] methtp2proctype*/arg (CT2PT2 t) T2P2) %{=>}%
      _ ([t] transform/inside ([o] transform/args/+ (TA t o))) 
      _ ([t] callTyping/exists ([o] (callTyping/arg o (CTYP t o)))) 
      (transform/trans
@@ -803,8 +949,12 @@
 			  (implies/equiv equiv/commute)
 			  (implies/equiv equiv/identity)))))))
 	(transform/rem-unused))
-     <- clspred-can-be-duplicated T2P ([o] DP o)
-     <- clspred-implies-empty T2P ([o] EP o)
+     <- clspred-can-be-duplicated T2P1 ([o] DP o)
+     <- clspred-implies-empty T2P1 ([o] EP o)
+     <- nulltp2perm-deterministic T2P2 T2P1 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- ({o} combine-preserves-eq (PFEQ o) permission`eq/ (PEQ o))
+     <- ({t}{o} methtp2proctype-respects-eq*
+	   (CT2PT2 t o) predmap`eq/ (PEQ o) methtp`eq/ proctype`eq/ (CT2PT1 t o))
      <- ({o} conversion-helper/callconst/L
 	   CM2PM MM2W RT2P ([t] EA t o) 
 	   ([t] implies/trans5
@@ -818,9 +968,99 @@
 	   (equiv/transitive 
 	      (equiv/combine equiv/reflexive EQV)
 	      (equiv/roll2))
-	   (APO o) ([t] NCTYP t o) _ ([t] CT2PT t o)
+	   (APO o) ([t] NCTYP t o) ([t] CT2PT1 t o)
 	   _ ([t] TA t o) _ ([t] CTYP t o) (TE o)).
 
+%worlds (objvar) (conversion-helper/callconst/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total A (conversion-helper/callconst/L _ _ _ _ _ _ _ A _ _ _ _ _ _).
+
+
+%theorem conversion-helper/callconst/L :
+        forall* {CM} {PM} {MM} {W} {Pi} {Pi2} {Pi1}
+                {OS:object -> permission} {PTF}
+                {OA} {OA'} {RA} {MTF} {T} 
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+		{EA: {t} envadd (OS t) OA (OA' t)}
+                {I: {t} implies ((OS t) , Pi) ((Pi1 t) , Pi)}
+                {EQV: equiv Pi (sharedPerm , Pi2)}
+                {APO: perm-output PM Pi RA OA}
+                {NTYP: {t} nullCallTyping CM MM RA (MTF t) (result/expr T)}
+                {CT2PT: {t} methtp2proctype* PM (Pi1 t) (MTF t) (PTF t)}
+        exists  {OA''} {TA: {t} transform (OA' t) (OA'' t)}
+                {OP} {CTYP: {t} callTyping W (OA'' t) (PTF t) OP}
+                {PF} {T2P: nulltp2perm PM T PF}
+                {TE: transform OP (output/exists [rt] (output/expr rt ((PF rt) , Pi))) }
+        true.
+
+- : conversion-helper/callconst/L _ _
+     ([t] envadd/args/0) ([t] IMP t) EQV perm-output/args/0
+     ([t] nullCallTyping/call) ([t] methtp2proctype*/base T2P)
+     %{=>}% 
+     _ ([t] transform/args/0
+	  (implies/trans4
+	     (IMP t)
+	     (implies/combine 
+		(implies/reflexive) 
+		(implies/equiv EQV))
+	     (implies/equiv equiv/roll2)
+	     (implies/equiv equiv/associate)))
+     _ ([t] callTyping/call (envadd/exists [rt] (envadd/expr)))
+     _ T2P
+     (transform/inside [rt]
+	(transform/implies
+	   (implies/trans4
+	      (implies/equiv equiv/roll2)
+	      (implies/equiv equiv/associate)
+	      (implies/combine
+		 (implies/equiv (equiv/symmetric EQV))
+		 (implies/reflexive))
+	      (implies/equiv equiv/commute)))).
+
+
+- : conversion-helper/callconst/L
+     CM2PM MM2W ([t] (envadd/exists [o] (envadd/args/+ (EA t o)))) I EQV
+     (perm-output/args/+ ([o] APO o) T2P1)
+     ([t] nullCallTyping/arg ([o] (NCTYP t o)))  
+     ([t] methtp2proctype*/arg (CT2PT2 t) T2P2) %{=>}%
+     _ ([t] transform/inside ([o] transform/args/+ (TA t o))) 
+     _ ([t] callTyping/exists ([o] (callTyping/arg o (CTYP t o))))
+     _ T2Pout
+     (transform/trans
+	(transform/inside [o]
+	   (transform/trans
+	      (TE o)
+	      (transform/inside [rt]
+		 (transform/implies
+		    (implies/combine
+		       (implies/reflexive)
+		       (implies/trans3
+			  (implies/combine (EP o) implies/reflexive)
+			  (implies/equiv equiv/commute)
+			  (implies/equiv equiv/identity)))))))
+	(transform/rem-unused))
+     <- clspred-can-be-duplicated T2P1 ([o] DP o)
+     <- clspred-implies-empty T2P1 ([o] EP o)
+     <- nulltp2perm-deterministic T2P2 T2P1 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
+     <- ({o} combine-preserves-eq (PFEQ o) permission`eq/ (PEQ o))
+     <- ({t}{o} methtp2proctype-respects-eq*
+	   (CT2PT2 t o) predmap`eq/ (PEQ o) methtp`eq/ proctype`eq/ (CT2PT1 t o))
+     <- ({o} conversion-helper/callconst/L
+	   CM2PM MM2W ([t] EA t o) 
+	   ([t] implies/trans5
+	      (implies/equiv equiv/roll2)
+	      (implies/combine (DP o) (I t))
+	      (implies/equiv (equiv/symmetric equiv/associate))
+	      (implies/combine 
+		 (implies/reflexive)
+		 (implies/equiv equiv/roll2))
+	      (implies/equiv equiv/associate))
+	   (equiv/transitive 
+	      (equiv/combine equiv/reflexive EQV)
+	      (equiv/roll2))
+	   (APO o) ([t] NCTYP t o) ([t] CT2PT1 t o)
+	   _ ([t] TA t o) _ ([t] CTYP t o) _ T2Pout (TE o)).
+
 %worlds (objvar) (conversion-helper/callconst/L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
-%total A (conversion-helper/callconst/L _ _ _ _ _ _ _ A _ _ _ _ _ _ _).
+%trustme %total A (conversion-helper/callconst/L _ _ _ _ _ _ A _ _ _ _ _ _ _ _).
 
