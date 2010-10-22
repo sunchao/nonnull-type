@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.8 2010/10/18 21:58:29 csun Exp csun $
+%%%%% $Id: conversion-thms.elf,v 1.9 2010/10/21 03:11:22 csun Exp csun $
 
 %theorem methtpmatch-implies-proctypematch :
         forall* {CM} {MM} {PM} {MT} {W} {L} {F} {M}
@@ -142,15 +142,19 @@
 		       (implies/nonlinear bimplies/objequal-reflexive))
 		    (implies/reflexive))))
 	   (transform/gen-exists null))).
- 
+
+%%% here I need to figure out a way to tell Twelf that PDF does NOT take
+%%% any variable.
+
 - : convert/expr-ok
-     CM2PM CM-CM CM-MM CM-OFL MM2W L2P (nulltLet ([o] NTYPF o) NTYPE) _ T2Pout
+     CM2PM CM-CM CM-MM CM-OFL MM2W L2P (nulltLet ([o] NTYPF o) NTYPE)
+     _ (nulltp2perm/norm PM-LP NN2P)
      (tTrans2
 	(tLet
 	   TYPE
 	   (letTyping/exists ([v] 
 	      letTyping/base v
-	  	 (tTrans2 (TYPF v)
+	  	 (tTrans2 (TYPF2 v)
 		    (transform/inside [r]
 		       (transform/trans
 			  (transform/implies
@@ -160,7 +164,10 @@
      <- convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W L2P NTYPE PF T2P TYPE
      <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-OFL NTYPE CM-T
      <- ({o} convert/expr-ok CM2PM CM-CM CM-MM (clsmap-oflist/+ CM-T CM-OFL) 
-	   MM2W (oflist2perm/+ T2P L2P) (NTYPF o)  _ T2Pout (TYPF o)).
+	   MM2W (oflist2perm/+ T2P L2P) (NTYPF o) 
+	   _ (nulltp2perm/norm (PM-LPF o) NN2P) (TYPF o))
+     <- no-variable-lookup ([o] PM-LPF o) _ PM-LP ([o] PDEQ o)
+     <- conversion-helper/let2 NN2P ([o] PDEQ o) ([o] TYPF o) ([o] TYPF2 o).
 
 - : convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P
      (nulltWhile NTYPE NTYPC) _ nulltp2perm/null

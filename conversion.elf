@@ -1,6 +1,6 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id: conversion.elf,v 1.11 2010/10/17 23:29:06 csun Exp csun $
+%%%%% $Id: conversion.elf,v 1.12 2010/10/21 03:11:16 csun Exp csun $
 
 %abbrev null-perm = [o] unitperm 
 	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
@@ -42,7 +42,7 @@ nulltp2perm/null
    : nulltp2perm _ nulltp/null ([r] unitperm (nonlinear (objequal r null))).
 
 nulltp2perm/norm
-   : nulltp2perm PM (nulltp/norm C NN) (PF PD)
+   : nulltp2perm PM (nulltp/norm C NN) ([o] (PF PD o))
       <- nn2perm NN PF
       <- predmap`lookup PM C PD.
 
@@ -158,11 +158,11 @@ perm-output/args/+
 %theorem output/exists-preserves-eq :
         forall* {K} {Out1: object -> output K} {Out2: object -> output K}
         forall  {E: {o} environment`eq (Out1 o) (Out2 o)}
-        exists  {E: environment`eq (output/exists [o] (Out1 o)) (output/exists [o] (Out2 o))}
+        exists  {E: environment`eq
+		     (output/exists [o] (Out1 o)) (output/exists [o] (Out2 o))}
         true.
 
 - : output/exists-preserves-eq ([o] environment`eq/) environment`eq/.
-
 
 %worlds (objvar) (output/exists-preserves-eq _ _).
 %total  {} (output/exists-preserves-eq _ _).
@@ -288,7 +288,7 @@ perm-output/args/+
 
 
 %theorem nulltp2perm-deterministic/L :
-        forall* {PF1:nullpred -> object -> permission} {PF2} {PD1} {PD2} 
+        forall* {PF1: nullpred -> object -> permission} {PF2} {PD1} {PD2} 
         forall  {FEQ: {p}{o} permission`eq (PF1 p o) (PF2 p o)}
                 {PEQ: predicate`eq PD1 PD2}
         exists  {PEQ: {o} permission`eq (PF1 PD1 o) (PF2 PD2 o)}
@@ -359,7 +359,8 @@ perm-output/args/+
         exists  {MT2PT: methtp2proctype* PM2 Pi2 MT2 PT2}
         true.
 
-- : methtp2proctype-respects-eq* M2P predmap`eq/ permission`eq/ methtp`eq/ proctype`eq/ M2P.
+- : methtp2proctype-respects-eq* 
+     M2P predmap`eq/ permission`eq/ methtp`eq/ proctype`eq/ M2P.
 
 %worlds (objvar) (methtp2proctype-respects-eq* _ _ _ _ _ _).
 %total  {} (methtp2proctype-respects-eq* _ _ _ _ _ _).
@@ -428,7 +429,8 @@ perm-output/args/+
      <- proctype/base-preserves-eq permission`eq/ OEQ' PTEQ.
      
 - : methtp2proctype-deterministic/L
-     (methtp2proctype*/arg ([o] MT2PT1 o) T2P1) (methtp2proctype*/arg ([o] MT2PT2 o) T2P2)
+     (methtp2proctype*/arg ([o] MT2PT1 o) T2P1)
+     (methtp2proctype*/arg ([o] MT2PT2 o) T2P2)
      PMEQ PiEQ MTEQ PTEQ
      <- arg-eq-implies-nulltp-eq MTEQ ([o] MTFEQ o) TEQ
      <- nulltp2perm-deterministic T2P1 T2P2 PMEQ TEQ ([o] PFEQ o)
@@ -456,24 +458,24 @@ perm-output/args/+
 %worlds (objvar) (methtp2proctype-deterministic _ _ _ _ _).
 %total  {} (methtp2proctype-deterministic _ _ _ _ _).
 
-constp2proctype : predmap -> fldmap -> 
-	(object -> methtp) -> (object -> proctype) -> type.
+% constp2proctype : predmap -> fldmap -> 
+% 	(object -> methtp) -> (object -> proctype) -> type.
 
-constp2proctype/ 
-   : constp2proctype PM FM ([t] MTF t) ([t] PTF t)
-      <- fldmap`domain FM S
-      <- ({t} allocFields t S (OS t))
-      <- ({t} methtp2proctype* PM (OS t) (MTF t) (PTF t)).
+% constp2proctype/ 
+%    : constp2proctype PM FM ([t] MTF t) ([t] PTF t)
+%       <- fldmap`domain FM S
+%       <- ({t} allocFields t S (OS t))
+%       <- ({t} methtp2proctype* PM (OS t) (MTF t) (PTF t)).
 
 
-%theorem constp2proctype-deterministic :
-        forall* {PM1} {PM2} {CT1} {CT2} {PT1} {PT2}
-        forall  {CT2PT: constp2proctype PM1 CT1 PT1}
-                {CT2PT: constp2proctype PM2 CT2 PT2}
-                {EQ: predmap`eq PM1 PM2}
-                {EQ: ({o} methtp`eq CT1 CT2}
-        exists  {EQ: proctype`eq PT1 PT2}
-        true.
+% %theorem constp2proctype-deterministic :
+%         forall* {PM1} {PM2} {CT1} {CT2} {PT1} {PT2}
+%         forall  {CT2PT: constp2proctype PM1 CT1 PT1}
+%                 {CT2PT: constp2proctype PM2 CT2 PT2}
+%                 {EQ: predmap`eq PM1 PM2}
+%                 {EQ: ({o} methtp`eq CT1 CT2}
+%         exists  {EQ: proctype`eq PT1 PT2}
+%         true.
 
         
 %theorem constp2proctype-respects-eq :

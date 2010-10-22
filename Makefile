@@ -18,7 +18,7 @@ all : ${SUBDIRS} ${SRC} ${GEN}
 
 CAT = cat
 # The C preprocessor (not C++ compiler!)
-CPP = /lib/cpp
+CPP = /usr/bin/cpp
 CPPFLAGS = -DBEGIN_ELF="%}%" -DEND_ELF="%{%" -I../library 
 REC = ../library/remove-empty-comments.pl
 GN = ../library/get-names.pl
