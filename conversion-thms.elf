@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.10 2010/10/22 18:54:34 csun Exp csun $
+%%%%% $Id: conversion-thms.elf,v 1.11 2010/10/25 14:56:21 csun Exp csun $
 
 %theorem methtpmatch-implies-proctypematch :
         forall* {CM} {MM} {PM} {MT} {W} {L} {F} {M}
@@ -56,13 +56,25 @@
                 {PM: perm-output PM Pi ARslt AOut}
         true.
 
+- : convert/cond-ok
+     CM2PM CM-CM CM-MM CM-L MM2W L2P (nulltNot NTYP) _ TYP' CPO'
+     <- convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYP _ TYP CPO
+     <- conversion-helper/not TYP CPO _ TYP' CPO'.
+
+- : convert/cond-ok
+     CM2PM CM-CM CM-MM CM-L MM2W L2P (nulltAnd NTYP1 NTYP2) _
+     (tTrans2 (tAnd TYP1 AH) T) CPO4
+     <- convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYP1 _ TYP1 CPO1
+     <- convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYP2 _ TYP2 CPO2
+     <- conversion-helper/and CPO1 TYP2 _ Out4 AH T CPO4.
+
 - : convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P (nulltEql NTYPE1 NTYPE2) _ 
      (tEql1
 	TYPE1
 	(letTyping/exists [v1]
 	   (letTyping/base v1
 	      (tEql2
-		 TYPE2'
+		 (TYPE2' v1)
 		 (letTyping/exists [v2]
 		    (letTyping/base v2
 		       (tTrans2
@@ -77,9 +89,9 @@
 				      (implies/true2empty))
 				   (implies/trans5
 				      (implies/combine
-					 (REM2 v2) 
+					 (REM1 v1) 
 					 (implies/combine
-					    (REM1 v1)
+					    (REM2 v2)
 					    (implies/reflexive)))
 				      (implies/equiv equiv/commute)
 				      (implies/equiv equiv/identity)
@@ -94,9 +106,9 @@
 				      (implies/true2empty))
 				   (implies/trans5
 				      (implies/combine
-					 (REM2 v2) 
+					 (REM1 v1) 
 					 (implies/combine
-					    (REM1 v1)
+					    (REM2 v2)
 					    (implies/reflexive)))
 				      (implies/equiv equiv/commute)
 				      (implies/equiv equiv/identity)
@@ -106,22 +118,10 @@
 				(implies/equiv equiv/identity))))))))))
      (perm-output/exists ([v1] (perm-output/exists ([v2] (perm-output/cond)))))
      <- convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYPE1 _ T2P1 TYPE1
-     <- convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYPE2 _ T2P2 TYPE2 
-     <- typing-frame* TYPE2 (envadd/exists ([v] (envadd/expr))) TYPE2'
+     <- convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYPE2 _ T2P2 TYPE2
+     <- conversion-helper/write3 T2P1 TYPE2 ([v] TYPE2' v)
      <- clspred-implies-empty T2P1 ([r] REM1 r)
      <- clspred-implies-empty T2P2 ([r] REM2 r).
-
-- : convert/cond-ok
-     CM2PM CM-CM CM-MM CM-L MM2W L2P (nulltNot NTYP) _ TYP' CPO'
-     <- convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYP _ TYP CPO
-     <- conversion-helper/not TYP CPO _ TYP' CPO'.
-
-- : convert/cond-ok
-     CM2PM CM-CM CM-MM CM-L MM2W L2P (nulltAnd NTYP1 NTYP2) _
-     (tTrans2 (tAnd TYP1 AH) T) CPO4
-     <- convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYP1 _ TYP1 CPO1
-     <- convert/cond-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYP2 _ TYP2 CPO2
-     <- conversion-helper/and CPO1 TYP2 _ Out4 AH T CPO4.
 
 - : convert/expr-ok _ _ _ _ _ L2P (nulltLit L) _ T2P 
      (tTrans2 tObjLoc 
@@ -297,7 +297,7 @@
 	   (callTyping/exists [t]
 	      (callTyping/arg t (CTYP t))))
 	(transform/trans
-	   (transform/inside [_] TE)
+	   (transform/inside [t] (TE t))
 	   (transform/rem-unused)))
      <- methmap2progtype-implies-constp2proctype 
 	MM2W CM-LP MM-LP _ W-LP (constp2proctype/ ([t] MT2PT t) ([t] AF2 t) FM-DM2)
@@ -393,7 +393,7 @@
 	(transform/rem-unused))
      <- convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYP 
 	_ (nulltp2perm/norm PM-LP1 nn2perm/yes) TYPE
-     <- clsmap2predmap-implies-fldmap2conj-converse CM2PM CM-LP _ PM-LP2 _
+     <- clsmap2predmap-implies-predmap-lookup CM2PM CM-LP _ PM-LP2
      <- predmap`lookup-deterministic PM-LP1 PM-LP2 predmap`eq/ nat`eq/ PEQ
      <- typing-preserves-eq nn2perm/yes PEQ TYPE TYPE'
      <- writeshared-can-move-front OFL2P _ EQV
@@ -405,7 +405,7 @@
 %%% PM-LP doesn't know this, it gave a more generic result.
 
 - : convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P
-     (nulltWrite FM-LP CM-LP NTYPE2 NTYPE1) _ T2P
+     (nulltWrite FM-LP CM-LP NTYPE2 NTYPE1) _ (nulltp2perm/norm PM-FLP1 NN2P1)
      (tTrans2
 	(tWrite1
 	   TYPE1'
@@ -418,7 +418,7 @@
 			  (tTrans
 			     (transform/trans3
 				(transform/implies
-				   (implies/trans3
+				   (implies/trans5
 				      (implies/combine
 					 (implies/trans6
 					    (implies/conj2combine)
@@ -445,7 +445,9 @@
 					       (implies/reflexive))
 					    (implies/equiv
 					       (equiv/symmetric equiv/associate))))
-				      (IMP2 v) %{ PE, EC, Pi2, PF2 }%
+				      (implies/equiv equiv/associate)
+				      (implies/combine (IMP2 v) implies/reflexive)
+				      (implies/equiv (equiv/symmetric equiv/associate))
 				      (implies/combine
 					 (implies/equiv (equiv/symmetric equiv/one))
 					 (implies/reflexive))))
@@ -507,21 +509,20 @@
 					       (implies/reflexive)
 					       (implies/equiv (equiv/symmetric EQV)))))))
 				(transform/rem-unused)))))))))
-	(transform/rem-unused)) 
+	(transform/rem-unused))
      <- convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYPE1
      	_ (nulltp2perm/norm PM-LP1 nn2perm/yes) TYPE1 
-     <- clsmap2predmap-implies-fldmap2conj-converse CM2PM CM-LP _ PM-LP2 _
+     <- clsmap2predmap-implies-predmap-lookup CM2PM CM-LP _ PM-LP2
      <- predmap`lookup-deterministic PM-LP1 PM-LP2 predmap`eq/ nat`eq/ PEQ
      <- typing-preserves-eq nn2perm/yes PEQ TYPE1 TYPE1'
-     <- convert/expr-ok 
-	CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYPE2 _ 
-	(nulltp2perm/norm PM-LP3 NN2P2) TYPE2 
-     <- conversion-helper/write TYPE1' TYPE2 ([r] TYPE3 r)
+     <- convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYPE2 _
+	(nulltp2perm/norm PM-FLP1 NN2P1) TYPE2
+     <- conversion-helper/write3 (nulltp2perm/norm PM-LP2 nn2perm/yes) TYPE2 ([r] TYPE3 r)
      <- writeshared-can-move-front OFL2P _ EQV
-     <- lookup-fldperm CM2PM PM-LP2 CM-LP FM-LP _ _ _ FNN2P PM-FLP IMP
-     <- get-precise-exists FNN2P PM-FLP _ NN2P IMP2
-     <- clspred-implies-empty (nulltp2perm/norm PM-FLP NN2P) ([r] REM r)
-     <- conversion-helper/write2 NN2P PM-FLP T2P DUP.
+     <- lookup-fldperm-converse CM2PM PM-LP2 CM-LP FM-LP PM-FLP1 _ FNN2P _ IMP
+     <- get-precise-exists-single FNN2P PM-FLP1 NN2P1 IMP2
+     <- clspred-implies-empty (nulltp2perm/norm PM-FLP1 NN2P1) ([r] REM r)
+     <- conversion-helper/write2 NN2P1 PM-FLP1 (nulltp2perm/norm PM-FLP1 NN2P1) DUP.
 
 - : convert/args-ok CM2PM CM-CM CM-MM CM-L MM2W L2P nulltArgs/0 
      _ tArgs0 perm-output/args/0.
