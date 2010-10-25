@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.9 2010/10/17 23:29:01 csun Exp csun $
+%%%%% $Id: typing.elf,v 1.10 2010/10/21 03:11:16 csun Exp csun $
 %%%%% Created at February, 2010
 
 
@@ -44,6 +44,8 @@ nulltLit : nullTyping _ _ L (lit O) (result/expr T)
     <- oflist-lookup L O T.
 
 nulltNull : nullTyping _ _ _ (lit null) (result/expr nulltp/null).
+
+% we only allow non-null type in fldmap
 
 nulltRead 
    : nullTyping CM MM L (read E F) (result/expr (nulltp/norm N NN))
