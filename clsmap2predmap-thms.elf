@@ -1,6 +1,6 @@
 %%%%% clsmap2predmap-thms.elf
 %%%%% theorems about clsmap2predmap 
-%%%%% Chao Sun
+%%%%% $Id$
 %%%%% Jun 30, 2010
 
 
@@ -74,7 +74,8 @@
 
 - : predmap-equal-fldmap2conj fldmap2conj/0 _ _ fldmap2conj/0.
 
-- : predmap-equal-fldmap2conj (fldmap2conj/null F2C SH) L1 L2 (fldmap2conj/null F2C' SH)
+- : predmap-equal-fldmap2conj
+     (fldmap2conj/null F2C SH) L1 L2 (fldmap2conj/null F2C' SH)
      <- predmap-equal-fldmap2conj F2C L1 L2 F2C'.
 
 - : predmap-equal-fldmap2conj (fldmap2conj/norm/in F2C FNN2P SH PM-L) L1 L2
@@ -352,6 +353,34 @@ clsmap-predmap*/+
 %total  {} (fldmap2conj-preserves-clsmap-predmap _ _ _ _ _ _).
 
 
+%theorem clsmap-predmap-implies-fldmap2conj*-converse :
+        forall* {CM} {FM} {PM} {PMin} {C} {PD}
+        forall  {CP: clsmap-predmap* CM PM PMin}
+                {CL: clsmap`lookup CM C FM}
+                {PL: predmap`lookup PMin C PD}
+        exists  {CJ} {PL: predmap`lookup PMin C (conj2pred CJ)}
+                {F2C: fldmap2conj CM PM FM ([r] CJ (conj2pred CJ) r) PM}
+        true.
+
+- : clsmap-predmap-implies-fldmap2conj*-converse
+     (clsmap-predmap*/+ _ _ (clsmap-predmap-helper/ F2C CM-L)) CM-L'
+     (predmap`lookup/= C=N) _ _ F2C'
+     <- clsmap`lookup-deterministic CM-L' CM-L clsmap`eq/ C=N FM=FM'
+     <- fldmap`eq-symmetric FM=FM' FM'=FM
+     <- fldmap2conj-respects-eq F2C clsmap`eq/ predmap`eq/ FM'=FM F2C'.
+
+- : clsmap-predmap-implies-fldmap2conj*
+     (clsmap-predmap*/+ CM-PMM SH CPH)
+     (predmap`lookup/> PMM-L P) CM-L F2C
+     <- nat`plus-swap-succ P P'
+     <- nat`plus-commutative P' P''
+     <- predmap`shift-preserves-lookup* PMM-L SH P'' PMM-L'
+     <- clsmap-predmap-implies-fldmap2conj* CM-PMM PMM-L' CM-L F2C.
+
+%worlds (objvar) (clsmap-predmap-implies-fldmap2conj* _ _ _ _).
+%total CP (clsmap-predmap-implies-fldmap2conj* CP _ _ _).
+
+     
 %theorem clsmap-predmap-implies-fldmap2conj* :
         forall* {CM} {FM} {PM} {PMin} {C} {CJ}
         forall  {CP: clsmap-predmap* CM PM PMin}
@@ -376,7 +405,7 @@ clsmap-predmap*/+
      <- clsmap-predmap-implies-fldmap2conj* CM-PMM PMM-L' CM-L F2C.
 
 %worlds (objvar) (clsmap-predmap-implies-fldmap2conj* _ _ _ _).
-%total  CP (clsmap-predmap-implies-fldmap2conj* CP _ _ _).
+%total CP (clsmap-predmap-implies-fldmap2conj* CP _ _ _).
 
 
 %theorem clsmap-predmap-implies-fldmap2conj :
@@ -391,7 +420,7 @@ clsmap-predmap*/+
      <- clsmap-predmap-implies-fldmap2conj* CP PL CL F2C.
 
 %worlds (objvar) (clsmap-predmap-implies-fldmap2conj _ _ _ _).
-%total  {} (clsmap-predmap-implies-fldmap2conj _ _ _ _).
+%total {} (clsmap-predmap-implies-fldmap2conj _ _ _ _).
 
 
 %theorem clsmap2predmap-preserves-clsmap-predmap/L :
@@ -490,6 +519,20 @@ clsmap-predmap*/+
 %total  {} (clsmap2predmap-implies-fldmap2conj* _ _ _ _ _ _).
 
 
+%theorem clsmap2predmap-implies-fldmap2conj*-converse :
+        forall* {CM*} {CM} {PMin} {PMout} {C} {FM} 
+        forall  {L: clsmap`leq CM CM*}
+                {CM-PM: clsmap-predmap CM* PMin}
+                {CM2PM: clsmap2predmap* CM* PMin CM PMout}
+                {CM-L: clsmap`lookup CM C FM}
+        exists  {CJ} {PM-L: predmap`lookup PMout C (conj2pred CJ)}
+                {F2C: fldmap2conj CM* PMout FM ([r] CJ (conj2pred CJ) r) PMout}
+        true.
+
+%worlds (objvar) (clsmap2predmap-implies-fldmap2conj*-converse _ _ _ _ _ _ _).
+%trustme %total  {} (clsmap2predmap-implies-fldmap2conj*-converse _ _ _ _ _ _ _).
+
+
 %theorem clsmap2predmap-implies-fldmap2conj :
         forall* {CM} {FM} {PM} {C} {CJ}
         forall  {CM2PM: clsmap2predmap CM PM}
@@ -505,6 +548,23 @@ clsmap-predmap*/+
 
 %worlds (objvar) (clsmap2predmap-implies-fldmap2conj _ _ _ _).
 %total  {} (clsmap2predmap-implies-fldmap2conj _ _ _ _).
+
+
+%theorem clsmap2predmap-implies-fldmap2conj-converse :
+        forall* {CM} {FM} {PM} {C} 
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {CM-L: clsmap`lookup CM C FM}
+        exists  {CJ} {PM-L: predmap`lookup PM C (conj2pred CJ)}
+                {F2C: fldmap2conj CM PM FM ([r] CJ (conj2pred CJ) r) PM}
+        true.
+
+- : clsmap2predmap-implies-fldmap2conj-converse CM2PM CM-L _ PM-L F2C
+     <- clsmap`leq-reflexive _ CM<=CM
+     <- clsmap2predmap-implies-fldmap2conj*-converse 
+	CM<=CM clsmap-predmap*/0 CM2PM CM-L _ PM-L F2C.
+
+%worlds (objvar) (clsmap2predmap-implies-fldmap2conj-converse _ _ _ _ _).
+%total  {} (clsmap2predmap-implies-fldmap2conj-converse _ _ _ _ _).
 
 
 %%% 3. totality theorems

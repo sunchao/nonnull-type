@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id: conversion-lemmas.elf,v 1.12 2010/10/21 03:11:19 csun Exp csun $
+%%%%% $Id: conversion-lemmas.elf,v 1.13 2010/10/22 18:54:50 csun Exp csun $
 %%%%% Created at July 19, 2010
 
 
@@ -367,10 +367,13 @@
 
 %theorem conversion-helper/write :
         forall* {W} {Pi} {E1} {E2} {PF1} {PF2}
-        forall  {TYP1: typing W Pi E1 (output/exists [r1] (output/expr r1 ((PF1 r1) , Pi)))}
-                {TYP2: typing W Pi E2 (output/exists [r2] (output/expr r2 ((PF2 r2) , Pi)))}
+        forall  {TYP1: typing W Pi E1
+			(output/exists [r1] (output/expr r1 ((PF1 r1) , Pi)))}
+                {TYP2: typing W Pi E2
+			(output/exists [r2] (output/expr r2 ((PF2 r2) , Pi)))}
         exists  {TYP3: {r1} typing W ((PF1 r1) , Pi) E2
-			(output/exists [r2] (output/expr r2 ((PF1 r1) , ((PF2 r2) , Pi))))}
+			(output/exists [r2]
+			   (output/expr r2 ((PF1 r1) , ((PF2 r2) , Pi))))}
         true.
 
 - : conversion-helper/write TYP1 TYP2 TYP3
@@ -758,78 +761,6 @@
 %worlds (objvar) (conversion-helper/callmeth/L _ _ _ _ _ _ _ _ _ _ _ _ _).
 %total NTYPA (conversion-helper/callmeth/L _ _ _ _ _ _ NTYPA _ _ _ _ _ _).
 
-% %theorem conversion-helper/callmeth/L :
-%         forall* {PM} {CM} {MM} {MT} {Pi} {Pi1} {Pi2}
-%                 {ARslt} {AOut} {W} {T} {PF}
-% 	forall  {CM2PM: clsmap2predmap CM PM}
-% 		{MM2W: methmap2progtype PM CM MM W}		   
-% 		{T2P: nulltp2perm PM T PF}			 
-%                 {I: implies Pi (Pi1 , Pi)}
-% 		{EQV: equiv Pi (sharedPerm , Pi2)}			 
-% 	        {NTYPC: nullCallTyping CM MM ARslt MT (result/expr T)}
-%                 {APO: perm-output PM Pi ARslt AOut}
-% 	exists  {PT} {MT2PT: methtp2proctype* PM Pi1 MT PT}
-%                 {AOut'} {TA: transform AOut AOut'}
-% 		{Out} {CTYP: callTyping W AOut' PT Out}	
-% 		{TE: transform Out (output/exists ([r] (output/expr r ((PF r) , Pi))))}
-% 	true.	   
-
-% - : conversion-helper/callmeth/L
-%      CM2PM MM2W T2P I EQV nullCallTyping/call perm-output/args/0
-%      %{=>}% _ (methtp2proctype*/base T2P) 
-%      _ (transform/args/0
-% 	(implies/trans4
-% 	   (I)
-% 	   (implies/combine implies/reflexive (implies/equiv EQV))
-% 	   (implies/equiv equiv/roll2)
-% 	   (implies/equiv equiv/associate)))
-%      _ (callTyping/call (envadd/exists ([_] envadd/expr))) 
-%      (transform/inside [_]
-% 	(transform/implies
-% 	   (implies/trans4
-% 	      (implies/equiv equiv/roll2)
-% 	      (implies/equiv equiv/associate)
-% 	      (implies/combine
-% 		 (implies/equiv (equiv/symmetric EQV))
-% 		 (implies/reflexive))
-% 	      (implies/equiv equiv/commute)))).
-
-% - : conversion-helper/callmeth/L
-%      CM2PM MM2W T2POut I EQV (nullCallTyping/arg ([o] NTYPC o))
-%      (perm-output/args/+ ([o] APO o) T2P) %{=>}% 
-%      _ (methtp2proctype*/arg ([o] MT2PT o) T2P) 
-%      _ (transform/inside ([o] (transform/args/+ (TA o))))
-%      _ (callTyping/exists ([o] (callTyping/arg o (CTYP o))))
-%      (transform/trans
-% 	(transform/inside [r]
-% 	   (transform/trans
-% 	      (TE r)
-% 	      (transform/inside [o]
-% 		 (transform/implies
-% 		    (implies/combine 
-% 		       (implies/reflexive)
-% 		       (implies/trans3
-% 			  (implies/combine (EP r) implies/reflexive)
-% 			  (implies/equiv equiv/commute)
-% 			  (implies/equiv equiv/identity)))))))
-% 	(transform/rem-unused))
-%      <- clspred-can-be-duplicated T2P ([o] DP o)
-%      <- clspred-implies-empty T2P ([o] EP o)
-%      <- ({o} conversion-helper/callmeth/L
-% 	   CM2PM MM2W T2POut
-% 	   (implies/trans4
-% 	      (implies/combine (DP o) I)
-% 	      (implies/equiv (equiv/symmetric equiv/associate))
-% 	      (implies/combine implies/reflexive (implies/equiv equiv/roll2))
-% 	      (implies/equiv equiv/associate))
-% 	   (equiv/transitive 
-% 	      (equiv/combine equiv/reflexive EQV)
-% 	      (equiv/roll2)) %{ Now the new 'Pi2' is ((PF o) , Pi2) }%
-% 	   (NTYPC o) (APO o) _ (MT2PT o) _ (TA o) _ (CTYP o) (TE o)).
-
-% %worlds (objvar) (conversion-helper/callmeth/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
-% %total NTYPA (conversion-helper/callmeth/L _ _ _ _ _ _ NTYPA _ _ _ _ _ _ _).
-
 
 %%% Main theorem: in this case, Pi1 is empty
 
@@ -845,7 +776,8 @@
                 {MT2PT: methtp2proctype PM MT PT}
 	exists  {AOut'} {TA: transform AOut AOut'}
 		{Out} {CTYP: callTyping W AOut' PT Out}
-		{PF} {TS: transform Out (output/exists ([r] (output/expr r ((PF r) , Pi))))}
+		{PF} {TS: transform Out
+			   (output/exists ([r] (output/expr r ((PF r) , Pi))))}
 		{T2P: nulltp2perm PM T ([r] PF r)}		       
 	true.	   
 
@@ -1029,7 +961,8 @@
         exists  {OA''} {TA: {t} transform (OA' t) (OA'' t)}
                 {OP} {CTYP: {t} callTyping W (OA'' t) (PTF t) OP}
                 {PF} {T2P: nulltp2perm PM T PF}
-                {TE: transform OP (output/exists [rt] (output/expr rt ((PF rt) , Pi))) }
+                {TE: transform OP
+		      (output/exists [rt] (output/expr rt ((PF rt) , Pi))) }
         true.
 
 - : conversion-helper/callconst/L _ _
@@ -1102,4 +1035,34 @@
 
 %worlds (objvar) (conversion-helper/callconst/L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 %trustme %total A (conversion-helper/callconst/L _ _ _ _ _ _ A _ _ _ _ _ _ _ _).
+
+
+%theorem conversion-helper/let3 :
+        forall* {PM} {T} {PFF:object -> object -> permission}
+        forall  {T2P: {o} nulltp2perm PM T ([o1] PFF o o1)}
+        exists  {PF: object -> permission} 
+                {EQ: {o}{o1} permission`eq (PFF o o1) (PF o1)}
+	        {T2P: nulltp2perm PM T ([o1] PF o1)}
+        true.
+
+%worlds (objvar) (conversion-helper/let3 _ _ _ _ ).
+%trustme %total  {} (conversion-helper/let3 _ _ _ _).
+
+
+%theorem conversion-helper/let4 :
+        forall* {W} {P1:object -> permission} {P2} {PF} {F} {PFF}
+        forall  {EQ: {o}{o1} permission`eq (PFF o o1) (PF o1)}
+                {TYPF: {o} typing W (combine (P1 o) P2) (F o)
+			(output/exists [r] 
+			   (output/expr r
+			      (combine (PFF o r) (combine (P1 o) P2))))}
+	 exists {TYPF: {o} typing W (combine (P1 o) P2) (F o)
+			(output/exists [r] 
+			   (output/expr r
+			      (combine (PF r) (combine (P1 o) P2))))}
+         true.
+					      
+%worlds (objvar) (conversion-helper/let4 _ _ _).
+%trustme %total  {} (conversion-helper/let4 _ _ _).
+
 
