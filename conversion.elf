@@ -1,6 +1,6 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id: conversion.elf,v 1.13 2010/10/22 18:54:50 csun Exp csun $
+%%%%% $Id: conversion.elf,v 1.14 2010/10/25 14:56:16 csun Exp csun $
 
 %abbrev null-perm = [o] unitperm 
 	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
@@ -276,20 +276,6 @@ perm-output/args/+
 %total  {} (nn2perm-total _ _ _).
 
 
-%theorem nn2perm-deterministic :
-        forall* {NN1} {NN2} {FF1} {FF2}
-        forall  {NN2P1: nn2perm NN1 FF1}
-                {NN2P2: nn2perm NN2 FF2}
-                {NNEQ: nn`eq NN1 NN2}
-        exists  {EQ: {p}{o} permission`eq (FF1 p o) (FF2 p o)}
-        true.
-
-- : nn2perm-deterministic nn2perm/yes nn2perm/yes _ ([_][_] permission`eq/).
-- : nn2perm-deterministic nn2perm/may nn2perm/may _ ([_][_] permission`eq/).
-
-%worlds (objvar) (nn2perm-deterministic _ _ _ _).
-%total  {} (nn2perm-deterministic _ _ _ _).
-
 %theorem clsmap-nulltp-implies-nulltp2perm :
 	forall* {CM} {PM} {T}
 	forall  {CM2PM: clsmap2predmap CM PM}
@@ -307,6 +293,39 @@ perm-output/args/+
 
 %worlds (objvar) (clsmap-nulltp-implies-nulltp2perm _ _ _ _).
 %total  {} (clsmap-nulltp-implies-nulltp2perm _ _ _ _).
+
+
+%theorem oflist2perm-total :
+        forall* {PM} {CM} {OFL} 
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {CM-OFL: clsmap-oflist CM OFL}
+        exists  {Pi} {OFL2P: oflist2perm PM OFL Pi}
+        true.
+
+- : oflist2perm-total CM2PM CM-OFL _ oflist2perm/0.
+
+- : oflist2perm-total CM2PM (clsmap-oflist/+ CM-T CM-OFL) _ (oflist2perm/+ T2P OFL2P) 
+     <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T _ T2P
+     <- oflist2perm-total CM2PM CM-OFL _ OFL2P.
+
+%worlds (objvar) (oflist2perm-total _ _ _ _).
+%total CO (oflist2perm-total _ CO _ _).
+
+
+%theorem nn2perm-deterministic :
+        forall* {NN1} {NN2} {FF1} {FF2}
+        forall  {NN2P1: nn2perm NN1 FF1}
+                {NN2P2: nn2perm NN2 FF2}
+                {NNEQ: nn`eq NN1 NN2}
+        exists  {EQ: {p}{o} permission`eq (FF1 p o) (FF2 p o)}
+        true.
+
+- : nn2perm-deterministic nn2perm/yes nn2perm/yes _ ([_][_] permission`eq/).
+- : nn2perm-deterministic nn2perm/may nn2perm/may _ ([_][_] permission`eq/).
+
+%worlds (objvar) (nn2perm-deterministic _ _ _ _).
+%total  {} (nn2perm-deterministic _ _ _ _).
+
 
 
 %theorem nulltp2perm-respects-eq :
@@ -526,7 +545,8 @@ perm-output/args/+
         exists  {C2P: constp2proctype PM2 FM2 CTF2 PTF2}
         true.
 
-- : constp2proctype-respects-eq C2P predmap`eq/ fldmap`eq/ ([_] methtp`eq/) proctype`eq/ C2P.
+- : constp2proctype-respects-eq 
+     C2P predmap`eq/ fldmap`eq/ ([_] methtp`eq/) proctype`eq/ C2P.
      
 %worlds (objvar) (constp2proctype-respects-eq _ _ _ _ _ _).
 %total  {} (constp2proctype-respects-eq _ _ _ _ _ _).

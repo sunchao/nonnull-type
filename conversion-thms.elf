@@ -1,20 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.11 2010/10/25 14:56:21 csun Exp csun $
-
-%theorem methtpmatch-implies-proctypematch :
-        forall* {CM} {MM} {PM} {MT} {W} {L} {F} {M}
-        forall  {CM-L: clsmap-oflist CM L}
-                {CM-CM: clsmap-clsmap CM CM}
-                {CM-MM: clsmap-methmap CM MM}
-                {CM2PM: clsmap2predmap CM PM}
-                {MM2W: methmap2progtype PM CM MM W}
-                {MM-LP: methmap`lookup MM M MT}
-                {MC: methtpmatch CM MM L F MT}
-        exists  {PT} {W-LP: progtype`lookup W M PT}
-                {PC: proctypematch W F PT}
-        true.                
-
+%%%%% $Id: conversion-thms.elf,v 1.12 2010/10/25 22:37:13 csun Exp csun $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -544,4 +530,66 @@
 (convert/expr-ok _ _ _ _ _ _ T1 _ _ _)
 (convert/cond-ok _ _ _ _ _ _ T2 _ _ _)
 (convert/args-ok _ _ _ _ _ _ T3 _ _ _).
+
+
+%theorem methtpmatch-implies-proctypematch* :
+        forall* {CM} {MM} {PM} {MT} {W} {F} {OFL} {Pi} {Pi2}
+        forall  {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM2PM: clsmap2predmap CM PM}
+		{CM-OFL: clsmap-oflist CM OFL}			       
+		{MM2W: methmap2progtype PM CM MM W}			      
+                {OFL2P: oflist2perm PM OFL Pi}
+                {EQV: equiv Pi (sharedPerm , Pi2)}
+                {MC: methtpmatch* CM MM OFL F MT}
+        exists  {PT} {MT2PT: methtp2proctype* PM Pi2 MT PT}
+                {PC: proctypematch W F PT}
+        true.                
+
+- : methtpmatch-implies-proctypematch* 
+     CM-CM CM-MM CM2PM CM-OFL MM2W OFL2P EQV (methtpmatch*/base NTYP) _
+     (methtp2proctype*/base T2P) 
+     (proctypematch/base
+	(tTrans
+	   (transform/implies
+	      (implies/equiv (equiv/symmetric EQV)))
+	   (letTyping/base null TYP)
+	   (transform/inside [ret]
+	      (transform/trans
+		 (transform/implies
+		    (implies/trans3
+		       (implies/combine 
+			  (implies/reflexive)
+			  (implies/trans
+			     (implies/equiv EQV)
+			     (implies/equiv equiv/commute)))
+		       (implies/equiv equiv/commute)
+		       (implies/equiv (equiv/symmetric equiv/associate))))
+		 (transform/drop)))))
+     <- convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYP _ T2P TYP.
+
+- : methtpmatch-implies-proctypematch
+     CM-CM CM-MM CM2PM MM2W CM-OFL (methtpmatch*/args ([o] MC o)) _ 
+     (methtp2proctype*/arg ([o] MT2PT o) T2P) (proctypematch/arg ([o] PC o))
+     <- ({o} methtpmatch-implies-proctypematch
+	   CM-CM CM-MM CM2PM MM2W (MC o) _ (MT2PT o) (PC o)).
+
+%worlds (objvar) (methtpmatch-implies-proctypematch* _ _ _ _ _ _ _ _ _ _ _).
+%total MC (methtpmatch-implies-proctypematch* _ _ _ _ _ _ _ MC _ _ _).
+
+%theorem convert/expr-ok :
+        forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM-OFL: clsmap-oflist CM OFL}
+                {MM2W: methmap2progtype PM CM MM W}
+                {OFL2P: oflist2perm PM OFL Pi}
+		{NTYP: nullTyping CM MM OFL E (result/expr T)}
+        exists  {PF} {T2P: nulltp2perm PM T ([r] PF r)}
+                {TYP: typing W Pi E
+		       (output/exists [r] (output/expr r ((PF r) , Pi)))}
+        true.
+
+     
 

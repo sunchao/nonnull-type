@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.10 2010/10/21 03:11:16 csun Exp csun $
+%%%%% $Id: typing.elf,v 1.11 2010/10/25 22:37:24 csun Exp csun $
 %%%%% Created at February, 2010
 
 
@@ -130,16 +130,17 @@ nulltCallMeth
 
 %%%%% Method Typing
 
-methtpmatch : clsmap -> methmap -> oflist -> func -> methtp -> type.
+methtpmatch* : clsmap -> methmap -> oflist -> func -> methtp -> type.
  
-methtpmatch/base 
-   : methtpmatch CM MM L (func/0 E) (methtp/base T')
+methtpmatch*/base 
+   : methtpmatch* CM MM L (func/0 E) (methtp/base T)
       <- nullTyping CM MM L E (result/expr T).
 		   
-methtpmatch/args 
-   : methtpmatch CM MM L (func/+ F) (methtp/arg MTF T)
-      <- ({o} methtpmatch CM MM (oflist/+ o T L) (F o) (MTF o)).
+methtpmatch*/args 
+   : methtpmatch* CM MM L (func/+ F) (methtp/arg MTF T)
+      <- ({o} methtpmatch* CM MM (oflist/+ o T L) (F o) (MTF o)).
 
+%abbrev methtpmatch = [CM][MM][F][MT] methtpmatch* CM MM oflist/0 F MT.
 
 %%%%% Constructor Typing
  
