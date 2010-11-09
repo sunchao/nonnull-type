@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.12 2010/10/25 22:37:13 csun Exp csun $
+%%%%% $Id: conversion-thms.elf,v 1.13 2010/11/02 14:20:39 csun Exp csun $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -536,6 +536,7 @@
         forall* {CM} {MM} {PM} {MT} {W} {F} {OFL} {Pi} {Pi2}
         forall  {CM-CM: clsmap-clsmap CM CM}
                 {CM-MM: clsmap-methmap CM MM}
+                {CM-MT: clsmap-methtp CM MT}
                 {CM2PM: clsmap2predmap CM PM}
 		{CM-OFL: clsmap-oflist CM OFL}			       
 		{MM2W: methmap2progtype PM CM MM W}			      
@@ -547,8 +548,8 @@
         true.                
 
 - : methtpmatch-implies-proctypematch* 
-     CM-CM CM-MM CM2PM CM-OFL MM2W OFL2P EQV (methtpmatch*/base NTYP) _
-     (methtp2proctype*/base T2P) 
+     CM-CM CM-MM _ CM2PM CM-OFL MM2W OFL2P EQV (methtpmatch*/base NTYP)
+     %{=>}% _ (methtp2proctype*/base T2P) 
      (proctypematch/base
 	(tTrans
 	   (transform/implies
@@ -568,15 +569,278 @@
 		 (transform/drop)))))
      <- convert/expr-ok CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYP _ T2P TYP.
 
-- : methtpmatch-implies-proctypematch
-     CM-CM CM-MM CM2PM MM2W CM-OFL (methtpmatch*/args ([o] MC o)) _ 
-     (methtp2proctype*/arg ([o] MT2PT o) T2P) (proctypematch/arg ([o] PC o))
-     <- ({o} methtpmatch-implies-proctypematch
-	   CM-CM CM-MM CM2PM MM2W (MC o) _ (MT2PT o) (PC o)).
+- : methtpmatch-implies-proctypematch*
+     CM-CM CM-MM (clsmap-methtp/arg ([o] (CM-MT o)) CM-T)
+     CM2PM CM-OFL MM2W OFL2P EQV (methtpmatch*/args ([o] MC o)) %{=>}%
+     _ (methtp2proctype*/arg ([o] MT2PT o) T2P) (proctypematch/arg ([o] PC o))
+     <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T _ T2P
+     <- ({o} methtpmatch-implies-proctypematch* 
+	   CM-CM CM-MM (CM-MT o) CM2PM (clsmap-oflist/+ CM-T CM-OFL) MM2W 
+	   (oflist2perm/+ T2P OFL2P)
+	   (equiv/transitive
+	      (equiv/combine (equiv/reflexive) EQV)
+	      (equiv/roll2))
+	   (MC o) _ (MT2PT o) (PC o)).
+	   
+%worlds (objvar) (methtpmatch-implies-proctypematch* _ _ _ _ _ _ _ _ _ _ _ _).
+%total MC (methtpmatch-implies-proctypematch* _ _ _ _ _ _ _ _ MC _ _ _).
 
-%worlds (objvar) (methtpmatch-implies-proctypematch* _ _ _ _ _ _ _ _ _ _ _).
-%total MC (methtpmatch-implies-proctypematch* _ _ _ _ _ _ _ MC _ _ _).
 
+%theorem methtpmatch-implies-proctypematch :
+        forall* {CM} {MM} {PM} {MT} {W} {F}
+        forall  {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM-MT: clsmap-methtp CM MT}
+                {CM2PM: clsmap2predmap CM PM}
+		{MM2W: methmap2progtype PM CM MM W}			      
+                {MC: methtpmatch CM MM F MT}
+        exists  {PT} {MT2PT: methtp2proctype PM MT PT}
+                {PC: proctypematch W F PT}
+        true.                
+
+- : methtpmatch-implies-proctypematch 
+     CM-CM CM-MM CM-MT CM2PM MM2W MC PT MT2PT PC
+     <- methtpmatch-implies-proctypematch*
+	CM-CM CM-MM CM-MT CM2PM clsmap-oflist/0 MM2W oflist2perm/0
+	(equiv/symmetric equiv/identity) MC PT MT2PT PC.
+
+%worlds () (methtpmatch-implies-proctypematch _ _ _ _ _ _ _ _ _).
+%total  {} (methtpmatch-implies-proctypematch _ _ _ _ _ _ _ _ _).
+
+
+%theorem allocFields-gives-fldperm :
+        forall* {PM} {CM} {MM} {W} {Pi} {NN} {PF} {C} {PD} {L} {E} {F} {FF}
+        forall  {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+                {OFL2P: oflist2perm PM L Pi}
+                {PM-L: predmap`lookup PM C PD}
+                {NN2P: nn2perm NN PF}
+                {FNN2P: fldnn2perm F NN ([p][r] FF p r)}
+                {TYP: typing W Pi E (output/exists [r] (output/expr r ((PF PD r) , Pi)))}
+        exists  {TYP: {t} typing W ((unitperm (basic t F null)) , Pi) (write (lit t) F E) 
+		       (output/exists [r] (output/expr r ((FF PD r) , Pi)))}
+	true.
+
+
+%theorem fldmap-filt-nnflds : 
+        forall* {FM} {S} {N} {C}
+        forall  {FN: filt-nnflds FM S}
+                {L: fldmap`lookup FM N (nulltp/norm C nn/yes)}
+        exists  {MB: set`member S N}
+        true.
+
+%worlds (objvar) (fldmap-filt-nnflds _ _ _).
+%trustme %total {} (fldmap-filt-nnflds _ _ _).
+
+
+rawperm-output
+   : predmap -> fldmap -> set -> (object -> permission) -> type.
+
+rawperm-output/0
+   : rawperm-output PM FM set/0 ([t] empty).
+
+rawperm-output/+ 
+   : rawperm-output PM FM (set/+ F S) ([t] ((FF CP t) , (PF t)))
+      <- fldmap`lookup FM F (nulltp/norm C NN)
+      <- predmap`lookup PM C CP
+      <- fldnn2perm F NN FF
+      <- set`shift F S S'
+      <- rawperm-output PM FM S' ([t] PF t).
+      
+
+nullflds2preds : predmap -> fldmap -> set -> (object -> permission) -> type.
+     
+nullflds2preds/0 : nullflds2preds _ _ set/0 ([_] empty).
+
+nullflds2preds/+
+   : nullflds2preds PM FM (set/+ F S) ([t] ((FF CP t) , (Pi t)))
+      <- fldmap`lookup FM 
+
+
+%%% we need to "assemble" field permissions 
+
+%%% we keep taking raw field permissions from OS, and assemble with predicates in Pi.
+%%% For all the rests in OS, we know they must be of "maybe-null" type, thus we can
+%%% construct field permission for them. At last, we assemble these two parts, and 
+%%% get the permission for the whole class.
+
+%%% for the output, we need a relation saying all the raw permission taken from OS are
+%%% assembled in output. Then, we know all "non-null" fields are assembled. Then, we
+%%% know we can construct the class permission.
+
+%%% first we filter out all "maybe null" fields and construct predicates for them.
+
+
+set-rawfldperm : set -> (object -> permission) -> type.
+
+set-rawfldperm/0 : set-rawfldperm set/0 ([_] empty).
+
+set-rawfldperm/+ 
+   : set-rawfldperm S ([t] (unitperm (basic t F null)) , (B t))
+      <- set`member S F
+      <- set`remove S (set/+ F set/0) S'
+      <- set-rawfldperm S' B.
+
+set-fldpred : predmap -> fldmap -> set -> (object -> permission) -> type.
+
+set-fldpred/0 : set-fldpred _ _ set/0 ([_] empty).
+
+set-fldpred/+ 
+   : set-fldpred PM FM S ([t] (R P t) , (H t))
+      <- set`member S F
+      <- fldmap`lookup FM F (nulltp/norm C NN)
+      <- fldnn2perm F NN R
+      <- predmap`lookup PM C P
+      <- set`remove S (set/+ F set/0) S'
+      <- set-fldpred PM FM S' H.
+
+rawfldperm-expr : (object -> permission) -> (object -> expr) -> type.
+
+rawfldperm-expr/0 : rawfldperm-expr ([_] empty) ([t] lit t).
+
+rawfldperm-expr/+
+   : rawfldperm-expr
+      ([t] (unitperm (basic t F null)) , (P t)) 
+      ([t] (seq (write (lit t) F _) (E t)))
+      <- rawfldperm-expr P E.
+
+
+is-nonnull-set : fldmap -> set -> type.
+
+is-nonnull-set/0 : is-nonnull-set _ set/0.
+
+is-nonnull-set/+
+   : is-nonnull-set FM (set/+ F S)
+      <- fldmap`lookup FM F (nulltp/norm _ nn/yes)
+      <- set`shift F S S'
+      <- is-nonnull-set FM S'.
+
+
+%theorem maybe-null-not-in-nonnull-set :
+        forall* {S} {FM} {F} {C}
+        forall  {IS-NS: is-nonnull-set FM S}
+                {FM-L: fldmap`lookup FM F (nulltp/norm C nn/may)}
+        exists  {NM: set`not-member S F}
+        true.
+
+- : maybe-null-not-in-nonnull-set is-nonnull-set/0 _ set`not-member/0.
+
+%worlds () (maybe-null-not-in-nonnull-set _ _ _).
+%trustme %total {} (maybe-null-not-in-nonnull-set _ _ _).
+     
+
+%theorem remove-maybe-null-preserves-leq :
+        forall* {FM} {F} {S} {S0} {S1} {C}
+        forall  {IS-NS: is-nonnull-set FM S}
+                {LEQ: set`leq S S0}
+                {RM: set`remove S0 (set/+ F set/0) S1}
+                {FM-L: fldmap`lookup FM F (nulltp/norm C nn/may)}
+        exists  {LEQ: set`leq S S1}
+        true.
+
+
+%worlds () (remove-maybe-null-preserves-leq _ _ _ _ _).
+%trustme %total {} (remove-maybe-null-preserves-leq _ _ _ _ _).
+
+
+%theorem can-assemble-fldperm :
+        forall* {PM} {F} {NN} {C} {PD} {PF} 
+        forall  {NN2P: nn2perm NN PF}
+                {PM-LP: predmap`lookup PM C PD}
+        exists  {FF} {FNN2P: fldnn2perm F NN FF}
+                {I: {t}{r} implies ((unitperm (basic t F r)) , (PF PD r)) (FF PD t)}
+        true.
+
+- : can-assemble-fldperm
+     nn2perm/yes PM-LP _ fldnn2perm/yes ([t][r] (implies/pack r)).
+
+- : can-assemble-fldperm
+     nn2perm/may PM-LP _ fldnn2perm/may ([t][r] (implies/pack r)).
+     
+%worlds () (can-assemble-fldperm _ _ _ _ _).
+%total {} (can-assemble-fldperm _ _ _ _ _).
+	     
+
+
+%theorem constyping-implies-typing/L :
+        forall* {PM} {CM} {MM} {FM} {E} {W}
+                {S} {S0} {L} {Pi} {R0}
+        forall  {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM-OFL: clsmap-oflist CM L}
+                {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+                {OFL2P: oflist2perm PM L Pi}
+                {CTYP: constyping CM MM FM S L ([t] E t)}
+		{S0-R0: set-rawfldperm S0 R0}
+                {R0-E: rawfldperm-expr R0 E}
+        exists  {R1} {H} 
+                {TYP: {t} typing W ((R0 t) , Pi) (E t) 
+		       (output/expr t ((R1 t) , ((H t) , Pi)))}
+                {S1} {S1-R1: set-rawfldperm S1 R1}
+                {S2} {S2-H: set-fldpred PM FM S2 H}
+                {S<=S2: set`leq S S2}
+                {RM: set`remove S0 S1 S2}
+        true.
+
+- : constyping-implies-typing/L CM-CM CM-MM CM-OFL CM2PM MM2W OFL2P 
+     (constyping/mn CTYP NTYP FM-L) 
+     (set-rawfldperm/+ S-R0 S-RM S-MB) (rawfldperm-expr/+ R0-E) _ _ %{=>}%
+     ([t] tTrans2
+	(tLet
+	   (tWrite2
+	      (tTrans2
+		 (TYPE' t)
+		 (transform/inside [r]
+		    (transform/implies
+		       (implies/equiv
+			  (equiv/symmetric equiv/associate)))))
+	      (letTyping/exists [r]
+		 (letTyping/base r
+		    (tTrans2
+		       (tWrite)
+		       (transform/implies
+			  (implies/trans3
+			     (implies/combine
+				(implies/reflexive) 
+				(implies/equiv equiv/roll2))
+			     (implies/equiv equiv/associate)
+			     (implies/combine (I t r) (implies/reflexive))))))))
+	   (letTyping/exists [r]
+	      (letTyping/base r
+		 (tTrans2
+		    (TYPB' t)
+		    (transform/implies
+		       (implies/trans
+			  (implies/equiv equiv/roll2)
+			  (implies/combine
+			     (implies/reflexive)
+			     (implies/equiv equiv/associate))))))))
+	(transform/rem-unused))
+     _ S1-R1 _ (set-fldpred/+ S2-H _ PM-LP FNN2P FM-L _) _ _
+     <- convert/expr-ok
+	CM2PM CM-CM CM-MM CM-OFL MM2W OFL2P NTYP _ (nulltp2perm/norm PM-LP NN2P) TYPE
+     <- constyping-implies-typing/L
+	CM-CM CM-MM CM-OFL CM2PM MM2W OFL2P CTYP S-R0 R0-E 
+	_ _ ([t] TYPB t) _ S1-R1 _ S2-H S<=S2 RM
+     <- can-assemble-fldperm NN2P PM-LP _ FNN2P ([t][r] I t r)
+     <- ({t} typing-frame* TYPE (envadd/exists ([r] envadd/expr)) (TYPE' t))
+     <- ({t} typing-frame* (TYPB t) (envadd/expr) (TYPB' t)).
+
+
+- : constyping-implies-typing/L _ _ _ _ _ _
+     (constyping/0) S0-R0 _ _ _  %{=>}%
+     ([t] tTrans2
+	(tObjLoc)
+	(transform/trans
+	   (transform/implies
+	      (implies/combine
+		 (implies/reflexive)
+		 (implies/equiv (equiv/symmetric equiv/identity))))
+	   (transform/gen-exists t)))
+     S0-R0 _ set/0 set-fldpred/0 set`leq/0 set`remove/L.
+
+ 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
         forall  {CM2PM: clsmap2predmap CM PM}
@@ -590,6 +854,43 @@
                 {TYP: typing W Pi E
 		       (output/exists [r] (output/expr r ((PF r) , Pi)))}
         true.
+
+%theorem constyping-implies-typing :
+        forall* {PM} {CM} {MM} {FM} {E} {W} {S} {S0} {S1}
+                {G} {L} {OS} {Pi} {PF} {FF}
+        forall  {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM-OFL: clsmap-oflist CM L}
+                {CM2PM: clsmap2predmap CM PM}
+                {MM2W: methmap2progtype PM CM MM W}
+                {OFL2P: oflist2perm PM L Pi}
+                {CM-L: clsmap`lookup CM C FM}
+                {DM: fldmap`domain FM S}
+                {AF: {t} allocFields t S (OS t)}
+                {FNN: filt-nnflds FM S0}
+                {SR: set`remove S S0 S1}
+                {CTYP: constyping CM MM FM S0 L ([t] E t)}
+        exists  {PF} {PD} 
+                {TYP: {t} typing W ((OS t) , Pi) (E t)
+		      (output/exists [rt] (output/expr rt (sharedPerm , (PF PD rt))))}
+                {PM: predmap`lookup CM C PD}
+                {NN2P: nn2perm nn/yes PF}
+        true.
+
+
+%theorem constpmatch-implies-proctypematch* :
+        forall* {CM} {MM} {PM} {FM} {CTF} {W} {F} {OFL} {Pi} {Pi2} {S}
+        forall  {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM2PM: clsmap2predmap CM PM}
+		{CM-OFL: clsmap-oflist CM OFL}			       
+		{MM2W: methmap2progtype PM CM MM W}			      
+                {OFL2P: oflist2perm PM OFL Pi}
+                {EQV: equiv Pi (sharedPerm , Pi2)}
+                {MC: constypematch* CM MM FM S OFL F CTF}
+        exists  {PTF} {MT2PT: constp2proctype PM FM CTF PTF}
+                {PC: proctypematch W (func/+ F) (proctype/arg PTF)}
+        true.                
 
      
 
