@@ -60,7 +60,7 @@ clsmap-clsmap/0 : clsmap-clsmap _ clsmap`map/0.
 
 clsmap-clsmap/+
    : clsmap-clsmap M (clsmap`map/+ C FM CM)
-      <- clsmap`domain? M C true
+      <- clsmap`lookup M C FM
       <- clsmap-fldmap M FM
       <- clsmap`shift C CM CM'
       <- clsmap-clsmap M CM'.

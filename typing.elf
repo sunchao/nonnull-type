@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.11 2010/10/25 22:37:24 csun Exp csun $
+%%%%% $Id: typing.elf,v 1.12 2010/11/02 14:20:55 csun Exp csun $
 %%%%% Created at February, 2010
 
 
@@ -142,40 +142,44 @@ methtpmatch*/args
 
 %abbrev methtpmatch = [CM][MM][F][MT] methtpmatch* CM MM oflist/0 F MT.
 
+
 %%%%% Constructor Typing
  
-constyping : nat -> set -> clsmap -> methmap -> 
-	oflist -> (object -> expr) -> type.
+constyping
+   : clsmap -> methmap -> fldmap -> set -> oflist -> (object -> expr) -> type.
     
-constyping/0 : constyping _ (set/0) _ _ _ ([t] lit t).
+constyping/0 : constyping _ _ _ (set/0) _ ([t] lit t).
 
-constyping/nn : constyping C S CM MM L ([t] (seq (write (lit t) F E) (B t))) 
-    <- clsmap`lookup CM C FM
-    <- fldmap`lookup FM F (nulltp/norm C' nn/yes)
-    <- set`remove S (set/+ F set/0) S'
-    <- nullTyping CM MM L E (result/expr (nulltp/norm C' nn/yes))
-    <- constyping C S' CM MM L ([t] B t).
+constyping/nn
+   : constyping CM MM FM S L ([t] (seq (write (lit t) F E) (B t))) 
+      <- fldmap`lookup FM F (nulltp/norm C nn/yes)
+      <- set`remove S (set/+ F set/0) S1
+      <- nullTyping CM MM L E (result/expr (nulltp/norm C nn/yes))
+      <- constyping CM MM FM S1 L ([t] B t).
 
-constyping/mn : constyping C S CM MM L ([t] (seq (write (lit t) F E) (B t)))
-    <- clsmap`lookup CM C FM
-    <- fldmap`lookup FM F (nulltp/norm C' nn/may)
-    <- nullTyping CM MM L E (result/expr (nulltp/norm C' _))
-    <- constyping C S CM MM L ([t] B t).
+constyping/mn 
+   : constyping CM MM FM S L ([t] (seq (write (lit t) F E) (B t)))
+      <- fldmap`lookup FM F (nulltp/norm C nn/may)
+      <- nullTyping CM MM L E (result/expr (nulltp/norm C _))
+      <- constyping CM MM FM S L ([t] B t).
 
-
-constypematch : nat -> set -> clsmap -> methmap ->
+constypematch* : clsmap -> methmap -> fldmap -> set ->
    oflist -> (object -> func) -> (object -> methtp) -> type.
 
-constypematch/base : constyping C S CM MM L E ->
-    constypematch C S CM MM L ([t] func/0 (E t)) ([t] methtp/base T).
-
-constypematch/args 
-   : constypematch C S CM MM L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
-      <- ({o} constypematch C S CM MM (oflist/+ o T L)  ([t] (F t o)) ([t] (CTF t o))).
-	    
+constypematch*/base 
+   : constypematch* CM MM FM S L ([t] func/0 (E t)) ([t] methtp/base T)
+      <- constyping CM MM FM S L E.
+    
+constypematch*/args 
+   : constypematch* CM MM FM S L ([t] (func/+ ([o] F t o))) ([t] methtp/arg (CTF t) T)
+      <- ({o} constypematch* CM MM FM S (oflist/+ o T L)  ([t] (F t o)) ([t] (CTF t o))).
+	      
+%abbrev constypematch
+   = [CM][MM][FM][S][CTF][MTF] constypematch* CM MM FM S oflist/0 CTF MTF.
 
 
 %%%%% Program Typing
+
 
 filt-nnflds : fldmap -> set -> type.
 
@@ -190,3 +194,32 @@ filt-nnflds/out
    : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/may) M) S
       <- fldmap`shift F M M'
       <- filt-nnflds M S.
+
+
+methmapmatch* : clsmap -> methmap -> methmap -> prog -> type.
+
+methmapmatch*/0 : methmapmatch* _ _ methmap`map/0 prog`map/0.
+
+methmapmatch*/+/const 
+   : methmapmatch* CM MM0
+      (methmap`map/+ N (methtp/arg ([t] CTF t) T) MM) 
+      (prog`map/+ N (func/+ ([t] FUNF t)) G)
+      <- clsmap`lookup CM N FM
+      <- filt-nnflds FM S
+      <- constypematch CM MM0 FM S FUNF CTF
+      <- methmap`shift N MM MM1
+      <- prog`shift N G G1
+      <- methmapmatch* CM MM0 MM1 G1.
+
+methmapmatch*/+/meth 
+   : methmapmatch* CM MM0
+      (methmap`map/+ N MT MM) (prog`map/+ N FUN G)
+      <- clsmap`fresh CM N
+      <- methtpmatch CM MM0 FUN MT
+      <- methmap`shift N MM MM1
+      <- prog`shift N G G1
+      <- methmapmatch* CM MM0 MM1 G1.
+
+%abbrev methmapmatch = [CM][MM][G] methmapmatch* CM MM MM G.
+
+		   

@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id: conversion-lemmas.elf,v 1.14 2010/10/25 14:56:20 csun Exp csun $
+%%%%% $Id: conversion-lemmas.elf,v 1.15 2010/10/25 22:38:40 csun Exp $
 %%%%% Created at July 19, 2010
 
 %theorem conversion-helper/let3 :
@@ -292,6 +292,7 @@
 %worlds (objvar) (lookup-fldperm _ _ _ _ _ _ _ _ _ _).
 %total  {} (lookup-fldperm _ _ _ _ _ _ _ _ _ _).
 
+
 %theorem lookup-fldperm-converse :
 	forall* {CM} {PM} {FM} {C} {D} {F} {CJ} {NN} {PD} 
 	forall  {CM2PM: clsmap2predmap CM PM}
@@ -402,7 +403,6 @@
 
 %worlds (objvar) (get-precise-exists _ _ _ _ _).
 %total  {} (get-precise-exists _ _ _ _ _).
-
 
 
 %theorem output/expr-format :
