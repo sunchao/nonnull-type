@@ -168,6 +168,20 @@ clsmap2predmap*/out
 %total  {} (predmap-eq-respects-pred-eq _ _ _).
 
 
+%theorem fldnn2perm-respects-eq :
+        forall* {F1} {NN1} {W1} {F2} {NN2} {W2}
+        forall  {FNN2P1: fldnn2perm F1 NN1 ([p][o] W1 p o)}
+                {FEQ: nat`eq F1 F2} {NNEQ: nn`eq NN1 NN2}
+                {PEQ: {p}{o} permission`eq (W1 p o) (W2 p o)}
+        exists  {FNN2P2: fldnn2perm F2 NN2 ([p][o] W2 p o)}
+        true.
+
+- : fldnn2perm-respects-eq FNN2P nat`eq/ nn`eq/ ([_][_] permission`eq/) FNN2P.
+
+%worlds () (fldnn2perm-respects-eq _ _ _ _ _).
+%total  {} (fldnn2perm-respects-eq _ _ _ _ _).
+
+
 %theorem fldnn2perm-deterministic :
         forall* {F1} {F2} {NN1} {NN2} {PF1} {PF2}
         forall  {E: nat`eq F1 F2} {E: nn`eq NN1 NN2}

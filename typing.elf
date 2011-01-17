@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.12 2010/11/02 14:20:55 csun Exp csun $
+%%%%% $Id: typing.elf,v 1.13 2010/11/24 04:58:54 csun Exp $
 %%%%% Created at February, 2010
 
 
@@ -186,14 +186,15 @@ filt-nnflds : fldmap -> set -> type.
 filt-nnflds/0 : filt-nnflds fldmap`map/0 set`set/0.
 
 filt-nnflds/in
-   : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/yes) M) (set`set/+ F S)
+   : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/yes) M) S'
       <- fldmap`shift F M M'
-      <- filt-nnflds M' S.
+      <- filt-nnflds M' S
+      <- set`union S (set/+ F set/0) S'.
 
 filt-nnflds/out
    : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/may) M) S
       <- fldmap`shift F M M'
-      <- filt-nnflds M S.
+      <- filt-nnflds M' S.
 
 
 methmapmatch* : clsmap -> methmap -> methmap -> prog -> type.

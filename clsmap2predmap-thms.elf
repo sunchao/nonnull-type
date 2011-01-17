@@ -1,6 +1,6 @@
 %%%%% clsmap2predmap-thms.elf
 %%%%% theorems about clsmap2predmap 
-%%%%% $Id: clsmap2predmap-thms.elf,v 1.5 2010/11/01 22:53:16 csun Exp csun $
+%%%%% $Id: clsmap2predmap-thms.elf,v 1.6 2010/11/03 21:32:26 csun Exp csun $
 %%%%% Jun 30, 2010
 
 
@@ -829,7 +829,7 @@ clsmap-predmap*/+
      <- clsmap`shift-preserves-size SZ SH SZ'
      <- clsmap2predmap-total/L1 N SZ' M-M M-CM' M-PMin DM-S DM-R R<=S PMout CM2PM.
 
-- : {CJ} {M-PMout2} {CM2PM} {M-PMout} {F2CF} 
+- :  {CJ} {M-PMout2} {CM2PM} {M-PMout} {F2CF} 
      {PMF<=PMF} {M-PMF} {PMF-LP} {F2CF'} {PME-LP} 
      clsmap2predmap-total/L2 N false SZ Out
      M-LP M-M M-PMin SH M-CM' M-FM DM-S DM-R R<=S XXX

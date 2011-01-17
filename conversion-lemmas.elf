@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id: conversion-lemmas.elf,v 1.15 2010/10/25 22:38:40 csun Exp $
+%%%%% $Id: conversion-lemmas.elf,v 1.16 2010/11/24 04:59:02 csun Exp csun $
 %%%%% Created at July 19, 2010
 
 %theorem conversion-helper/let3 :
@@ -145,6 +145,51 @@
 
 %worlds (objvar) (clspred-remove-cond _ _ _).
 %total {} (clspred-remove-cond _ _ _).
+
+
+%theorem nn2perm-implies-fldnn2perm :
+        forall* {F} {NN} {PM} {C} {P} {W} 
+        forall  {NN2P: nn2perm NN ([p][o] W p o)}
+                {L: predmap`lookup PM C P}
+        exists  {R} {FNN2P: fldnn2perm F NN ([p][o] R p o)}
+                {IMP: {r}{t} implies ((unitperm (basic t F r)) , (W P r)) (R P t)}
+        true.
+
+- : nn2perm-implies-fldnn2perm nn2perm/yes _ _ fldnn2perm/yes ([r][_] (implies/pack r)) .
+- : nn2perm-implies-fldnn2perm nn2perm/may _ _ fldnn2perm/may ([r][_] (implies/pack r)).
+
+%worlds () (nn2perm-implies-fldnn2perm _ _ _ _ _).
+%total NP (nn2perm-implies-fldnn2perm NP _ _ _ _).
+
+
+%%% another trivial theorem
+%%% very similar to clspred-implies-empty
+
+%theorem nn2perm-implies-empty :
+        forall* {NN} {H} {PM} {C} {P}
+        forall  {NN2P: nn2perm NN ([p][r] H p r)}
+                {PM-L: predmap`lookup PM C P}
+        exists  {IMP: {r} implies (H P r) empty}
+        true.
+
+- : nn2perm-implies-empty nn2perm/yes _
+     ([_] implies/trans
+	(implies/nonlinear bimplies/tt)
+	(implies/true2empty)).
+
+- : nn2perm-implies-empty nn2perm/may _
+     ([_] implies/trans
+	(implies/cond-inner
+	   (bimplies/reflexive)
+	   (bimplies/reflexive)
+	   (implies/reflexive)
+	   (implies/trans
+	      (implies/nonlinear bimplies/tt)
+	      (implies/true2empty)))
+	(implies/cond-equal)).
+
+%worlds () (nn2perm-implies-empty _ _ _).
+%total  {} (nn2perm-implies-empty _ _ _).
 
 
 %theorem clspred-implies-empty :
