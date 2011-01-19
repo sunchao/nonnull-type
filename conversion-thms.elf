@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.16 2010/12/01 14:43:28 csun Exp csun $
+%%%%% $Id: conversion-thms.elf,v 1.17 2011/01/17 04:55:25 csun Exp $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -904,7 +904,6 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 
 %%% theorems about set-fldpred
 
-
 %theorem set-fldpred-imply :
         forall* {PM} {FM} {FP} {S} {F}
         forall  {S-FP: set-fldpred PM FM S ([t] FP t)} {F&S: set-in F S} 
@@ -1137,19 +1136,6 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 (set-fldpred-reorder/L _ _ SF2 _ _ _ _ _ _ _ _ _ _ _ _).
 
 
-
-% %theorem fldmap2conj-reorder :
-%         forall* {CM} {PM} {FM} {G} 
-%         forall  {F2J: fldmap2conj CM PM FM ([t] G t) PM}
-%                 {FM-L: fldmap`lookup FM F (nulltp/norm C NN)}
-%         exists  {PF} {FNN2P: fldnn2perm F NN ([p][r] PF p r)}
-%                 {CP} {PM-L: predmap`lookup PM C CP}
-%                 {FM1} {
-%                 {H} {{IMP: {t} bimplies (G t) (conj (nested (PF CP t) null own) (H t))}
-%         true.
-
-
-
 %theorem set-fldpred-implies-fldmap2conj/L :
         forall* {PM} {FM} {F} {S} {FP} {C} {NN}
         forall  {SF: set-fldpred PM FM S ([t] FP t)}
@@ -1175,60 +1161,171 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %total  {} (set-fldpred-implies-fldmap2conj/L _ _ _ _ _ _ _ _ _ _ _ _ _).
 
 
-%theorem set-fldpred-imply :
-        forall* {PM} {FM} {FP} {S} {F}
-        forall  {S-FP: set-fldpred PM FM S ([t] FP t)} {F&S: set-in F S} 
-        exists  {C} {NN} {FM-L: fldmap`lookup FM F (nulltp/norm C NN)}
-                {W} {FNN2P: fldnn2perm F NN ([p][o] W p o)}
-                {P} {PM-L: predmap`lookup PM C P}
-                {RP} {TAS: {t} implies (FP t) ((W P t) , (RP t))}
-                {S1} {S1-RP: set-fldpred PM FM S1 ([t] RP t)}
-                {NM: set-notin F S1} {U: set-unit-union S1 F S} 
+%%% couldn't find this theorem in fldmap.elf
+
+%theorem fldmap-shift-preserves-fresh :
+        forall* {FM} {FM'} {N} {F} {T}
+        forall  {NM: fldmap`fresh (fldmap`map/+ F T FM) N}
+                {SH: fldmap`shift F FM FM'}
+        exists  {NM: fldmap`fresh FM' N}
         true.
 
-%theorem set-fldpred-implies-fldmap2conj : 
-        forall* {CM} {PM} {FM} {S} {FP} 
-        forall  {N} {SZ: fldmap`size FM N} 
-                {GD: good-fldmap FM}
+- : fldmap-shift-preserves-fresh 
+     _ fldmap`shift/0 fldmap`fresh/0.
+
+- : fldmap-shift-preserves-fresh FS (fldmap`shift/+ SF+N2=N3) FS1
+     <- nat`plus-swap-succ SF+N2=N3 F+SN2=N3
+     <- nat`plus-commutative F+SN2=N3 SN2+F=N3
+     <- fldmap`update-preserves-fresh-converse FS (fldmap`update/< SN2+F=N3) FS1.
+
+%worlds () (fldmap-shift-preserves-fresh _ _ _).
+%total  SH (fldmap-shift-preserves-fresh _ SH _).
+
+	
+%%% An important lemma for set-fldpred-implies-fldmap2conj
+
+%theorem set-fldpred-implies-fldmap2conj/L2 :
+        forall* {CM} {PM} {FM} {FM1} {G} {F} {C} {P} {NN} {W} 
+        forall  {F2C: fldmap2conj CM PM FM1 ([t] G t) PM}
+                {FS: fldmap`fresh FM1 F} 
+                {U: fldmap`update FM1 F (nulltp/norm C NN) FM}
+                {PM-L: predmap`lookup PM C P} 
+		{FNN2P: fldnn2perm F NN ([p][o] W p o)}
+        exists  {G1} {F2C: fldmap2conj CM PM FM ([t] G1 t) PM}
+                {IMP: {o} bimplies true (conj (nested (W P o) null own) (G o)) (G1 o)}
+        true.
+
+- : set-fldpred-implies-fldmap2conj/L2 fldmap2conj/0 fldmap`fresh/0 fldmap`update/0
+     PM-L FNN2P _ (fldmap2conj/norm/in fldmap2conj/0 FNN2P fldmap`shift/0 PM-L)
+     ([o] bimplies/reflexive).
+
+- : set-fldpred-implies-fldmap2conj/L2 (fldmap2conj/null F2C SH)
+     F/FM1 FM1+F=FM PM-L FNN2P _ _ _
+     <- fldmap-shift-preserves-fresh F/FM1 SH F/FM'
+     <- set-fldpred-implies-fldmap2conj/L2 F2C 
+
+
+%worlds () (set-fldpred-implies-fldmap2conj/L2 _ _ _ _ _ _ _ _).
+%trustme %total  {} (set-fldpred-implies-fldmap2conj/L2 _ _ _ _ _ _ _ _).
+
+
+%theorem set-fldpred-implies-fldmap2conj/L4 :
+        forall* {FM} {S1} {S} {F} {T} {N}
+        forall  {SZ: fldmap`size FM (s N)}
                 {DM: fldmap`domain FM S}
+                {L: fldmap`lookup FM F T}
+                {U: set`union S1 (set/+ F set/0) S}
+                {FS: set`not-member S1 F}
+        exists  {FM1} {SZ: fldmap`size FM1 N} 
+                {DM: fldmap`domain FM1 S1}
+                {FS: fldmap`fresh FM1 F}
+                {U: fldmap`update FM1 F T FM}
+        true.
+
+%worlds () (set-fldpred-implies-fldmap2conj/L4 _ _ _ _ _ _ _ _ _ _).
+%trustme %total  {} (set-fldpred-implies-fldmap2conj/L4 _ _ _ _ _ _ _ _ _ _).
+
+
+%theorem set-fldpred-shrink-fldmap :
+        forall* {PM} {FM1} {FM} {S} {R} {F} {T} 
+        forall  {SF: set-fldpred PM FM1 S ([t] (R t))}
+                {FS: set`not-member S F}
+                {U: fldmap`update FM F T FM1}
+        exists  {SF: set-fldpred PM FM S ([t] (R t))}
+        true.
+
+- : set-fldpred-shrink-fldmap set-fldpred/0 _ _ set-fldpred/0.
+
+- : set-fldpred-shrink-fldmap
+     (set-fldpred/+ S1-R N/S1 S1UN=S PM-L FNN2P FM1-L) F/S FM+F=FM1 
+     (set-fldpred/+ S1-R1 N/S1 S1UN=S PM-L FNN2P FM-L)
+     <- set`union-preserves-not-member-converse* F/S S1UN=S F/S1 _
+     <- set-fldpred-shrink-fldmap S1-R F/S1 FM+F=FM1 S1-R1
+     <- set`union-left-preserves-member* (set`lookup/= nat`eq/) S1UN=S N#S
+     <- set`not-member-lookup-not-equal F/S N#S F!=N
+     <- nat`ne-symmetric F!=N N!=F
+     <- fldmap`update-preserves-lookup-converse FM1-L FM+F=FM1 N!=F FM-L.
+
+%worlds () (set-fldpred-shrink-fldmap _ _ _ _).
+%total  SF (set-fldpred-shrink-fldmap SF _ _ _).
+
+
+%theorem set-fldpred-implies-fldmap2conj : 
+        forall* {CM} {PM} {FM:fldmap} {S} {FP} 
+        forall  {N} {SZ: fldmap`size FM N} {DM: fldmap`domain FM S}
 		{SF: set-fldpred PM FM S ([t] FP t)}
         exists  {G} {F2C: fldmap2conj CM PM FM ([t] G t) PM}
-                {TAS: {t} transform
-		       (output/expr t (FP t)) 
+                {TAS: {t} transform 
+		       (output/expr t (FP t))
 		       (output/expr t (unitperm (nonlinear (G t))))}
         true.
 
-- : set-fldpred-implies-fldmap2conj z fldmap`size/0 _
+- : set-fldpred-implies-fldmap2conj z _ 
      fldmap`domain/0 set-fldpred/0 %{=>}% 
-     _ fldmap2conj/0 ([_] transform/implies (implies/empty2true)).
+     _ fldmap2conj/0 ([_] (transform/implies implies/empty2true)).
 
-- : set-fldpred-implies-fldmap2conj (s N) (fldmap`size/+ SZ) (good-fldmap/+ GF1)
-     (fldmap`domain/+ DM-FM1) SF %{=>}%
-     _ (fldmap2conj/norm/in F2C FNN2P F<<FM1=FM1' PM-L) 
+- : set-fldpred-implies-fldmap2conj (s N) SZ DM
+     (set-fldpred/+ S1-R F/S1 S1UF=S PM-L FNN2P FM-L) %{=>}% _ F2C 
      ([t] transform/trans
-	(transform/implies (IMP t))
-	(transform/trans3
-	   (TAS' t)
+	(TAS1 t)
+	(transform/trans
 	   (transform/nest)
 	   (transform/implies
-	      (implies/combine2conj))))
-     <- fldmap`shift-total F<<FM1=FM1'
-     <- fldmap`shift-preserves-size SZ F<<FM1=FM1' SZ'
-     <- set-fldpred-implies-fldmap2conj/L 
-	SF (fldmap`lookup/= nat`eq/) (set`lookup/= nat`eq/) _ _ 
-	(set`union/> _ SN3+F=N1) _ S1'-R _ FNN2P _ PM-L ([t] IMP t)
-     <- nat`plus-swap-succ SN3+F=N1 N3+SF=N1
-     <- nat`plus-commutative N3+SF=N1 SF+N3=N1
-     <- fldmap`shift-preserves-domain* DM-FM1 F<<FM1=FM1' (set`shift/+ SF+N3=N1) DM-FM1'
-     <- shift-preserves-good-fldmap GF1 F<<FM1=FM1' GF1'
-     <- set-fldpred-implies-fldmap2conj N SZ' GF1' DM-FM1' S1'-R _ F2C ([t] TAS t)
-     <- ({t} transform-commutes-envadd* (TAS t) envadd/expr envadd/expr (TAS' t)).
+	      (implies/trans
+		 (implies/combine2conj)
+		 (implies/nonlinear (BIMP t))))))
+     <- set-fldpred-implies-fldmap2conj/L4
+	SZ DM FM-L S1UF=S F/S1 _ SZ1 DM1 F/FM1 FM1+F=FM
+     <- set-fldpred-shrink-fldmap S1-R F/S1 FM1+F=FM S1-R1
+     <- set-fldpred-implies-fldmap2conj N SZ1 DM1 S1-R1 _ F2C1 ([t] TAS t)
+     <- set-fldpred-implies-fldmap2conj/L2 
+	F2C1 F/FM1 FM1+F=FM PM-L FNN2P _ F2C BIMP
+     <- ({t} transform-commutes-envadd* (TAS t) envadd/expr envadd/expr (TAS1 t)).
+
+%worlds () (set-fldpred-implies-fldmap2conj _ _ _ _ _ _ _).
+%total  N (set-fldpred-implies-fldmap2conj N _ _ _ _ _ _).
+
+
+%theorem set-fldpred-implies-fldmap2conj/L2 :
+        forall* {CM} {PM} {FM} {FM1} {G} {F} {C} {P} {NN} {W} 
+        forall  {F2C: fldmap2conj CM PM FM1 ([t] G t) PM}
+                {FS: fldmap`fresh FM1 F} 
+                {U: fldmap`update FM1 F (nulltp/norm C NN) FM}
+                {PM-L: predmap`lookup PM C P} 
+		{FNN2P: fldnn2perm F NN ([p][o] W p o)}
+        exists  {G1} {F2C: fldmap2conj CM PM FM ([t] G1 t) PM}
+                {IMP: {o} bimplies true (conj (nested (W P o) null own) (G o)) (G1 o)}
+        true.
+
+     <- set`not-member-union-left-preserves-lookup*
+	F/S1 (set`lookup/= nat`eq/) S1UF=S F#S
+
+     
+% - : set-fldpred-implies-fldmap2conj (s N) (fldmap`size/+ SZ) (good-fldmap/+ GF1)
+%      (fldmap`domain/+ DM-FM1) SF 
+%      _ (fldmap2conj/norm/in F2C FNN2P F<<FM1=FM1' PM-L) 
+%      ([t] transform/trans
+% 	(transform/implies (IMP t))
+% 	(transform/trans3
+% 	   (TAS' t)
+% 	   (transform/nest)
+% 	   (transform/implies
+% 	      (implies/combine2conj))))
+%      <- fldmap`shift-total F<<FM1=FM1'
+%      <- fldmap`shift-preserves-size SZ F<<FM1=FM1' SZ'
+%      <- set-fldpred-implies-fldmap2conj/L 
+% 	SF (fldmap`lookup/= nat`eq/) (set`lookup/= nat`eq/) _ _ 
+% 	(set`union/> _ SN3+F=N1) _ S1'-R _ FNN2P _ PM-L ([t] IMP t)
+%      <- nat`plus-swap-succ SN3+F=N1 N3+SF=N1
+%      <- nat`plus-commutative N3+SF=N1 SF+N3=N1
+%      <- fldmap`shift-preserves-domain* DM-FM1 F<<FM1=FM1' (set`shift/+ SF+N3=N1) DM-FM1'
+%      <- shift-preserves-good-fldmap GF1 F<<FM1=FM1' GF1'
+%      <- set-fldpred-implies-fldmap2conj N SZ' GF1' DM-FM1' S1'-R _ F2C ([t] TAS t)
+%      <- ({t} transform-commutes-envadd* (TAS t) envadd/expr envadd/expr (TAS' t)).
 	   
 %worlds () (set-fldpred-implies-fldmap2conj _ _ _ _ _ _ _ _).
 %total  (N) (set-fldpred-implies-fldmap2conj N _ _ _ _ _ _ _).
 
-     <- set-fldpred-implies-fldmap2conj/L SF
-	_ F<<S1=S1'  _ S1'-R _ _ _ _ FNN2P _ PM-L ([t] IMP t)
 
 %%% this theorem says given a bijection between a set and a sequence of bare
 %%% field permissions, for any given element in the set, we can reorder the 
