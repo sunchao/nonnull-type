@@ -25,6 +25,21 @@
 %total  {} (shift-preserves-clsmap-fldmap _ _ _).
 
 
+%theorem shift-preserves-clsmap-methmap : 
+        forall* {CM} {MM1} {MM2} {N}
+        forall  {CM-MM1: clsmap-methmap CM MM1}
+                {SH: methmap`shift N MM1 MM2}
+        exists  {CM-MM2: clsmap-methmap CM MM2}
+        true.
+
+- : shift-preserves-clsmap-methmap clsmap-methmap/0 _ clsmap-methmap/0.
+
+- : shift-preserves-clsmap-methmap 
+     (clsmap-methmap/+ CM-MM1 CM-MT) _ (clsmap-methmap/+ CM-MM1 CM-MT).
+
+%worlds () (shift-preserves-clsmap-methmap _ _ _).
+%total  {} (shift-preserves-clsmap-methmap _ _ _).
+
 
 % This theorem says if under a "bigger" clsmap CM0, CM is well-defined, and
 % class C in CM has fldmap FM, then all classes in FM is well-defined under CM0

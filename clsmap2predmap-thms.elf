@@ -1,6 +1,6 @@
 %%%%% clsmap2predmap-thms.elf
 %%%%% theorems about clsmap2predmap 
-%%%%% $Id: clsmap2predmap-thms.elf,v 1.6 2010/11/03 21:32:26 csun Exp csun $
+%%%%% $Id: clsmap2predmap-thms.elf,v 1.7 2011/01/17 04:55:12 csun Exp csun $
 %%%%% Jun 30, 2010
 
 
@@ -567,6 +567,22 @@ clsmap-predmap*/+
 	([f] PMin-U f) CM-SH _) CM-PMout
      <- clsmap`lookup-respects-leq (clsmap`lookup/= nat`eq/)
 	CM<=CM* FM CM*-L' FM=FM*
+     <- fldmap`eq-symmetric FM=FM* FM*=FM
+     <- clsmap`lookup-respects-eq CM*-L' clsmap`eq/ nat`eq/ FM*=FM CM*-L
+     <- clsmap2predmap-implies-predmap-leq CM2PM PMF<=PMout
+     <- predmap`leq-transitive PMF<=PMout PMout<=PM* PMF<=PM*
+     <- fldmap2conj-preserves-clsmap-predmap* CM*-L PMF<=PM*
+	CM-PMin (PMin-U (conj2pred CJ)) (F2CF (conj2pred CJ)) CM-PMF
+     <- clsmap2predmap-preserves-clsmap-predmap/L CM<=CM* CM-SH CM'<=CM*
+     <- clsmap2predmap-preserves-clsmap-predmap*
+	CM'<=CM* PMout<=PM* CM-PMF CM2PM CM-PMout.
+
+- : clsmap2predmap-preserves-clsmap-predmap* CM<=CM* PMout<=PM* CM-PMin
+     (clsmap2predmap*/out CM2PM 
+	(F2CF:{f} fldmap2conj CM _ _ ([r] CJ f r) _)
+	([f] PMin-U f) CM-SH _) CM-PMout
+     <- clsmap`lookup-respects-leq (clsmap`lookup/= nat`eq/)
+	CM<=CM* FM* CM*-L' FM=FM*
      <- fldmap`eq-symmetric FM=FM* FM*=FM
      <- clsmap`lookup-respects-eq CM*-L' clsmap`eq/ nat`eq/ FM*=FM CM*-L
      <- clsmap2predmap-implies-predmap-leq CM2PM PMF<=PMout
