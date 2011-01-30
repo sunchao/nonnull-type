@@ -1,6 +1,6 @@
 %%%%% typing.elf
 %%%%% Typing Rules 
-%%%%% $Id: typing.elf,v 1.13 2010/11/24 04:58:54 csun Exp $
+%%%%% $Id: typing.elf,v 1.14 2011/01/17 04:55:03 csun Exp $
 %%%%% Created at February, 2010
 
 
@@ -186,15 +186,15 @@ filt-nnflds : fldmap -> set -> type.
 filt-nnflds/0 : filt-nnflds fldmap`map/0 set`set/0.
 
 filt-nnflds/in
-   : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/yes) M) S'
-      <- fldmap`shift F M M'
-      <- filt-nnflds M' S
-      <- set`union S (set/+ F set/0) S'.
+   : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/yes) M) S
+      <- fldmap`shift F M MP
+      <- filt-nnflds MP SP
+      <- set`union SP (set/1 F) S.
 
 filt-nnflds/out
    : filt-nnflds (fldmap`map/+ F (nulltp/norm _ nn/may) M) S
-      <- fldmap`shift F M M'
-      <- filt-nnflds M' S.
+      <- fldmap`shift F M MP
+      <- filt-nnflds MP S.
 
 
 methmapmatch* : clsmap -> methmap -> methmap -> prog -> type.
@@ -224,3 +224,125 @@ methmapmatch*/+/meth
 %abbrev methmapmatch = [CM][MM][G] methmapmatch* CM MM MM G.
 
 		   
+
+%%% Theorems
+
+%%% theorems about nulltyping
+
+%theorem nulltyping-sub :
+        forall* {CM} {MM} {L} {E} {C} 
+        forall  {NN} {CM-CM: clsmap-clsmap CM CM}
+                {CM-MM: clsmap-methmap CM MM}
+                {CM-OFL: clsmap-oflist CM L}
+                {NTYP: nullTyping CM MM L E (result/expr (nulltp/norm C NN))}
+        exists  {NTYP: nullTyping CM MM L E (result/expr (nulltp/norm C nn/may))}
+        true.
+
+- : nulltyping-sub nn/may _ _ _ NTYP NTYP.
+
+% - : nulltyping-sub nn/yes CM-CM CM-MM CM-OFL NTYP 
+%      (nulltSub NTYP (clsmap-nulltp/norm IN) (sub/oo nn`subtype/my))
+%      <- typing-implies-clsmap-nulltp
+% 	CM-CM CM-MM CM-OFL NTYP (clsmap-nulltp/norm IN).
+
+%worlds () (nulltyping-sub _ _ _ _ _ _).
+%trustme %total  NN (nulltyping-sub NN _ _ _ _ _).
+
+
+%%% theorems about constyping
+
+%theorem constyping-respects-eq :
+        forall* {CM} {MM} {FM} {S1} {S2} {L} {E}
+        forall  {CTYP: constyping CM MM FM S1 L ([t] E t)}
+                {EQ: set`eq S1 S2}
+        exists  {CTYP: constyping CM MM FM S2 L ([t] E t)}
+        true.
+
+- : constyping-respects-eq CTYP set`eq/ CTYP.
+
+%worlds () (constyping-respects-eq _ _ _).
+%total  {} (constyping-respects-eq _ _ _).
+
+
+%%% theorems about filt-nnflds
+
+%theorem filt-nnflds-preserves-fresh/L :
+	forall* {M} {MP} {N1} {N2} {T} 
+	forall  {FS: fldmap`fresh (fldmap`map/+ N2 T M) N1}
+		{SH: fldmap`shift N2 M MP}
+		{NE: nat`ne N1 N2}
+	exists  {FS: fldmap`fresh MP N1}
+	true.
+
+- : filt-nnflds-preserves-fresh/L
+     (fldmap`fresh/< N2>N1) N2<<M=MP _ N1/MP
+     <- fldmap`shift-implies-fresh* N2<<M=MP (nat`ge/> N2>N1) N1/MP.
+
+- : filt-nnflds-preserves-fresh/L 
+     (fldmap`fresh/> N0/M SN0+N2=N1) N2<<M=MP N1!=N2 N1/MP
+     <- nat`plus-swap-succ SN0+N2=N1 N0+SN2=N1
+     <- nat`plus-commutative N0+SN2=N1 SN2+N0=N1
+     <- fldmap`shift-preserves-fresh N0/M SN2+N0=N1 M2 N2<<M=M2 N1/M2
+     <- fldmap`shift-deterministic N2<<M=M2 N2<<M=MP nat`eq/ fldmap`eq/ M2=MP
+     <- fldmap`fresh-respects-eq N1/M2 M2=MP nat`eq/ N1/MP.
+
+%worlds () (filt-nnflds-preserves-fresh/L _ _ _ _).
+%total  (FS) (filt-nnflds-preserves-fresh/L FS _ _ _).
+
+
+%theorem filt-nnflds-preserves-fresh :
+	forall* {FM} {S} {F}
+	forall  {NS: filt-nnflds FM S}
+		{FS: fldmap`fresh FM F}
+	exists  {NM: set`not-member S F}
+	true.
+
+- : filt-nnflds-preserves-fresh filt-nnflds/0 _ set`not-member/0.
+
+- : filt-nnflds-preserves-fresh
+     (filt-nnflds/in SPUN=S MP->SP N<<M=MP) F/FM F/S
+     <- fldmap`fresh-lookup-not-equal F/FM (fldmap`lookup/= nat`eq/) F!=N
+     <- filt-nnflds-preserves-fresh/L F/FM N<<M=MP F!=N F/MP
+     <- filt-nnflds-preserves-fresh MP->SP F/MP F/SP
+     <- set`unit-union-implies-add SPUN=S SP+N=S
+     <- set`update-preserves-not-member F/SP SP+N=S F!=N F/S.
+
+- : filt-nnflds-preserves-fresh
+     (filt-nnflds/out MP->S N<<M=MP) F/FM F/S
+     <- fldmap`fresh-lookup-not-equal F/FM (fldmap`lookup/= nat`eq/) F!=N
+     <- filt-nnflds-preserves-fresh/L F/FM N<<M=MP F!=N F/MP
+     <- filt-nnflds-preserves-fresh MP->S F/MP F/S.
+
+%worlds () (filt-nnflds-preserves-fresh _ _ _).
+%total  (NS) (filt-nnflds-preserves-fresh NS _ _).
+
+%theorem filt-nnflds-lookup-implies-member :
+        forall* {FM} {S} {F} {C} 
+        forall  {NNS: filt-nnflds FM S}
+                {L: fldmap`lookup FM F (nulltp/norm C nn/yes)}
+        exists  {MB: set`member S F}
+        true.
+
+- : filt-nnflds-lookup-implies-member
+     (filt-nnflds/in S2UN=S _ _) (fldmap`lookup/= N=F) NinS
+     <- set`union-implies-leq S2UN=S _ N<=S
+     <- set`member-respects-leq (set`lookup/= nat`eq/) N<=S NinS.
+
+- : filt-nnflds-lookup-implies-member
+     (filt-nnflds/in S2UN=S FM2->S2 N<<FM1=FM2) (fldmap`lookup/> FM1#N0 SN0+N=F) FinS
+     <- nat`plus-swap-succ SN0+N=F N0+SN=F
+     <- nat`plus-commutative N0+SN=F SN+N0=F 
+     <- fldmap`shift-preserves-lookup* FM1#N0 N<<FM1=FM2 SN+N0=F FM2#F
+     <- filt-nnflds-lookup-implies-member FM2->S2 FM2#F FinS2
+     <- set`union-implies-leq S2UN=S S2<=S _
+     <- set`member-respects-leq FinS2 S2<=S FinS.
+
+- : filt-nnflds-lookup-implies-member
+     (filt-nnflds/out FM2->S N<<FM1=FM2) (fldmap`lookup/> FM1#N0 SN0+N=F) FinS
+     <- nat`plus-swap-succ SN0+N=F N0+SN=F
+     <- nat`plus-commutative N0+SN=F SN+N0=F
+     <- fldmap`shift-preserves-lookup* FM1#N0 N<<FM1=FM2 SN+N0=F FM2#F
+     <- filt-nnflds-lookup-implies-member FM2->S FM2#F FinS.
+
+%worlds () (filt-nnflds-lookup-implies-member _ _ _).
+%total  (NNS) (filt-nnflds-lookup-implies-member NNS _ _).
