@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.20 2011/01/28 18:26:05 csun Exp $
+%%%%% $Id: conversion-thms.elf,v 1.21 2011/02/01 02:37:58 csun Exp csun $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -1204,7 +1204,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`add-implies-member C+N=D N<-D
      <- set`remove-implies-disjoint B/D=E D^E
      <- set`disjoint-lookup-implies-not-member N<-D D^E N/E
-     <- fnn-rm-imp-mns/LL1 E<=B N/E A+N=B E<=A
+     <- set-not-member-preserves-leq E<=B N/E A+N=B E<=A
      <- set`not-member-update-implies-leq N/C C+N=D C<=D
      <- set`disjoint-respects-geq* D^E C<=D C^E
      <- set`union-total CUE=F
@@ -1367,6 +1367,31 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %total  (SR) (allocfields-implies-set-rawfldperm _ SR _ _ _).
 
 
+%theorem remove-not-member-implies-same-result :
+	forall* {S} {S1} {S2} {N}
+	forall  {RM: set`remove S S1 S2}
+		{NM: set`not-member S N}
+		{MB: set`member S1 N}
+	exists  {S3} {NM: set`not-member S3 N}
+		{RM: set`remove S S3 S2}
+		{AD: set`add S3 N S1}
+	true.
+
+- : remove-not-member-implies-same-result 
+     S-S1=S2 N/S N<-S1 %{=>}% S3 N/S3 S-S3=S2 S3+N=S1
+     <- set`lookup-implies-union N<-S1 S3 N/S3 NUS3=S1
+     <- set`union-commutative NUS3=S1 S3UN=S1 
+     <- set`unit-union-implies-add S3UN=S1 S3+N=S1
+     <- set`remove-associates-union-converse NUS3=S1 S-S1=S2 S4 S-N=S4 S4-S3=S2
+     <- set`not-member-implies-unit-disjoint N/S S^N
+     <- set`disjoint-implies-remove-nothing S^N S-N=S
+     <- set`remove-unique S-N=S4 S-N=S set`eq/ set`eq/ S4=S
+     <- set`remove-respects-eq S4-S3=S2 S4=S set`eq/ set`eq/ S-S3=S2.
+
+%worlds () (remove-not-member-implies-same-result _ _ _ _ _ _ _).
+%total  {} (remove-not-member-implies-same-result _ _ _ _ _ _ _).
+
+
 %theorem rm-psv-sfp :
 	forall* {S} {S1} {S2} {P}
 	forall  {SP: set-rawfldperm S ([t] P t)}
@@ -1377,11 +1402,9 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 		{SP: set-rawfldperm S2 ([t] P2 t)}
 	true.
 
-%%% TODO: the 0 case
-
-- : rm-psv-sfp (set-rawfldperm/+ SP-PP N/SP SPUN=S) S1<=S S/S1=S2 _ _ _ _ _
-     <- set`remove-right-distributes-over-union SPUN=S S/S1=S2 S3 S4 SP/S1=S3 N/S1=S4 S3US4=S2
-     <- rm-psv-sfp SP-PP SP/S1=S3 P1 P3 PP=>P1P3 S1-P1 S3-P3
+- : rm-psv-sfp set-rawfldperm/0 _ _ _ _
+     ([_] implies/equiv (equiv/symmetric equiv/identity)) 
+     set-rawfldperm/0 set-rawfldperm/0.
 
 %theorem rm-psv-sfp/L :
 	forall* {B} {SP} {S} {S1} {S2} {S3} {S4} {N} {PP} 
@@ -1398,7 +1421,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 		{P2} {S2-P2: set-rawfldperm S2 ([t] P2 t)}
 		{I: {t} implies ((unitperm (basic t N null)) , (PP t)) ((P1 t) , (P2 t))}
 	true.
-		
+
 - : rm-psv-sfp/L (set`member?/out N/S1) 
      SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4 S3US4=S2 _ S1-P1 _
      (set-rawfldperm/+ S3-P3 N/S3 S3UN=S2) 
@@ -1417,35 +1440,51 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`union-respects-eq S3US4=S2 set`eq/ S4=N set`eq/ S3UN=S2.
 
 
-%theorem remove-not-member-implies-same-result :
-	forall* {S} {S1} {S2} {N}
-	forall  {RM: set`remove S S1 S2}
-		{NM: set`not-member S N}
-		{MB: set`member S1 N}
-	exists  {S3} {RM: set`remove S S3 S2}
-		{AD: set`add S3 N S1}
-	true.
-
-- : remove-not-member-implies-same-result 
-     S-S1=S2 N/S N<-S1 S3 S-S3=S2 S3+N=S1
-     <- set`lookup-implies-union N<-S1 S3 N/S3 NUS3=S1
-     <- set`remove-implies-leq S-S1=S2 S2<=S
-     <- set`remove-implies-disjoint S-S1=S2 S1^S2
-     <- set`union-implies-leq NUS3=S1 N<=S1 S3<=S1
-     <- set`disjoint-respects-geq* S1^S2 S3<=S1 S3^S2
-     <- set`union-total S2US3=R
-
-     <- set`remove-characterization S2<=S S3^S2 S2US3=R S<=R S-S3=S2.
-
-
 - : rm-psv-sfp/L (set`member?/in N<-S1)
-     SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4 S3US4=S2 _ S1-P1 _ S2-P2 _
+     SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4 S3US4=S2 _ 
+     (set-rawfldperm/+ S5-P5 N/S5 S5UN=S1) _ S2-P3 
+     ([t] implies/trans
+	(implies/combine
+	   (implies/reflexive)
+	   (PP=>P5P3 t))
+	(implies/equiv equiv/associate))
+     <- remove-not-member-implies-same-result
+	SP-S1=S3 N/SP N<-S1 S5 N/S5 SP-S5=S3 S5+N=S1
+     <- set`not-member-implies-unit-disjoint N/S5 S5^N
+     <- set`not-member-implies-unit-disjoint N/SP SP^N
+     <- set`disjoint-symmetric S5^N N^S5
+     <- set`disjoint-symmetric SP^N N^SP
+     <- set`add-implies-unit-union S5+N=S1 S5UN=S1
+     <- set`union-commutative S5UN=S1 NUS5=S1
+     <- set`union-commutative SPUN=S NUSP=S
+     <- set`union-implies-leq S5UN=S1 S5<=S1 N<=S1
+     <- set`union-implies-leq SPUN=S SP<=S N<=S
+     <- set`leq-reflexive _ S1<=S1
+     <- set`leq-reflexive _ S<=S
+     <- set`remove-characterization S5<=S1 N^S5 NUS5=S1 S1<=S1 S1-N=S5
+     <- set`remove-characterization SP<=S N^SP NUSP=S S<=S S-N=SP
+     <- set`remove-right-preserves-leq S1<=S S1-N=S5 S-N=SP S5<=SP
+     <- rm-psv-sfp SP-PP S5<=SP SP-S5=S3 P5 P3 ([t] PP=>P5P3 t) S5-P5 S3-P3
      <- set`lookup-implies-unit-leq N<-S1 N<=S1
      <- set`leq-implies-remove-all N<=S1 N-S1=0
      <- set`remove-unique N-S1=S4 N-S1=0 set`eq/ set`eq/ S4=0
      <- set`union-respects-eq S3US4=S2 set`eq/ S4=0 set`eq/ S3U0=S2
-     <- set`union-unique S3U0=S2 set`eq/ set`eq/ S3=S2
-     <- set-rawfldperm-respects-eq S3-P2 S3=S2 ([_] permission`eq/) S2-P2
+     <- set`union-unique S3U0=S2 set`union/R set`eq/ set`eq/ S3=S2
+     <- set-rawfldperm-respects-eq S3-P3 S3=S2 ([_] permission`eq/) S2-P3.
+
+- : rm-psv-sfp (set-rawfldperm/+ SP-PP N/SP SPUN=S) S1<=S S-S1=S2 
+     _ _ IMP S1-P1 S2-P2
+     <- set`remove-right-distributes-over-union
+ 	SPUN=S S-S1=S2 S3 S4 SP-S1=S3 N-S1=S4 S3US4=S2
+     <- set`member?-total N<-S1?
+     <- rm-psv-sfp/L N<-S1? SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4
+	S3US4=S2 %{=>}% _ S1-P1 _ S2-P2 IMP.
+
+%worlds () (rm-psv-sfp _ _ _ _ _ _ _ _)
+           (rm-psv-sfp/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total (P1 P2) 
+(rm-psv-sfp P1 _ _ _ _ _ _ _)
+(rm-psv-sfp/L _ P2 _ _ _ _ _ _ _ _ _ _ _ _).
      
 %theorem set-not-member-preserves-leq :
 	forall* {A} {B} {C} {N}
