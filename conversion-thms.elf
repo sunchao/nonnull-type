@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.19 2011/01/25 01:59:00 csun Exp $
+%%%%% $Id: conversion-thms.elf,v 1.20 2011/01/28 18:26:05 csun Exp $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -754,6 +754,17 @@ nonnull-set/+
       <- nonnull-set FM SP.
 
 
+maynull-set : fldmap -> set -> type.
+
+maynull-set/0 : maynull-set _ set/0.
+
+maynull-set/+ 
+   : maynull-set FM S
+      <- fldmap`lookup FM F (nulltp/norm _ nn/may)
+      <- set`add SP F S
+      <- maynull-set FM SP.
+
+
 %%% a fldmap is good if it doesn't contain null field
 
 good-fldmap : fldmap -> type.
@@ -1029,9 +1040,10 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %worlds () (set-fldpred-shrink-fldmap _ _ _ _).
 %total  SF (set-fldpred-shrink-fldmap SF _ _ _).
 
+
 %%% a long lemma about set...
 
-%theorem fnn-comp-sfp/LL1 :
+%theorem set-not-member-preserves-leq :
 	forall* {A} {B} {C} {N}
 	forall  {LE: set`leq A B}
 		{NM: set`not-member A N}
@@ -1039,7 +1051,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {LE: set`leq A C}
 	true.		
 
-%theorem fnn-comp-sfp/LL1B1 :
+%theorem set-not-member-preserves-leq/L1 :
 	forall* {A} {B} {C} {N} {K}
 	forall  {LE: set`leq A B}
 		{NM: set`not-member A N}
@@ -1048,9 +1060,9 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {LE: set`leq A C}
 	true.		
 
-- : fnn-comp-sfp/LL1B1 A<=B N/A C+N=B A<=C A<=C.
+- : set-not-member-preserves-leq/L1 A<=B N/A C+N=B A<=C A<=C.
 
-%theorem fnn-comp-sfp/LL1B2 :
+%theorem set-not-member-preserves-leq/L2 :
 	forall* {A} {B} {C} {N} {M} {K} 
 	forall  {LE: set`leq A B}
 		{NM: set`not-member A N}
@@ -1061,11 +1073,11 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {LE: set`leq A C}
 	true.
 
-- : fnn-comp-sfp/LL1B2 _ N/A _ nat`eq?/yes N<-A _ A<=C
+- : set-not-member-preserves-leq/L2 _ N/A _ nat`eq?/yes N<-A _ A<=C
      <- set`member-not-member-contradiction N<-A N/A F
      <- set`false-implies-leq F A<=C.
      
-- : fnn-comp-sfp/LL1B2 
+- : set-not-member-preserves-leq/L2
      A<=B N/A C+N=B (nat`eq?/no N!=M) M<-A M/C A<=C
      <- set`member-respects-leq M<-A A<=B M<-B
      <- nat`ne-symmetric N!=M M!=N
@@ -1073,25 +1085,25 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`member-not-member-contradiction M<-B M/B F
      <- set`false-implies-leq F A<=C.
      
-%worlds () (fnn-comp-sfp/LL1B2 _ _ _ _ _ _ _).
-%total  (EQ?) (fnn-comp-sfp/LL1B2 _ _ _ EQ? _ _ _).
+%worlds () (set-not-member-preserves-leq/L2 _ _ _ _ _ _ _).
+%total  (EQ?) (set-not-member-preserves-leq/L2 _ _ _ EQ? _ _ _).
 
-- : fnn-comp-sfp/LL1B1 A<=B N/A C+N=B (set`nle/< M<-A M/C) A<=C
+- : set-not-member-preserves-leq/L1 A<=B N/A C+N=B (set`nle/< M<-A M/C) A<=C
      <- nat`eq?-total N?=M
-     <- fnn-comp-sfp/LL1B2 A<=B N/A C+N=B N?=M M<-A M/C A<=C.
+     <- set-not-member-preserves-leq/L2 A<=B N/A C+N=B N?=M M<-A M/C A<=C.
 
-%worlds () (fnn-comp-sfp/LL1B1 _ _ _ _ _).
-%total  (LE?) (fnn-comp-sfp/LL1B1 _ _ _ LE? _).
+%worlds () (set-not-member-preserves-leq/L1 _ _ _ _ _).
+%total  (LE?) (set-not-member-preserves-leq/L1 _ _ _ LE? _).
 
-- : fnn-comp-sfp/LL1 A<=B N/A C+N=B A<=C
+- : set-not-member-preserves-leq A<=B N/A C+N=B A<=C
      <- set`leq?-total A<=?C
-     <- fnn-comp-sfp/LL1B1 A<=B N/A C+N=B A<=?C A<=C.
+     <- set-not-member-preserves-leq/L1 A<=B N/A C+N=B A<=?C A<=C.
 
-%worlds () (fnn-comp-sfp/LL1 _ _ _ _).
-%total  {} (fnn-comp-sfp/LL1 _ _ _ _).
+%worlds () (set-not-member-preserves-leq _ _ _ _).
+%total  {} (set-not-member-preserves-leq _ _ _ _).
 
 
-%theorem fnn-comp-sfp/LL2 :
+%theorem fnn-rm-imp-mns/LL2 :
 	forall* {A} {B} {C} {D} {E} {F} {N}
 	forall  {AD: set`add A N B}
 		{AD: set`add C N D}
@@ -1102,7 +1114,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {LE: set`leq A F}
 	true.
 
-%theorem fnn-comp-sfp/LL2B1 :
+%theorem fnn-rm-imp-mns/LL2B1 :
 	forall* {A} {B} {C} {D} {E} {F} {N} {K}
 	forall  {AD: set`add A N B}
 		{AD: set`add C N D}
@@ -1114,9 +1126,9 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {LE: set`leq A F}
 	true.
 
-- : fnn-comp-sfp/LL2B1 _ _ _ _ _ _ A<=F A<=F.
+- : fnn-rm-imp-mns/LL2B1 _ _ _ _ _ _ A<=F A<=F.
 
-%theorem fnn-comp-sfp/LL2B2 :
+%theorem fnn-rm-imp-mns/LL2B2 :
 	forall* {A} {B} {C} {D} {E} {F} {N} {M} {K1} {K2}
 	forall  {AD: set`add A N B}
 		{AD: set`add C N D}
@@ -1131,11 +1143,11 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {LE: set`leq A F}
 	true.
 
-- : fnn-comp-sfp/LL2B2 _ _ N/A _ _ _ N<-A _ _ nat`eq?/yes A<=F
+- : fnn-rm-imp-mns/LL2B2 _ _ N/A _ _ _ N<-A _ _ nat`eq?/yes A<=F
      <- set`member-not-member-contradiction N<-A N/A V
      <- set`false-implies-leq V A<=F.
 
-- : fnn-comp-sfp/LL2B2 
+- : fnn-rm-imp-mns/LL2B2 
      A+N=B C+N=D N/A N/C B/D=E CUE=F M<-A M/F (set`member?/in M<-D) (nat`eq?/no N!=M) A<=F
      <- set`not-member-update-implies-leq N/A A+N=B A<=B
      <- set`member-respects-leq M<-A A<=B M<-B
@@ -1146,7 +1158,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`member-not-member-contradiction M<-C M/C V 
      <- set`false-implies-leq V A<=F.
 
-- : fnn-comp-sfp/LL2B2
+- : fnn-rm-imp-mns/LL2B2
      A+N=B C+N=D N/A N/C (set`remove/ _ _ DUE=G B<=G)
      CUE=F M<-A M/F (set`member?/out M/D) (nat`eq?/no N!=M) A<=F
      <- set`not-member-update-implies-leq N/A A+N=B A<=B
@@ -1157,27 +1169,27 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`member-not-member-contradiction M<-E M/E V 
      <- set`false-implies-leq V A<=F.
 
-%worlds () (fnn-comp-sfp/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
-%total  {} (fnn-comp-sfp/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
+%worlds () (fnn-rm-imp-mns/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
+%total  {} (fnn-rm-imp-mns/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
 
-- : fnn-comp-sfp/LL2B1 
+- : fnn-rm-imp-mns/LL2B1 
      A+N=B C+N=D N/A N/C B/D=E CUE=F (set`nle/< M<-A M/F) A<=F
      <- set`member?-total M<-D?
      <- nat`eq?-total N=M?
-     <- fnn-comp-sfp/LL2B2 A+N=B C+N=D N/A N/C B/D=E CUE=F M<-A M/F M<-D? N=M? A<=F.
+     <- fnn-rm-imp-mns/LL2B2 A+N=B C+N=D N/A N/C B/D=E CUE=F M<-A M/F M<-D? N=M? A<=F.
 
-%worlds () (fnn-comp-sfp/LL2B1 _ _ _ _ _ _ _ _).
-%total  {} (fnn-comp-sfp/LL2B1 _ _ _ _ _ _ _ _).
+%worlds () (fnn-rm-imp-mns/LL2B1 _ _ _ _ _ _ _ _).
+%total  {} (fnn-rm-imp-mns/LL2B1 _ _ _ _ _ _ _ _).
 
-- : fnn-comp-sfp/LL2 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F
+- : fnn-rm-imp-mns/LL2 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F
      <- set`leq?-total A<=F?
-     <- fnn-comp-sfp/LL2B1 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F? A<=F.
+     <- fnn-rm-imp-mns/LL2B1 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F? A<=F.
      
-%worlds () (fnn-comp-sfp/LL2 _ _ _ _ _ _ _).
-%total  {} (fnn-comp-sfp/LL2 _ _ _ _ _ _ _).
+%worlds () (fnn-rm-imp-mns/LL2 _ _ _ _ _ _ _).
+%total  {} (fnn-rm-imp-mns/LL2 _ _ _ _ _ _ _).
 
 
-%theorem fnn-comp-sfp/L1 :
+%theorem fnn-rm-imp-mns/L1 :
 	forall* {A} {B} {C} {D} {E} {N}
 	forall  {AD: set`add A N B}
 		{AD: set`add C N D}
@@ -1187,23 +1199,23 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {R: set`remove A C E}
 	true.
 
-- : fnn-comp-sfp/L1 A+N=B C+N=D N/A N/C B/D=E %{=>}% A/C=E
+- : fnn-rm-imp-mns/L1 A+N=B C+N=D N/A N/C B/D=E %{=>}% A/C=E
      <- set`remove-implies-leq B/D=E E<=B
      <- set`add-implies-member C+N=D N<-D
      <- set`remove-implies-disjoint B/D=E D^E
      <- set`disjoint-lookup-implies-not-member N<-D D^E N/E
-     <- fnn-comp-sfp/LL1 E<=B N/E A+N=B E<=A
+     <- fnn-rm-imp-mns/LL1 E<=B N/E A+N=B E<=A
      <- set`not-member-update-implies-leq N/C C+N=D C<=D
      <- set`disjoint-respects-geq* D^E C<=D C^E
      <- set`union-total CUE=F
-     <- fnn-comp-sfp/LL2 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F
+     <- fnn-rm-imp-mns/LL2 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F
      <- remove-characterization E<=A C^E CUE=F A<=F A/C=E.
 
-%worlds () (fnn-comp-sfp/L1 _ _ _ _ _ _).
-%total  {} (fnn-comp-sfp/L1 _ _ _ _ _ _).
+%worlds () (fnn-rm-imp-mns/L1 _ _ _ _ _ _).
+%total  {} (fnn-rm-imp-mns/L1 _ _ _ _ _ _).
 
 
-%theorem fnn-comp-sfp/L2 :
+%theorem fnn-rm-imp-mns/L2 :
 	forall* {A} {B} {C} {D} {E}
 	forall  {U: set`union A B C}
 		{X: set`disjoint B D}
@@ -1212,60 +1224,42 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 		{U: set`union F B E}
 	true.
 
-- : fnn-comp-sfp/L2 AUB=C B^D C-D=E F A-D=F FUB=E
+- : fnn-rm-imp-mns/L2 AUB=C B^D C-D=E F A-D=F FUB=E
      <- set`remove-right-distributes-over-union AUB=C C-D=E F H A-D=F B-D=H FUH=E
      <- set`disjoint-implies-remove-nothing B^D B-D=B
      <- set`remove-deterministic B-D=H B-D=B set`eq/ set`eq/ H=B
      <- set`union-respects-eq FUH=E set`eq/ H=B set`eq/ FUB=E.
 
-%worlds () (fnn-comp-sfp/L2 _ _ _ _ _ _ ).
-%total  {} (fnn-comp-sfp/L2 _ _ _ _ _ _ ).
+%worlds () (fnn-rm-imp-mns/L2 _ _ _ _ _ _ ).
+%total  {} (fnn-rm-imp-mns/L2 _ _ _ _ _ _ ).
 
 
-%theorem fnn-comp-sfp/L3 :
-	forall* {PM} {FM} {FMP} {S} {PF} {F} {T} {N}
-	forall  {SF: set-fldpred PM FMP S ([t] PF t)}
+%theorem fnn-rm-imp-mns/L3 :
+	forall* {FM} {FMP} {S} {N} {T} {F}
+	forall  {MNS: maynull-set FMP S}
 		{SH: fldmap`shift N FM FMP}
-	exists  {SF: set-fldpred PM (fldmap`map/+ F T FM) S ([t] PF t)}
+	exists  {SF: maynull-set (fldmap`map/+ F T FM) S}
 	true.
 
-%worlds () (fnn-comp-sfp/L3 _ _ _).
-%trustme %total {} (fnn-comp-sfp/L3 _ _ _).
+%worlds () (fnn-rm-imp-mns/L3 _ _ _).
+%trustme %total {} (fnn-rm-imp-mns/L3 _ _ _).
 
 
-%theorem fnn-comp-sfp/L4 :
-	forall* {F} {W} 
-	forall  {FNN2P: fldnn2perm F nn/may ([p][o] W p o)}
-	exists  {I: {p}{o} implies empty (W p o)}
-	true.
-
-- : fnn-comp-sfp/L4 fldnn2perm/may 
-     ([_][_] implies/trans3
-	(implies/equiv (equiv/symmetric equiv/identity))
-	(implies/combine
-	   (implies/trans
-	      (implies/empty2true)
-	      (implies/nonlinear
-		 (bimplies/objequal-reflexive)))
-	   (implies/reflexive))
-	(implies/cond-intro)).
-
-     
-%theorem fnn-comp-sfp :
+%theorem fnn-rm-imp-mns :
         forall* {CM} {PM} {FM} {S} {S1} {S2}
         forall  {CM2PM: clsmap2predmap CM PM}
                 {CM-FM: clsmap-fldmap CM FM}
                 {DM: fldmap`domain FM S}
                 {FNN: filt-nnflds FM S1}
                 {RM: set`remove S S1 S2}
-        exists  {FP} {S-RP: set-fldpred PM FM S2 FP}
+        exists  {MNS: maynull-set FM S2}
         true.
 
-- : fnn-comp-sfp _ _ fldmap`domain/0 _ _ _ set-fldpred/0.
+- : fnn-rm-imp-mns _ _ fldmap`domain/0 _ _ maynull-set/0.
 
-- : fnn-comp-sfp 
+- : fnn-rm-imp-mns 
      CM2PM (clsmap-fldmap/+ CM-FM _) (fldmap`domain/+ DM-FM=SS)
-     (filt-nnflds/in S1PUN=S1 FMP->S1P N<<FM=FMP) S/S1=S2 %{=>}% _ S2-FP
+     (filt-nnflds/in S1PUN=S1 FMP->S1P N<<FM=FMP) S/S1=S2 %{=>}% MN-S2
      <- fldmap`shift-preserves-domain DM-FM=SS N<<FM=FMP _ N<<SS=SP DM-FMP=SP
      <- shift-preserves-clsmap-fldmap CM-FM N<<FM=FMP CM-FMP
      <- set`shift-implies-not-member N<<SS=SP N/SP
@@ -1274,14 +1268,14 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`unit-union-implies-add S1PUN=S1 S1P+N=S1
      <- fldmap`shift-implies-fresh N<<FM=FMP N/FMP
      <- filt-nnflds-preserves-fresh FMP->S1P N/FMP N/S1P
-     <- fnn-comp-sfp/L SP+N=S S1P+N=S1 N/SP N/S1P S/S1=S2 SP/S1P=S2
-     <- fnn-comp-sfp CM2PM CM-FMP DM-FMP=SP FMP->S1P SP/S1P=S2 _ S2-FPP
-     <- fnn-comp-sfp/L3 S2-FPP N<<FM=FMP S2-FP.
+     <- fnn-rm-imp-mns/L1 SP+N=S S1P+N=S1 N/SP N/S1P S/S1=S2 SP/S1P=S2
+     <- fnn-rm-imp-mns CM2PM CM-FMP DM-FMP=SP FMP->S1P SP/S1P=S2 FMP-MN-S2
+     <- fnn-rm-imp-mns/L3 FMP-MN-S2 N<<FM=FMP MN-S2.
 
-- : fnn-comp-sfp
+- : fnn-rm-imp-mns
      CM2PM (clsmap-fldmap/+ CM-FM _) (fldmap`domain/+ DM-FM=SS)
-     (filt-nnflds/out FMP->S1 N<<FM=FMP) S/S1=S2 %{=>}% _ 
-     (set-fldpred/+ S2P-R N/S2P S2P+N=S2 PML FNN2P (fldmap`lookup/= nat`eq/))
+     (filt-nnflds/out FMP->S1 N<<FM=FMP) S/S1=S2 
+     (maynull-set/+ MN-S3 S3+N=S2 (fldmap`lookup/= nat`eq/))
      <- fldmap`shift-preserves-domain DM-FM=SS N<<FM=FMP _ N<<SS=SP DM-FMP=SP
      <- shift-preserves-clsmap-fldmap CM-FM N<<FM=FMP CM-FMP
      <- fldmap`shift-implies-fresh N<<FM=FMP N/FMP
@@ -1290,35 +1284,176 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`unit-union-implies-add SPUN=S SP+N=S
      <- set`not-member-implies-unit-disjoint N/S1 S1^N
      <- set`disjoint-symmetric S1^N N^S1
-     <- fnn-comp-sfp/L2 SPUN=S N^S1 S/S1=S2 S3 SP/S1=S3 S3UN=S2
-     <- fnn-comp-sfp CM2PM CM-FMP DM-FMP=SP FMP->S1 SP/S1=S3 _ S3-FPR.
+     <- fnn-rm-imp-mns/L2 SPUN=S N^S1 S/S1=S2 S3 SP/S1=S3 S3UN=S2
+     <- set`unit-union-implies-add S3UN=S2 S3+N=S2
+     <- fnn-rm-imp-mns CM2PM CM-FMP DM-FMP=SP FMP->S1 SP/S1=S3 FMP-MN-S3
+     <- fnn-rm-imp-mns/L3 FMP-MN-S3 N<<FM=FMP MN-S3.
+
+%worlds () (fnn-rm-imp-mns _ _ _ _ _ _).
+%total  (FN) (fnn-rm-imp-mns _ _ _ FN _ _).
 
 
-%worlds () (fnn-comp-sfp _ _ _ _ _ _ _).
-%total  (FN) (fnn-comp-sfp _ _ _ FN _ _ _).
+%theorem fnn-rm-imp-mns/L4 :
+	forall* {F} {W} 
+	forall  {FNN2P: fldnn2perm F nn/may ([p][o] W p o)}
+	exists  {I: {p}{o} implies (unitperm (basic o F null)) (W p o)}
+	true.
+
+- : fnn-rm-imp-mns/L4 fldnn2perm/may 
+     ([_][_] implies/trans3
+	(implies/equiv
+	   (equiv/symmetric equiv/identity))
+	(implies/combine
+	   (implies/reflexive)
+	   (implies/trans3
+	      (implies/equiv
+		 (equiv/symmetric equiv/identity)) 
+	      (implies/combine
+		 (implies/trans
+		    (implies/empty2true)
+		    (implies/nonlinear
+		       (bimplies/objequal-reflexive)))
+		 (implies/reflexive))
+	      (implies/cond-intro)))
+	(implies/pack null)).
+
+%worlds () (fnn-rm-imp-mns/L4 _ _).
+%total  {} (fnn-rm-imp-mns/L4 _ _).
 
 
 % theorems about set-rawfldperm
 
+%theorem set-rawfldperm-respects-eq :
+	forall* {S1} {P1} {S2} {P2} 
+	forall  {SR: set-rawfldperm S1 ([t] P1 t)}
+		{EQ: set`eq S1 S2} {EQ: {t} permission`eq (P1 t) (P2 t)}
+	exists  {SR: set-rawfldperm S2 ([t] P2 t)}
+	true.
+
+- : set-rawfldperm-respects-eq SR set`eq/ ([_] permission`eq/) SR.
+
+%worlds () (set-rawfldperm-respects-eq _ _ _ _).
+%total  {} (set-rawfldperm-respects-eq _ _ _ _).
+
+
 %theorem allocfields-implies-set-rawfldperm :
-	forall* {FM} {S} {OS} 
+	forall* {FM} {S} {P1} 
 	forall  {DM: fldmap`domain FM S}
-		{SR: {t} allocFields t S (OS t)}
-	exists  {SR: set-rawfldperm S ([t] OS t)}
+		{SR: {t} allocFields t S (P1 t)}
+	exists  {P2} {I: {t} implies (P1 t) (P2 t)}
+                {SR: set-rawfldperm S ([t] P2 t)}
 	true.
 
 - : allocfields-implies-set-rawfldperm
-     fldmap`domain/0 ([_] allocFields/0) set-rawfldperm/0.
+     fldmap`domain/0 ([_] allocFields/0) _ ([_] implies/reflexive) set-rawfldperm/0.
+
 
 - : allocfields-implies-set-rawfldperm 
      (fldmap`domain/+ DM-FM) ([t] allocFields/+ F<<S=SP (SP->PP t)) 
-     (set-rawfldperm/+ S3-B F/S3 S3UF=S)
+     _ ([t] implies/trans
+	  (implies/equiv equiv/commute)
+	  (implies/combine
+	     (implies/reflexive)
+	     (I t)))
+     (set-rawfldperm/+ SP-B F/SP SPUF=S)
+     <- fldmap`shift-total F<<FM=FMP
+     <- fldmap`shift-preserves-domain* DM-FM F<<FM=FMP F<<S=SP DM-FMP
+     <- allocfields-implies-set-rawfldperm DM-FMP SP->PP _ ([t] I t) SP-B
+     <- set`shift-implies-not-member F<<S=SP F/SP
+     <- set`shift-implies-update F<<S=SP SP+N=S
+     <- set`add-implies-unit-union SP+N=S SPUF=S.
 
-set-rawfldperm/+ 
-   : set-rawfldperm S ([t] (unitperm (basic t F null)) , (B t))
-      <- set-unit-union S1 F S
-      <- set-notin F S1
-      <- set-rawfldperm S1 B.
+%worlds () (allocfields-implies-set-rawfldperm _ _ _ _ _).
+%total  (SR) (allocfields-implies-set-rawfldperm _ SR _ _ _).
+
+
+%theorem rm-psv-sfp :
+	forall* {S} {S1} {S2} {P}
+	forall  {SP: set-rawfldperm S ([t] P t)}
+		{LE: set`leq S1 S}
+		{RM: set`remove S S1 S2}
+	exists  {P1} {P2} {I: {t} implies (P t) ((P1 t) , (P2 t))}
+		{S1: set-rawfldperm S1 ([t] P1 t)}
+		{SP: set-rawfldperm S2 ([t] P2 t)}
+	true.
+
+%%% TODO: the 0 case
+
+- : rm-psv-sfp (set-rawfldperm/+ SP-PP N/SP SPUN=S) S1<=S S/S1=S2 _ _ _ _ _
+     <- set`remove-right-distributes-over-union SPUN=S S/S1=S2 S3 S4 SP/S1=S3 N/S1=S4 S3US4=S2
+     <- rm-psv-sfp SP-PP SP/S1=S3 P1 P3 PP=>P1P3 S1-P1 S3-P3
+
+%theorem rm-psv-sfp/L :
+	forall* {B} {SP} {S} {S1} {S2} {S3} {S4} {N} {PP} 
+	forall  {MB?: set`member? S1 N B}
+		{SR: set-rawfldperm SP ([t] PP t)}
+		{NM: set`not-member SP N}
+		{U: set`union SP (set/1 N) S}
+		{LE: set`leq S1 S}
+		{RM: set`remove S S1 S2}
+		{R: set`remove SP S1 S3}
+		{R: set`remove (set/1 N) S1 S4}
+		{U: set`union S3 S4 S2}
+	exists  {P1} {S1-P1: set-rawfldperm S1 ([t] P1 t)}
+		{P2} {S2-P2: set-rawfldperm S2 ([t] P2 t)}
+		{I: {t} implies ((unitperm (basic t N null)) , (PP t)) ((P1 t) , (P2 t))}
+	true.
+		
+- : rm-psv-sfp/L (set`member?/out N/S1) 
+     SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4 S3US4=S2 _ S1-P1 _
+     (set-rawfldperm/+ S3-P3 N/S3 S3UN=S2) 
+     ([t] implies/trans
+	(implies/combine (implies/reflexive) (PP=>P1P3 t))
+	(implies/equiv equiv/roll2))
+     <- set`unit-union-implies-add SPUN=S SP+N=S
+     <- set-not-member-preserves-leq S1<=S N/S1 SP+N=S S1<=SP
+     <- rm-psv-sfp SP-PP S1<=SP SP-S1=S3 P1 P3 PP=>P1P3 S1-P1 S3-P3
+     <- set`remove-implies-leq SP-S1=S3 S3<=SP
+     <- set`not-member-respects-geq N/SP S3<=SP N/S3
+     <- set`not-member-implies-unit-disjoint N/S1 S1^N
+     <- set`disjoint-symmetric S1^N N^S1
+     <- set`disjoint-implies-remove-nothing N^S1 N-S1=N
+     <- set`remove-unique N-S1=S4 N-S1=N set`eq/ set`eq/ S4=N
+     <- set`union-respects-eq S3US4=S2 set`eq/ S4=N set`eq/ S3UN=S2.
+
+
+%theorem remove-not-member-implies-same-result :
+	forall* {S} {S1} {S2} {N}
+	forall  {RM: set`remove S S1 S2}
+		{NM: set`not-member S N}
+		{MB: set`member S1 N}
+	exists  {S3} {RM: set`remove S S3 S2}
+		{AD: set`add S3 N S1}
+	true.
+
+- : remove-not-member-implies-same-result 
+     S-S1=S2 N/S N<-S1 S3 S-S3=S2 S3+N=S1
+     <- set`lookup-implies-union N<-S1 S3 N/S3 NUS3=S1
+     <- set`remove-implies-leq S-S1=S2 S2<=S
+     <- set`remove-implies-disjoint S-S1=S2 S1^S2
+     <- set`union-implies-leq NUS3=S1 N<=S1 S3<=S1
+     <- set`disjoint-respects-geq* S1^S2 S3<=S1 S3^S2
+     <- set`union-total S2US3=R
+
+     <- set`remove-characterization S2<=S S3^S2 S2US3=R S<=R S-S3=S2.
+
+
+- : rm-psv-sfp/L (set`member?/in N<-S1)
+     SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4 S3US4=S2 _ S1-P1 _ S2-P2 _
+     <- set`lookup-implies-unit-leq N<-S1 N<=S1
+     <- set`leq-implies-remove-all N<=S1 N-S1=0
+     <- set`remove-unique N-S1=S4 N-S1=0 set`eq/ set`eq/ S4=0
+     <- set`union-respects-eq S3US4=S2 set`eq/ S4=0 set`eq/ S3U0=S2
+     <- set`union-unique S3U0=S2 set`eq/ set`eq/ S3=S2
+     <- set-rawfldperm-respects-eq S3-P2 S3=S2 ([_] permission`eq/) S2-P2
+     
+%theorem set-not-member-preserves-leq :
+	forall* {A} {B} {C} {N}
+	forall  {LE: set`leq A B}
+		{NM: set`not-member A N}
+		{AD: set`add C N B}
+	exists  {LE: set`leq A C}
+	true.		
 
 %%% this theorem says given a bijection between a set and a sequence of bare
 %%% field permissions, for any given element in the set, we can reorder the 
