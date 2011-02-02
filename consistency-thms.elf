@@ -41,6 +41,7 @@
 %total  {} (shift-preserves-clsmap-methmap _ _ _).
 
 
+
 % This theorem says if under a "bigger" clsmap CM0, CM is well-defined, and
 % class C in CM has fldmap FM, then all classes in FM is well-defined under CM0
 
@@ -174,7 +175,30 @@
 %worlds () (clsmap-nulltp-implies-lookup _ _ _).
 %total  {} (clsmap-nulltp-implies-lookup _ _ _).
 
-				 
+
+%theorem clsmap-fldmap-implies-lookup :
+	forall* {CM} {FM} {F} {C} {NN}
+	forall  {CM-FM: clsmap-fldmap CM FM}
+		{FML: fldmap`lookup FM F (nulltp/norm C NN)}
+	exists  {M} {CML: clsmap`lookup CM C M}
+	true.		
+
+- : clsmap-fldmap-implies-lookup
+     (clsmap-fldmap/n CM-FMP) (fldmap`lookup/> FMP#N0 SN0+N=F) _ CML
+     <- clsmap-fldmap-implies-lookup CM-FMP FMP#N0 _ CML.
+     
+- : clsmap-fldmap-implies-lookup
+     (clsmap-fldmap/+ _ C<-CM) (fldmap`lookup/= _) _ CM#C
+     <- clsmap`in-implies-lookup C<-CM _ CM#C.
+
+- : clsmap-fldmap-implies-lookup
+     (clsmap-fldmap/+ CM-FMP N<-CM) (fldmap`lookup/> FMP#N0 SN0+N=F) _ CML
+     <- clsmap-fldmap-implies-lookup CM-FMP FMP#N0 _ CML.
+
+%worlds () (clsmap-fldmap-implies-lookup _ _ _ _).
+%total  (L) (clsmap-fldmap-implies-lookup _ L _ _).
+
+
 %theorem typing-implies-clsmap-nulltp :
         forall* {CM} {MM} {L} {E} {T} 
         forall  {CM-CM: clsmap-clsmap CM CM}
