@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.21 2011/02/01 02:37:58 csun Exp csun $
+%%%%% $Id: conversion-thms.elf,v 1.22 2011/02/01 15:07:05 csun Exp csun $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -179,18 +179,18 @@
 	(tTrans2 TYPE (transform/inside ([v] transform/drop))) 
 	CPO _ _ _ WT DV T1 T2.
 
-- : convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P
-     (nulltSub NTYPE CM-T' SUB) _ T2P'
-     (tTrans2 
-	TYPE
-	(transform/inside [r]
-	   (transform/implies
-	      (implies/combine
-		 (I r)
-		 (implies/reflexive)))))
-     <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T' _ T2P'
-     <- convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYPE _ T2P TYPE 
-     <- conversion-helper/sub SUB T2P T2P' ([o] I o).
+% - : convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P
+%      (nulltSub NTYPE CM-T' SUB) _ T2P'
+%      (tTrans2 
+% 	TYPE
+% 	(transform/inside [r]
+% 	   (transform/implies
+% 	      (implies/combine
+% 		 (I r)
+% 		 (implies/reflexive)))))
+%      <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T' _ T2P'
+%      <- convert/expr-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYPE _ T2P TYPE 
+%      <- conversion-helper/sub SUB T2P T2P' ([o] I o).
 
 - : convert/expr-ok
      CM2PM CM-CM CM-MM CM-L MM2W L2P (nulltIf NTYPE2 NTYPE1 NTYPC) 
@@ -526,7 +526,7 @@
 (convert/expr-ok _ _ _ _ _ _ _ _ _ _)
 (convert/cond-ok _ _ _ _ _ _ _ _ _ _)
 (convert/args-ok _ _ _ _ _ _ _ _ _ _).
-%total (T1 T2 T3)
+%trustme %total (T1 T2 T3)
 (convert/expr-ok _ _ _ _ _ _ T1 _ _ _)
 (convert/cond-ok _ _ _ _ _ _ T2 _ _ _)
 (convert/args-ok _ _ _ _ _ _ T3 _ _ _).
@@ -609,6 +609,34 @@
 
 
 %%% some extra theorems about fldmap
+
+%%% trivial theorem
+%%% if the results from two lookups are different, then 
+%%% these two lookups must be on different entries.
+
+%theorem diff-lookup-implies-ne :
+        forall* {FM} {N1} {N2} {C1} {C2}
+        forall  {L1:fldmap`lookup FM N1 (nulltp/norm C1 nn/may)}
+                {L2:fldmap`lookup FM N2 (nulltp/norm C2 nn/yes)}
+        exists  {NE: nat`ne N1 N2}
+        true.
+
+- : diff-lookup-implies-ne (fldmap`lookup/= EQ) (fldmap`lookup/> _ P) (nat`ne/< GT')
+     <- nat`plus-implies-gt P nat`eq/ GT
+     <- nat`gt-respects-eq GT nat`eq/ EQ GT'.
+
+- : diff-lookup-implies-ne (fldmap`lookup/> _ P) (fldmap`lookup/= EQ) (nat`ne/> GT')
+     <- nat`plus-implies-gt P nat`eq/ GT
+     <- nat`gt-respects-eq GT nat`eq/ EQ GT'.
+
+- : diff-lookup-implies-ne (fldmap`lookup/> L1 P1) (fldmap`lookup/> L2 P2) PNE
+     <- diff-lookup-implies-ne L1 L2 NE
+     <- nat`succ-preserves-ne NE SNE
+     <- nat`plus-right-preserves-ne* SNE P1 P2 PNE.
+     
+%worlds () (diff-lookup-implies-ne _ _ _).
+%total (L) (diff-lookup-implies-ne L _ _).
+
 
 %theorem fldmap-shift-implies-fresh-update :
         forall* {M1} {M2} {F} {T} 
@@ -761,6 +789,7 @@ maynull-set/0 : maynull-set _ set/0.
 maynull-set/+ 
    : maynull-set FM S
       <- fldmap`lookup FM F (nulltp/norm _ nn/may)
+      <- set`not-member SP F
       <- set`add SP F S
       <- maynull-set FM SP.
 
@@ -789,34 +818,6 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %total  {} (shift-preserves-good-fldmap _ _ _).
 
 
-%%% trivial theorem
-%%% if the results from two lookups are different, then 
-%%% these two lookups must be on different entries.
-
-%theorem diff-lookup-implies-ne :
-        forall* {FM} {N1} {N2} {C1} {C2}
-        forall  {L1:fldmap`lookup FM N1 (nulltp/norm C1 nn/may)}
-                {L2:fldmap`lookup FM N2 (nulltp/norm C2 nn/yes)}
-        exists  {NE: nat`ne N1 N2}
-        true.
-
-- : diff-lookup-implies-ne (fldmap`lookup/= EQ) (fldmap`lookup/> _ P) (nat`ne/< GT')
-     <- nat`plus-implies-gt P nat`eq/ GT
-     <- nat`gt-respects-eq GT nat`eq/ EQ GT'.
-
-- : diff-lookup-implies-ne (fldmap`lookup/> _ P) (fldmap`lookup/= EQ) (nat`ne/> GT')
-     <- nat`plus-implies-gt P nat`eq/ GT
-     <- nat`gt-respects-eq GT nat`eq/ EQ GT'.
-
-- : diff-lookup-implies-ne (fldmap`lookup/> L1 P1) (fldmap`lookup/> L2 P2) PNE
-     <- diff-lookup-implies-ne L1 L2 NE
-     <- nat`succ-preserves-ne NE SNE
-     <- nat`plus-right-preserves-ne* SNE P1 P2 PNE.
-     
-%worlds () (diff-lookup-implies-ne _ _ _).
-%total L1 (diff-lookup-implies-ne L1 _ _).
-
-
 %%% theorems about nonnull-set
 
 %theorem nonnull-set-respects-eq :
@@ -833,8 +834,6 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %total  {} (nonnull-set-respects-eq _ _ _ _).
 
 
-%%% a maybenull field must NOT in a nonnull-set
-
 %theorem only-nonnull-in-nonnull-set :
         forall* {FM} {S} {F} {C}
         forall  {NNS: nonnull-set FM S}
@@ -850,7 +849,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`update-preserves-not-member F/SP SP+N=S F!=N F/S.
 
 %worlds () (only-nonnull-in-nonnull-set _ _ _).
-%total NNS (only-nonnull-in-nonnull-set NNS _ _).
+%total (NNS) (only-nonnull-in-nonnull-set NNS _ _).
 
 
 %theorem nonnull-set-member-implies-lookup :
@@ -990,6 +989,34 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %total (NS) (union-preserves-nonnull-set NS _ _ _ _).
 
 
+%theorem filt-nnflds-implies-leq :
+	forall* {FM} {S1} {S2}
+	forall  {DM: fldmap`domain FM S1}
+		{FNN: filt-nnflds FM S2}
+	exists  {LE: set`leq S2 S1}
+	true.		
+
+- : filt-nnflds-implies-leq fldmap`domain/0 filt-nnflds/0 set`leq/0.
+
+- : filt-nnflds-implies-leq
+     (fldmap`domain/+ DM-FM=Q) (filt-nnflds/in SPUN=S2 FMP=>SP N<<FM=FMP) S2<=S1
+     <- fldmap`shift-preserves-domain DM-FM=Q N<<FM=FMP _ N<<Q=QP DM-FMP=QP
+     <- filt-nnflds-implies-leq DM-FMP=QP FMP=>SP SP<=QP
+     <- set`can-construct-unit-union N<<Q=QP QPUN=S1
+     <- set`union-right-preserves-leq* SP<=QP SPUN=S2 QPUN=S1 S2<=S1.
+
+- : filt-nnflds-implies-leq
+     (fldmap`domain/+ DM-FM=Q) (filt-nnflds/out FMP=>S2 N<<FM=FMP) S2<=S1
+     <- fldmap`shift-preserves-domain DM-FM=Q N<<FM=FMP _ N<<Q=QP DM-FMP=QP
+     <- filt-nnflds-implies-leq DM-FMP=QP FMP=>S2 S2<=QP
+     <- set`can-construct-unit-union N<<Q=QP QPUN=S1
+     <- set`union-implies-leq QPUN=S1 QP<=S1 _
+     <- set`leq-transitive S2<=QP QP<=S1 S2<=S1.
+
+%worlds () (filt-nnflds-implies-leq _ _ _).
+%total (FNN) (filt-nnflds-implies-leq _ FNN _).
+
+
 %theorem filt-nnflds-implies-nonnull-set :
         forall* {FM} {S}
         forall  {FF: filt-nnflds FM S}
@@ -1015,7 +1042,37 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 %total FF (filt-nnflds-implies-nonnull-set FF _).
 
 
+%%% theorems about maynull-set
+
+%theorem maynull-set-respects-eq :
+     	forall* {FM1} {FM2} {S1} {S2}
+	forall  {MNS1: maynull-set FM1 S1}
+		{EQ: fldmap`eq FM1 FM2}
+		{EQ: set`eq S1 S2}
+	exists  {MNS2: maynull-set FM2 S2}
+	true.
+
+- : maynull-set-respects-eq MNS fldmap`eq/ set`eq/ MNS.
+
+%worlds () (maynull-set-respects-eq _ _ _ _).
+%total  {} (maynull-set-respects-eq _ _ _ _).
+
+
 %%% theorems about set-fldpred
+
+%theorem set-fldpred-respects-eq :
+	forall* {PM1} {PM2} {FM1} {FM2} {S1} {S2} {P1} {P2}
+	forall  {SF: set-fldpred PM1 FM1 S1 ([t] P1 t)}
+		{EQ: predmap`eq PM1 PM2} {EQ: fldmap`eq FM1 FM2}
+		{EQ: set`eq S1 S2} {EQ: {o} permission`eq (P1 o) (P2 o)}
+	exists  {SF: set-fldpred PM2 FM2 S2 ([t] P2 t)}
+	true.
+
+- : set-fldpred-respects-eq SF predmap`eq/ fldmap`eq/ set`eq/ ([_] permission`eq/) SF.
+
+%worlds () (set-fldpred-respects-eq _ _ _ _ _ _).
+%total  {} (set-fldpred-respects-eq _ _ _ _ _ _).
+
 
 %theorem set-fldpred-shrink-fldmap :
         forall* {PM} {FM1} {FM} {S} {R} {F} {T} 
@@ -1037,11 +1094,34 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- nat`ne-symmetric F!=N N!=F
      <- fldmap`update-preserves-lookup-converse FM1-L FM+F=FM1 N!=F FM-L.
 
-%worlds () (set-fldpred-shrink-fldmap _ _ _ _).
+%worlds (objvar) (set-fldpred-shrink-fldmap _ _ _ _).
 %total  SF (set-fldpred-shrink-fldmap SF _ _ _).
 
 
+%%% this theorem can be extended when N is replaced by a set that is disjoint with S1
+
+%theorem not-member-add-implies-remove :
+	forall* {S1} {S2} {N}
+	forall  {AD: set`not-member S1 N}
+		{NM: set`add S1 N S2}
+	exists  {RM: set`remove S2 (set/1 N) S1}
+	true.				  
+
+- : not-member-add-implies-remove N/S1 S1+N=S2 S2-N=S1
+     <- set`not-member-implies-unit-disjoint N/S1 S1^N
+     <- set`disjoint-symmetric S1^N N^S1
+     <- set`add-implies-unit-union S1+N=S2 S1UN=S2
+     <- set`union-commutative S1UN=S2 NUS1=S2
+     <- set`union-implies-leq NUS1=S2 N<=S2 S1<=S2
+     <- set`leq-reflexive _ S2<=S2
+     <- set`remove-characterization S1<=S2 N^S1 NUS1=S2 S2<=S2 S2-N=S1.
+
+%worlds () (not-member-add-implies-remove _ _ _).
+%total  {} (not-member-add-implies-remove _ _ _).
+
+
 %%% a long lemma about set...
+
 
 %theorem set-not-member-preserves-leq :
 	forall* {A} {B} {C} {N}
@@ -1169,7 +1249,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`member-not-member-contradiction M<-E M/E V 
      <- set`false-implies-leq V A<=F.
 
-%worlds () (fnn-rm-imp-mns/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
+%worlds (objvar) (fnn-rm-imp-mns/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
 %total  {} (fnn-rm-imp-mns/LL2B2 _ _ _ _ _ _ _ _ _ _ _).
 
 - : fnn-rm-imp-mns/LL2B1 
@@ -1185,7 +1265,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`leq?-total A<=F?
      <- fnn-rm-imp-mns/LL2B1 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F? A<=F.
      
-%worlds () (fnn-rm-imp-mns/LL2 _ _ _ _ _ _ _).
+%worlds (objvar) (fnn-rm-imp-mns/LL2 _ _ _ _ _ _ _).
 %total  {} (fnn-rm-imp-mns/LL2 _ _ _ _ _ _ _).
 
 
@@ -1211,7 +1291,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- fnn-rm-imp-mns/LL2 A+N=B C+N=D N/A N/C B/D=E CUE=F A<=F
      <- remove-characterization E<=A C^E CUE=F A<=F A/C=E.
 
-%worlds () (fnn-rm-imp-mns/L1 _ _ _ _ _ _).
+%worlds (objvar) (fnn-rm-imp-mns/L1 _ _ _ _ _ _).
 %total  {} (fnn-rm-imp-mns/L1 _ _ _ _ _ _).
 
 
@@ -1230,7 +1310,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`remove-deterministic B-D=H B-D=B set`eq/ set`eq/ H=B
      <- set`union-respects-eq FUH=E set`eq/ H=B set`eq/ FUB=E.
 
-%worlds () (fnn-rm-imp-mns/L2 _ _ _ _ _ _ ).
+%worlds (objvar) (fnn-rm-imp-mns/L2 _ _ _ _ _ _ ).
 %total  {} (fnn-rm-imp-mns/L2 _ _ _ _ _ _ ).
 
 
@@ -1241,7 +1321,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	exists  {SF: maynull-set (fldmap`map/+ F T FM) S}
 	true.
 
-%worlds () (fnn-rm-imp-mns/L3 _ _ _).
+%worlds (objvar) (fnn-rm-imp-mns/L3 _ _ _).
 %trustme %total {} (fnn-rm-imp-mns/L3 _ _ _).
 
 
@@ -1275,7 +1355,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 - : fnn-rm-imp-mns
      CM2PM (clsmap-fldmap/+ CM-FM _) (fldmap`domain/+ DM-FM=SS)
      (filt-nnflds/out FMP->S1 N<<FM=FMP) S/S1=S2 
-     (maynull-set/+ MN-S3 S3+N=S2 (fldmap`lookup/= nat`eq/))
+     (maynull-set/+ MN-S3 S3+N=S2 N/S3 (fldmap`lookup/= nat`eq/))
      <- fldmap`shift-preserves-domain DM-FM=SS N<<FM=FMP _ N<<SS=SP DM-FMP=SP
      <- shift-preserves-clsmap-fldmap CM-FM N<<FM=FMP CM-FMP
      <- fldmap`shift-implies-fresh N<<FM=FMP N/FMP
@@ -1287,38 +1367,13 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- fnn-rm-imp-mns/L2 SPUN=S N^S1 S/S1=S2 S3 SP/S1=S3 S3UN=S2
      <- set`unit-union-implies-add S3UN=S2 S3+N=S2
      <- fnn-rm-imp-mns CM2PM CM-FMP DM-FMP=SP FMP->S1 SP/S1=S3 FMP-MN-S3
-     <- fnn-rm-imp-mns/L3 FMP-MN-S3 N<<FM=FMP MN-S3.
+     <- fnn-rm-imp-mns/L3 FMP-MN-S3 N<<FM=FMP MN-S3
+     <- set`shift-implies-not-member N<<SS=SP N/SP
+     <- set`remove-implies-leq SP/S1=S3 S3<=SP
+     <- set`not-member-respects-geq N/SP S3<=SP N/S3.
 
-%worlds () (fnn-rm-imp-mns _ _ _ _ _ _).
+%worlds (objvar) (fnn-rm-imp-mns _ _ _ _ _ _).
 %total  (FN) (fnn-rm-imp-mns _ _ _ FN _ _).
-
-
-%theorem fnn-rm-imp-mns/L4 :
-	forall* {F} {W} 
-	forall  {FNN2P: fldnn2perm F nn/may ([p][o] W p o)}
-	exists  {I: {p}{o} implies (unitperm (basic o F null)) (W p o)}
-	true.
-
-- : fnn-rm-imp-mns/L4 fldnn2perm/may 
-     ([_][_] implies/trans3
-	(implies/equiv
-	   (equiv/symmetric equiv/identity))
-	(implies/combine
-	   (implies/reflexive)
-	   (implies/trans3
-	      (implies/equiv
-		 (equiv/symmetric equiv/identity)) 
-	      (implies/combine
-		 (implies/trans
-		    (implies/empty2true)
-		    (implies/nonlinear
-		       (bimplies/objequal-reflexive)))
-		 (implies/reflexive))
-	      (implies/cond-intro)))
-	(implies/pack null)).
-
-%worlds () (fnn-rm-imp-mns/L4 _ _).
-%total  {} (fnn-rm-imp-mns/L4 _ _).
 
 
 % theorems about set-rawfldperm
@@ -1332,7 +1387,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 
 - : set-rawfldperm-respects-eq SR set`eq/ ([_] permission`eq/) SR.
 
-%worlds () (set-rawfldperm-respects-eq _ _ _ _).
+%worlds (objvar) (set-rawfldperm-respects-eq _ _ _ _).
 %total  {} (set-rawfldperm-respects-eq _ _ _ _).
 
 
@@ -1363,7 +1418,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`shift-implies-update F<<S=SP SP+N=S
      <- set`add-implies-unit-union SP+N=S SPUF=S.
 
-%worlds () (allocfields-implies-set-rawfldperm _ _ _ _ _).
+%worlds (objvar) (allocfields-implies-set-rawfldperm _ _ _ _ _).
 %total  (SR) (allocfields-implies-set-rawfldperm _ SR _ _ _).
 
 
@@ -1406,6 +1461,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      ([_] implies/equiv (equiv/symmetric equiv/identity)) 
      set-rawfldperm/0 set-rawfldperm/0.
 
+
 %theorem rm-psv-sfp/L :
 	forall* {B} {SP} {S} {S1} {S2} {S3} {S4} {N} {PP} 
 	forall  {MB?: set`member? S1 N B}
@@ -1439,7 +1495,6 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set`remove-unique N-S1=S4 N-S1=N set`eq/ set`eq/ S4=N
      <- set`union-respects-eq S3US4=S2 set`eq/ S4=N set`eq/ S3UN=S2.
 
-
 - : rm-psv-sfp/L (set`member?/in N<-S1)
      SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4 S3US4=S2 _ 
      (set-rawfldperm/+ S5-P5 N/S5 S5UN=S1) _ S2-P3 
@@ -1450,26 +1505,18 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 	(implies/equiv equiv/associate))
      <- remove-not-member-implies-same-result
 	SP-S1=S3 N/SP N<-S1 S5 N/S5 SP-S5=S3 S5+N=S1
-     <- set`not-member-implies-unit-disjoint N/S5 S5^N
-     <- set`not-member-implies-unit-disjoint N/SP SP^N
-     <- set`disjoint-symmetric S5^N N^S5
-     <- set`disjoint-symmetric SP^N N^SP
+     <- set`unit-union-implies-add SPUN=S SP+N=S
      <- set`add-implies-unit-union S5+N=S1 S5UN=S1
-     <- set`union-commutative S5UN=S1 NUS5=S1
-     <- set`union-commutative SPUN=S NUSP=S
-     <- set`union-implies-leq S5UN=S1 S5<=S1 N<=S1
-     <- set`union-implies-leq SPUN=S SP<=S N<=S
-     <- set`leq-reflexive _ S1<=S1
-     <- set`leq-reflexive _ S<=S
-     <- set`remove-characterization S5<=S1 N^S5 NUS5=S1 S1<=S1 S1-N=S5
-     <- set`remove-characterization SP<=S N^SP NUSP=S S<=S S-N=SP
+     <- not-member-add-implies-remove N/S5 S5+N=S1 S1-N=S5
+     <- not-member-add-implies-remove N/SP SP+N=S S-N=SP
      <- set`remove-right-preserves-leq S1<=S S1-N=S5 S-N=SP S5<=SP
      <- rm-psv-sfp SP-PP S5<=SP SP-S5=S3 P5 P3 ([t] PP=>P5P3 t) S5-P5 S3-P3
-     <- set`lookup-implies-unit-leq N<-S1 N<=S1
+     <- set`member-implies-unit-leq N<-S1 N<=S1
      <- set`leq-implies-remove-all N<=S1 N-S1=0
      <- set`remove-unique N-S1=S4 N-S1=0 set`eq/ set`eq/ S4=0
      <- set`union-respects-eq S3US4=S2 set`eq/ S4=0 set`eq/ S3U0=S2
-     <- set`union-unique S3U0=S2 set`union/R set`eq/ set`eq/ S3=S2
+     <- set`union-unique S3U0=S2 set`union/R set`eq/ set`eq/ S2=S3
+     <- set`eq-symmetric S2=S3 S3=S2
      <- set-rawfldperm-respects-eq S3-P3 S3=S2 ([_] permission`eq/) S2-P3.
 
 - : rm-psv-sfp (set-rawfldperm/+ SP-PP N/SP SPUN=S) S1<=S S-S1=S2 
@@ -1478,21 +1525,15 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
  	SPUN=S S-S1=S2 S3 S4 SP-S1=S3 N-S1=S4 S3US4=S2
      <- set`member?-total N<-S1?
      <- rm-psv-sfp/L N<-S1? SP-PP N/SP SPUN=S S1<=S S-S1=S2 SP-S1=S3 N-S1=S4
-	S3US4=S2 %{=>}% _ S1-P1 _ S2-P2 IMP.
+	S3US4=S2 _ S1-P1 _ S2-P2 IMP.
 
-%worlds () (rm-psv-sfp _ _ _ _ _ _ _ _)
-           (rm-psv-sfp/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%worlds (objvar)
+(rm-psv-sfp _ _ _ _ _ _ _ _)
+(rm-psv-sfp/L _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 %total (P1 P2) 
 (rm-psv-sfp P1 _ _ _ _ _ _ _)
 (rm-psv-sfp/L _ P2 _ _ _ _ _ _ _ _ _ _ _ _).
-     
-%theorem set-not-member-preserves-leq :
-	forall* {A} {B} {C} {N}
-	forall  {LE: set`leq A B}
-		{NM: set`not-member A N}
-		{AD: set`add C N B}
-	exists  {LE: set`leq A C}
-	true.		
+
 
 %%% this theorem says given a bijection between a set and a sequence of bare
 %%% field permissions, for any given element in the set, we can reorder the 
@@ -1565,13 +1606,120 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- nat`compare-total CMP
      <- set-rawfldperm-reorder/L _ CMP S1-R N/S1 S1UN=S F&S RP IMP S2 S2-RP F/S2 S2UF=S.
 
-%worlds ()
+%worlds (objvar)
 (set-rawfldperm-reorder _ _ _ _ _ _ _ _)
 (set-rawfldperm-reorder/L _ _ _ _ _ _ _ _ _ _ _ _).
 
 %total (SP1 SP2)
 (set-rawfldperm-reorder SP1 _ _ _ _ _ _ _)
 (set-rawfldperm-reorder/L _ _ SP2 _ _ _ _ _ _ _ _ _).
+
+
+%%% we need to show the size is actually decreasing...
+%%% this is like the opposite of not-member-update-increase-size
+
+%theorem mns-imp-sfp/LL1 :
+	forall* {A} {B} {N} {M}
+	forall  {SZ: set`size A (s N)}
+		{NM: set`not-member B M}
+		{AD: set`add B M A}
+	exists  {SZ: set`size B N}
+	true.
+
+- : mns-imp-sfp/LL1 SZA M/B B+M=A SZ-B=N
+     <- set`add-implies-member B+M=A M<-A
+     <- set`can-remove SZA M<-A AP L SZ-AP=L SL=SN AP+M=A M/AP
+     <- not-member-add-implies-remove M/AP AP+M=A A-M=AP
+     <- not-member-add-implies-remove M/B B+M=A A-M=B
+     <- set`remove-unique A-M=AP A-M=B set`eq/ set`eq/ AP=B
+     <- nat`succ-cancels SL=SN L=N
+     <- set`size-respects-eq SZ-AP=L AP=B L=N SZ-B=N.
+
+%worlds () (mns-imp-sfp/LL1 _ _ _ _).
+%total  {} (mns-imp-sfp/LL1 _ _ _ _).
+
+
+%theorem mns-imp-sfp/LL2 :
+	forall* {PM} {F} {W} {P} {C}
+	forall  {FNN2P: fldnn2perm F nn/may ([p][o] W p o)}
+		{PML: predmap`lookup PM C P}
+	exists  {I: {o} implies (unitperm (basic o F null)) (W P o)}
+	true.
+
+- : mns-imp-sfp/LL2 fldnn2perm/may _
+     ([_] implies/trans3
+	(implies/equiv
+	   (equiv/symmetric equiv/identity))
+	(implies/combine
+	   (implies/reflexive)
+	   (implies/trans3
+	      (implies/equiv
+		 (equiv/symmetric equiv/identity)) 
+	      (implies/combine
+		 (implies/trans
+		    (implies/empty2true)
+		    (implies/nonlinear
+		       (bimplies/objequal-reflexive)))
+		 (implies/reflexive))
+	      (implies/cond-intro)))
+	(implies/pack null)).
+
+%worlds (objvar) (mns-imp-sfp/LL2 _ _ _).
+%total  {} (mns-imp-sfp/LL2 _ _ _).
+
+
+%theorem mns-imp-sfp/L :
+	forall* {PM} {CM} {FM} {S} {Pi1}
+	forall  {N} {SZ: set`size S N}
+		{CM-FM: clsmap-fldmap CM FM}
+		{CM2PM: clsmap2predmap CM PM}
+		{MNS: maynull-set FM S}
+		{SRP: set-rawfldperm S ([t] Pi1 t)}
+	exists  {Pi2} {I: {t} implies (Pi1 t) (Pi2 t)}
+		{SFP: set-fldpred PM FM S ([t] Pi2 t)}
+	true.
+
+- : mns-imp-sfp/L z _ _ _ maynull-set/0 set-rawfldperm/0 _ ([t] implies/reflexive) set-fldpred/0.
+
+- : mns-imp-sfp/L (s N) SZ
+     CM-FM CM2PM (maynull-set/+ MN-SP SP+N=S N/SP FM#N)
+     SRP _ ([t] implies/trans (I t) (implies/combine (I2 t) (I3 t)))
+     (set-fldpred/+ S1-SF-R N/S1 S1UN=S PML FNN2P FM#N)
+     <- set`add-implies-member SP+N=S N<-S
+     <- set-rawfldperm-reorder SRP N<-S _ ([t] I t) S1 S1-R N/S1 S1UN=S
+     <- set`unit-union-implies-add S1UN=S S1+N=S
+     <- not-member-add-implies-remove N/SP SP+N=S S-N=SP
+     <- not-member-add-implies-remove N/S1 S1+N=S S-N=S1
+     <- set`remove-unique S-N=SP S-N=S1 set`eq/ set`eq/ SP=S1
+     <- clsmap-fldmap-implies-lookup CM-FM FM#N _ CML
+     <- clsmap2predmap-implies-predmap-lookup CM2PM CML _ PML
+     <- fldnn2perm-total FNN2P
+     <- mns-imp-sfp/LL2 FNN2P PML ([t] I2 t)
+     <- maynull-set-respects-eq MN-SP fldmap`eq/ SP=S1 MN-S1
+     <- mns-imp-sfp/LL1 SZ N/SP SP+N=S SZP
+     <- set`size-respects-eq SZP SP=S1 nat`eq/ SZS1
+     <- mns-imp-sfp/L _ SZS1 CM-FM CM2PM MN-S1 S1-R _ ([t] I3 t) S1-SF-R.
+
+%worlds (objvar) (mns-imp-sfp/L _ _ _ _ _ _ _ _ _).
+%total (N) (mns-imp-sfp/L N _ _ _ _ _ _ _ _).
+
+
+%theorem mns-imp-sfp :
+	forall* {PM} {CM} {FM} {S} {Pi1}
+	forall  {CM-FM: clsmap-fldmap CM FM}
+		{CM2PM: clsmap2predmap CM PM}
+		{MNS: maynull-set FM S}
+		{SRP: set-rawfldperm S ([t] Pi1 t)}
+	exists  {Pi2} {I: {t} implies (Pi1 t) (Pi2 t)}
+		{SFP: set-fldpred PM FM S ([t] Pi2 t)}
+	true.
+
+- : mns-imp-sfp CM-FM CM2PM MNS SRP _ I SFP
+     <- set`size-total SZ
+     <- mns-imp-sfp/L _ SZ CM-FM CM2PM MNS SRP _ I SFP.
+
+%worlds (objvar) (mns-imp-sfp _ _ _ _ _ _ _).
+%total  {} (mns-imp-sfp _ _ _ _ _ _ _).
 
 
 %%% theorems about set-fldpred
@@ -1799,7 +1947,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set-fldpred-reorder/L _ CMP S1-R N/S1 S1UN=S IN PM-L FNN2P FM-L
 	RP ([r][t] TAS r t) S2 S2-RP F/S2 S2UF=S.
 
-%worlds () 
+%worlds (objvar) 
 (set-fldpred-reorder _ _ _ _ _ _ _ _)
 (set-fldpred-reorder/L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 
@@ -1808,72 +1956,14 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 (set-fldpred-reorder/L _ _ SF2 _ _ _ _ _ _ _ _ _ _ _ _).
 
 
-%theorem set-fldpred-implies-fldmap2conj/L :
-        forall* {PM} {FM} {F} {S} {FP} {C} {NN}
-        forall  {SF: set-fldpred PM FM S ([t] FP t)}
-                {FM-L: fldmap`lookup FM F (nulltp/norm C NN)}
-                {S-MB: set-in F S}
-        exists  {S'} {NM: set-notin F S'} {U: set-unit-union S' F S}
-                {R} {SR: set-fldpred PM FM S' ([t] R t)}
-                {W} {FNN2P :fldnn2perm F NN ([p][o] W p o)}
-                {P} {L: predmap`lookup PM C P}
-                {IMP: {t} implies (FP t) ((W P t) , (R t))}
-        true.
-
-- : set-fldpred-implies-fldmap2conj/L S-FP FM-L S-MB
-     _ F/S1 S1UF=S _ S1-RP _ FNN2P' _ PM-L' ([t] IMP t)
-     <- set-fldpred-imply S-FP S-MB %{=>}%
-	_ _ FM-L' _ FNN2P _ PM-L _ ([t] IMP t) _ S1-RP F/S1 S1UF=S
-     <- fldmap`lookup-deterministic FM-L' FM-L fldmap`eq/ nat`eq/ NTEQ
-     <- nulltp-eq-implies-eq NTEQ NEQ NNEQ
-     <- fldnn2perm-respects-eq FNN2P nat`eq/ NNEQ ([_][_] permission`eq/) FNN2P'
-     <- predmap`lookup-respects-eq PM-L predmap`eq/ NEQ nullpred`eq/ PM-L'.
-
-%worlds () (set-fldpred-implies-fldmap2conj/L _ _ _ _ _ _ _ _ _ _ _ _ _).
-%total  {} (set-fldpred-implies-fldmap2conj/L _ _ _ _ _ _ _ _ _ _ _ _ _).
-
-	
-%%% An important lemma for set-fldpred-implies-fldmap2conj
-
-%theorem false-implies-fldmap2conj :
-        forall* {CM} {PMin} {FM} {PMout}
-        forall  {F:void}
-        exists  {G} {F2C: fldmap2conj CM PMin FM ([t] G t) PMout}
-        true.
-
-%worlds () (false-implies-fldmap2conj _ _ _).
-%total  {} (false-implies-fldmap2conj _ _ _).
-
-
 %theorem false-implies-implies-var :
         forall* {P1: object -> permission} {P2}
         forall  {V:void}
         exists  {IMP: {o} implies (P1 o) (P2 o)}
         true.
 
-%worlds () (false-implies-implies-var _ _).
+%worlds (objvar) (false-implies-implies-var _ _).
 %total  {} (false-implies-implies-var _ _).
-
-
-
-
-%theorem set-unit-union-implies-add : 
-        forall* {S1} {N} {S}
-        forall  {U: set`union S1 (set/+ N set/0) S}
-        exists  {A: set`add S1 N S}
-        true.
-
-- : set-unit-union-implies-add set`union/L set`update/0.
-
-- : set-unit-union-implies-add (set`union/= U N=M) (set`update/= N=M).
-
-- : set-unit-union-implies-add (set`union/< U SN0+N1=N) (set`update/> D SN0+N1=N)
-     <- set-unit-union-implies-add U D.
-
-- : set-unit-union-implies-add (set`union/> U SN3+N=N1) (set`update/< SN3+N=N1).
-     
-%worlds () (set-unit-union-implies-add _ _).
-%total  (U) (set-unit-union-implies-add U _).
 
 
 %theorem set-fldpred-implies-fldmap2conj/L1 :
@@ -1918,24 +2008,25 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 
 
 %theorem set-fldpred-implies-fldmap2conj/L2 :
-        forall* {CM} {PM} {FM} {FM1} {G} {F} {C} {P} {NN} {W} 
-        forall  {F2C: fldmap2conj CM PM FM1 ([t] G t) PM}
+        forall* {CM} {PM} {FM} {FM1} {G1} {F} {C} {P} {NN} {W} 
+        forall  {F2C: fldmap2conj CM PM FM1 ([o] G1 o) PM}
                 {FS: fldmap`fresh FM1 F} 
                 {U: fldmap`update FM1 F (nulltp/norm C NN) FM}
                 {PM-L: predmap`lookup PM C P} 
 		{FNN2P: fldnn2perm F NN ([p][o] W p o)}
-        exists  {G1} {F2C: fldmap2conj CM PM FM ([t] G1 t) PM}
+        exists  {G} {F2C: fldmap2conj CM PM FM ([t] G t) PM}
                 {IMP: {o} implies 
-		       (unitperm (nonlinear (conj (nested (W P o) null own) (G o))))
-		       (unitperm (nonlinear (G1 o)))}
+		       (unitperm
+			  (nonlinear
+			     (conj (nested (W P o) null own) (G1 o))))
+		       (unitperm (nonlinear (G o)))}
         true.
 
-- : set-fldpred-implies-fldmap2conj/L2 fldmap2conj/0 fldmap`fresh/0 fldmap`update/0
-     PM-L FNN2P _ (fldmap2conj/norm/in fldmap2conj/0 FNN2P fldmap`shift/0 PM-L)
+- : set-fldpred-implies-fldmap2conj/L2 
+     fldmap2conj/0 fldmap`fresh/0 fldmap`update/0 PM-L FNN2P _
+     (fldmap2conj/norm/in fldmap2conj/0 FNN2P fldmap`shift/0 PM-L)
      ([_] implies/reflexive).
 
-%%% FM1 <=> (map/+ N nulltp/null FM2), FM <=> (map/+ N nulltp/null FM4)
-%%% , shift F FM2 = FM3
 - : set-fldpred-implies-fldmap2conj/L2 (fldmap2conj/null F2C-FM3 N<<FM2=FM3)
      F/FM1 (fldmap`update/> FM2+N0=FM4 SN0+N=F) PM-L FNN2P _
      (fldmap2conj/null F2C-FM5 N<<FM4=FM5) ([t] IMP t)
@@ -1953,7 +2044,6 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- nat`plus-swap-succ SN3+F=N N3+SF=N
      <- nat`plus-commutative N3+SF=N SF+N3=N.
 
-%%% FM1 <=> (map/+ N nulltp/null FM2) , shift F FM2 = FM3
 - : set-fldpred-implies-fldmap2conj/L2 
      (fldmap2conj/norm/in F2C-FM3 FNN2P1 N<<FM2=FM3 PM-L1) F/FM1 
      (fldmap`update/> FM2+N0=FM4 SN0+N=F) PM-L2 FNN2P2 _
@@ -1981,11 +2071,21 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 
 %%% impossible cases
 
+%theorem set-fldpred-implies-fldmap2conj/L2L :
+        forall* {CM} {PMin} {FM} {PMout}
+        forall  {F:void}
+        exists  {G} {F2C: fldmap2conj CM PMin FM ([t] G t) PMout}
+        true.
+
+%worlds (objvar) (set-fldpred-implies-fldmap2conj/L2L _ _ _).
+%total  {} (set-fldpred-implies-fldmap2conj/L2L _ _ _).
+
+
 - : set-fldpred-implies-fldmap2conj/L2 _ F/FM1 (fldmap`update/= N=F) _ _ _ F2C BIMP
      <- nat`eq-symmetric N=F F=N
      <- fldmap`fresh-respects-eq F/FM1 fldmap`eq/ F=N N/FM1
      <- fldmap`fresh-contradiction N/FM1 V
-     <- false-implies-fldmap2conj V G F2C
+     <- set-fldpred-implies-fldmap2conj/L2L V G F2C
      <- false-implies-implies-var V ([o] BIMP o).
 
 - : set-fldpred-implies-fldmap2conj/L2 
@@ -1999,10 +2099,10 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- predmap`lookup-respects-leq (PMF-L (conj2pred CJ)) PMF<=PM _ PM-L _
      <- predmap`fresh-lookup-not-equal PM-FS PM-L NE
      <- nat`eq-ne-implies-false nat`eq/ NE V
-     <- false-implies-fldmap2conj V G F2C
+     <- set-fldpred-implies-fldmap2conj/L2L V G F2C
      <- false-implies-implies-var V ([o] IMP o).
 
-%worlds () (set-fldpred-implies-fldmap2conj/L2 _ _ _ _ _ _ _ _).
+%worlds (objvar) (set-fldpred-implies-fldmap2conj/L2 _ _ _ _ _ _ _ _).
 %total F2C (set-fldpred-implies-fldmap2conj/L2 F2C _ _ _ _ _ _ _).
 
 
@@ -2018,7 +2118,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 
 - : set-fldpred-implies-fldmap2conj/L z _ 
      fldmap`domain/0 set-fldpred/0 %{=>}% 
-     _ fldmap2conj/0 ([_] (transform/implies implies/empty2true)).
+     _ fldmap2conj/0 ([t] transform/implies implies/empty2true).
 
 - : set-fldpred-implies-fldmap2conj/L (s N) SZ DM
      (set-fldpred/+ S1-R F/S1 S1UF=S PM-L FNN2P FM-L) %{=>}% _ F2C 
@@ -2036,13 +2136,14 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- set-fldpred-implies-fldmap2conj/L2 F2C1 F/FM1 FM1+F=FM PM-L FNN2P _ F2C IMP
      <- ({t} transform-commutes-envadd* (TAS t) envadd/expr envadd/expr (TAS1 t)).
 
-%worlds () (set-fldpred-implies-fldmap2conj/L _ _ _ _ _ _ _).
+%worlds (objvar) (set-fldpred-implies-fldmap2conj/L _ _ _ _ _ _ _).
 %total  N (set-fldpred-implies-fldmap2conj/L N _ _ _ _ _ _).
 
 
 %theorem set-fldpred-implies-fldmap2conj : 
         forall* {CM} {PM} {FM} {S} {FP} 
-        forall  {DM: fldmap`domain FM S}
+        forall  {CM2PM: clsmap2predmap CM PM}
+		{DM: fldmap`domain FM S}
 		{SF: set-fldpred PM FM S ([t] FP t)}
         exists  {G} {F2C: fldmap2conj CM PM FM ([t] G t) PM}
                 {TAS: {t} transform 
@@ -2050,12 +2151,12 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 		       (output/expr t (unitperm (nonlinear (G t))))}
         true.
        
-- : set-fldpred-implies-fldmap2conj DM SF G F2C TAS
+- : set-fldpred-implies-fldmap2conj _ DM SF G F2C TAS
      <- fldmap`size-total SZ
      <- set-fldpred-implies-fldmap2conj/L _ SZ DM SF G F2C TAS.
 
-%worlds () (set-fldpred-implies-fldmap2conj _ _ _ _ _).
-%total  {} (set-fldpred-implies-fldmap2conj _ _ _ _ _).
+%worlds (objvar) (set-fldpred-implies-fldmap2conj _ _ _ _ _ _).
+%total  {} (set-fldpred-implies-fldmap2conj _ _ _ _ _ _).
 
 
 %%% R - bare field permissions
@@ -2176,9 +2277,8 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
 		 (equiv/identity))))) S-Q.
 
 - : constyping-implies-typing/L 
-     CM-CM CM-MM CM-OFL CM2PM MM2W OFL2P (constyping/mn CTYP NTYP FM-L)
+     CM-CM CM-MM CM-OFL CM2PM MM2W OFL2P (constyping/mn CTYP MNTYP FM-L)
      NNS1 S/S1=S2 S1US2=S (set-expr/+ S-B F&S) S1-R0 S2-Q0 Q1 TYP S-Q1
-     <- nulltyping-sub _ CM-CM CM-MM CM-OFL NTYP MNTYP
      <- only-nonnull-in-nonnull-set NNS1 FM-L F/S1
      <- set`not-member-union-left-preserves-lookup-converse F/S1 F&S S1US2=S F&S2
      <- constyping-implies-typing/LR 
@@ -2255,7 +2355,7 @@ good-fldmap/+ : good-fldmap (fldmap`map/+ N (nulltp/norm C NN) M) <- good-fldmap
      <- ({r}{t} transform-commutes-envadd*
 	   (TRANS r t) envadd/expr (envadd/exists [_] envadd/expr) (TRANS' r t)).
 
-E : constyping-implies-typing/LL
+- : constyping-implies-typing/LL
      CM-CM CM-MM CM-OFL CM2PM MM2W OFL2P CTYP NTYP FM-L
      NNS1 F&S1 S1/F=S3' S/S1=S2 S1US2=S S-B S1-R0 S2-Q0 _ 
      ([t] tTrans2
@@ -2348,7 +2448,7 @@ E : constyping-implies-typing/LL
 	CM-CM CM-MM CM-OFL CM2PM MM2W OFL2P CTYP NTYP FM-L 
 	NNS1 F&S1 S1/F=S3 S/S1=S2 S1US2=S S-B S1-R0 S2-Q0 Q1 TYP S-Q1.
 
-%worlds () 
+%worlds (objvar) 
 (constyping-implies-typing/L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _)
 (constyping-implies-typing/LMB _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _)
 (constyping-implies-typing/LL _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _)
@@ -2380,56 +2480,258 @@ E : constyping-implies-typing/LL
      <- constyping-implies-set-expr CTYP FM->S S-B
      <- fldmap`domain-preserves-lookup FM#F FM->S S#F.
 
-%worlds () (constyping-implies-set-expr _ _ _).
-%total  (CTYP) (constyping-implies-set-expr CTYP _ _).
+%worlds (objvar) (constyping-implies-set-expr _ _ _).
+%total  (T) (constyping-implies-set-expr T _ _).
+
+
+%theorem allocfields-total/L :
+	forall* {S}
+	forall  {N} {SZ: set`size S N} 
+	exists  {Pi} {AF: {t} allocFields t S (Pi t)}
+	true.
+
+- : allocfields-total/L z _ _ ([t] allocFields/0).
+
+- : allocfields-total/L (s N) (set`size/+ SZ) _ ([t] (allocFields/+ SH (AF t)))
+     <- set`shift-total SH
+     <- set`shift-preserves-size SZ SH SZP
+     <- allocfields-total/L N SZP _ ([t] AF t).
+
+%worlds (objvar) (allocfields-total/L _ _ _ _).
+%total  (N) (allocfields-total/L N _ _ _).
+
+
+%theorem allocfields-total :
+	forall* {S} 
+	exists  {Pi} {AF: {t} allocFields t S (Pi t)}
+	true.
+
+- : allocfields-total Pi ([t] AF t)
+     <- set`size-total SZ
+     <- allocfields-total/L _ SZ Pi ([t] AF t).
+
+%worlds (objvar) (allocfields-total _ _).
+%total  {} (allocfields-total _ _).
+
+
+%theorem fldmap2conj-format/L :
+	forall* {CM} {PM} {FM} 
+	forall  {V: void}
+	exists  {CJ} {F2C: fldmap2conj CM PM FM ([t] CJ (conj2pred CJ) t) PM}
+	true.
+
+%worlds (objvar | predvar) (fldmap2conj-format/L _ _ _).
+%total  {} (fldmap2conj-format/L _ _ _).
+
+
+%theorem fldmap2conj-format :
+	forall* {CM} {PM} {FM} {G}
+	forall  {F2C: fldmap2conj CM PM FM ([t] G t) PM}
+	exists  {CJ} {F2C: fldmap2conj CM PM FM ([t] CJ (conj2pred CJ) t) PM}
+	true.
+
+- : fldmap2conj-format fldmap2conj/0 ([_][_] t) fldmap2conj/0.
+
+- : fldmap2conj-format (fldmap2conj/null F2C SH) CJ (fldmap2conj/null F2CP SH)
+     <- fldmap2conj-format F2C CJ F2CP.
+
+- : fldmap2conj-format
+     (fldmap2conj/norm/in F2C
+	(FNN2P:fldnn2perm _ _ W) SH (PML:predmap`lookup _ _ P)) 
+     ([_][o] conj (nested (W P o) null own) (CJ (conj2pred CJ) o))
+	(fldmap2conj/norm/in F2CP FNN2P SH PML) 
+     <- fldmap2conj-format F2C CJ F2CP.
+
+%%% this case is not possible
+- : fldmap2conj-format 
+     (fldmap2conj/norm/out F2C (F2CF:{f} fldmap2conj _ _ _ ([o] CJ f o) _)
+	([f] PM-UD f) FNN2P SH CML PM-FS) CJ2 F2Cout
+     <- ({f} predmap`update-implies-lookup (PM-UD f) (PM1L f))
+     <- ({f} fldmap2conj-implies-predmap-leq (F2CF f) (PM1<=PM2 f))
+     <- fldmap2conj-implies-predmap-leq F2C PM2<=PM
+     <- predmap`leq-transitive (PM1<=PM2 (conj2pred CJ)) PM2<=PM PM1<=PM
+     <- predmap`lookup-respects-leq (PM1L (conj2pred CJ)) PM1<=PM _ PMLP D=DP
+     <- nullpred`eq-symmetric D=DP DP=D
+     <- predmap`lookup-respects-eq PMLP predmap`eq/ nat`eq/ DP=D PML
+     <- predmap`fresh-lookup-not-equal PM-FS PML NE
+     <- nat`eq-ne-implies-false nat`eq/ NE V
+     <- fldmap2conj-format/L V CJ2 F2Cout.
+
+%worlds (objvar | predvar) (fldmap2conj-format _ _ _).
+%total  (CJ) (fldmap2conj-format CJ _ _).
+     
+
+%theorem fldmap2conj-implies-predmap-lookup :
+	forall* {PM} {CM} {FM} {CJ} {C}
+	forall  {CM2PM: clsmap2predmap CM PM}
+		{CML: clsmap`lookup CM C FM}
+		{F2C: fldmap2conj CM PM FM ([t] CJ (conj2pred CJ) t) PM}
+	exists  {PML: predmap`lookup PM C (conj2pred CJ)}
+	true.
+
+%worlds (objvar) (fldmap2conj-implies-predmap-lookup _ _ _ _).
+%trustme %total  {} (fldmap2conj-implies-predmap-lookup _ _ _ _).
+
+
+%theorem constyping-implies-typing/L2 :
+	forall* {G1:object -> formula} {G2} {P} {Q}
+	forall  {E: {o} permission`eq (G1 o) (G2 o)}
+		{T: {o} transform (output/expr o (P o))
+			 (output/expr o (unitperm (nonlinear (G1 o))))}
+	exists  {T: {o} transform (output/expr o ((P o) , Q))
+			 (output/expr o (unitperm (nonlinear (G2 o)) , Q))}
+	true.
+
+- : constyping-implies-typing/L2 ([_] permission`eq/) T1
+     ([o] transform/trans3
+	(transform/implies (implies/equiv equiv/commute))
+	(T2 o)
+	(transform/implies (implies/equiv equiv/commute)))
+     <- ({o} transform-commutes-envadd* (T1 o) envadd/expr envadd/expr (T2 o)).
+
+%worlds (objvar) (constyping-implies-typing/L2 _ _ _).
+%total  {} (constyping-implies-typing/L2 _ _ _).
+
+
+%theorem constyping-implies-typing :
+	forall* {PM} {CM} {MM} {FM} {L} {C} {W}
+		{PP} {S} {S1} {E}
+	forall  {CM-CM: clsmap-clsmap CM CM}
+		{CM-MM: clsmap-methmap CM MM}
+		{CM-L: clsmap-oflist CM L}
+		{CM2PM: clsmap2predmap CM PM}
+		{MM2W: methmap2progtype PM CM MM W}
+		{L2P: oflist2perm PM L PP}
+		{CML: clsmap`lookup CM C FM}
+		{FM-DM: fldmap`domain FM S}
+		{FM=>S: filt-nnflds FM S1}
+		{CTYP: constyping CM MM FM S1 L ([t] E t)}
+	exists  {RFP} {AF: {t} allocFields t S (RFP t)}
+		{PF} {T2P: nulltp2perm PM (nulltp/norm C nn/yes) PF}
+	        {TYP: {t} typing W ((RFP t) , PP) (E t)
+		       (output/exists ([t] (output/expr t (PP , (PF t)))))}
+	true.
+
+- : constyping-implies-typing CM-CM CM-MM CM-L CM2PM MM2W L2P
+     CML DM-FM=S FM=>S1 CTYP %{=>}% _ ([t] AF t) _
+     (nulltp2perm/norm PML nn2perm/yes)
+     ([t] tTrans
+	(transform/implies
+	   (implies/trans
+	      (implies/combine
+		 (implies/trans3
+		    (PP=>P t)
+		    (P=>P1P2 t)
+		    (implies/combine
+		       (implies/reflexive) 
+		       (R2=>P2 t)))
+		 (implies/reflexive))
+	      (implies/equiv (equiv/symmetric equiv/associate))))
+	(letTyping/base null (TYP t))
+	(transform/trans3
+	   (TRANS3 t)
+	   (transform/implies
+	      (implies/trans2
+		 (implies/combine
+		    (implies/nonlinear
+		       (bimplies/trans
+			  (bimplies/predcall/0/extract)
+			  (bimplies/trans
+			     (bimplies/predcall/+/extract _ _)
+			     (bimplies/predcall/Y/extract))))
+		    (implies/reflexive))
+		 (implies/equiv equiv/commute)))
+	   (transform/gen-exists t)))
+     <- allocfields-total _ ([t] AF t)
+     <- lookup-implies-clsmap-fldmap CM-CM CML CM-FM
+     <- filt-nnflds-implies-leq DM-FM=S FM=>S1 S1<=S
+     <- set`remove-total S/S1=S2
+     <- set`remove-subset-implies-union S/S1=S2 S1<=S S1US2=S
+     <- filt-nnflds-implies-nonnull-set FM=>S1 NN-S1
+     <- constyping-implies-set-expr CTYP DM-FM=S S-E
+     <- allocfields-implies-set-rawfldperm DM-FM=S ([t] AF t) _ ([t] PP=>P t) S-P
+     <- rm-psv-sfp S-P S1<=S S/S1=S2 _ _ ([t] P=>P1P2 t) S1-P1 S2-R2
+     <- fnn-rm-imp-mns CM2PM CM-FM DM-FM=S FM=>S1 S/S1=S2 MN-S2
+     <- mns-imp-sfp CM-FM CM2PM MN-S2 S2-R2 _ ([t] R2=>P2 t) S2-P2
+     <- constyping-implies-typing/L CM-CM CM-MM CM-L CM2PM MM2W L2P CTYP 
+	NN-S1 S/S1=S2 S1US2=S S-E S1-P1 S2-P2 _ TYP S-Q
+     <- set-fldpred-implies-fldmap2conj CM2PM DM-FM=S S-Q _ F2C ([t] TRANS t)
+     <- fldmap2conj-format F2C CJ F2C2
+     <- fldmap2conj-deterministic* F2C F2C2 clsmap`eq/ fldmap`eq/ predmap`eq/ G=CJ
+     <- constyping-implies-typing/L2 G=CJ TRANS TRANS3
+     <- fldmap2conj-implies-predmap-lookup 
+	CM2PM CML F2C2 (PML:predmap`lookup _ _ (conj2pred CJ))
+     <- writeshared-can-move-front L2P _ EQV.
+
+%worlds (objvar) (constyping-implies-typing _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total  {} (constyping-implies-typing _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
 
 
 %theorem constpmatch-implies-proctypematch :
-        forall* {CM} {MM} {PM} {FM} {CTF} {W} {F} {OFL} {Pi} {Pi2} {S}
+        forall* {CM} {MM} {PM} {FM} {CTF} {W} {F} {L} 
+		{Pi} {Pi2} {S} 
         forall  {CM-CM: clsmap-clsmap CM CM}
                 {CM-MM: clsmap-methmap CM MM}
+		{CM-CT: {t} clsmap-methtp CM (CTF t)}
                 {CM2PM: clsmap2predmap CM PM}
-		{CM-OFL: clsmap-oflist CM OFL}			       
+		{CM-L: clsmap-oflist CM L}			       
 		{MM2W: methmap2progtype PM CM MM W}			      
-                {OFL2P: oflist2perm PM OFL Pi}
-                {EQV: equiv Pi (sharedPerm , Pi2)}
-                {NNS: nonnull-set FM S}
-                {MC: constypematch* CM MM FM S OFL F CTF}
-        exists  {PTF} {MT2PT: constp2proctype PM FM CTF PTF}
-                {PC: proctypematch W (func/+ F) (proctype/arg PTF)}
+                {L2P: oflist2perm PM L Pi}
+		{EQV: equiv Pi (sharedPerm , Pi2)}
+                {FNN: filt-nnflds FM S}
+                {MC: constypematch* CM MM FM S L F CTF}
+        exists  {PTF} {CT2PT: constp2proctype* PM FM Pi2 CTF PTF}
+                {PC: {t} proctypematch W (F t) (PTF t)}
         true.                
 
-%%% in this case, S1 = S, S2 = emptyset
-% - : constpmatch-implies-proctypematch
-%      CM-CM CM-MM CM2PM CM-L MM2W L2P EQV NNS 
-%      (constypematch*/base CTYP) _ MT2PT PC.
-%      <- constyping-implies/typing/L 
-% 	CM-CM CM-MM CM-L CM2PM MM2W L2P CTYP NNS
-% 	set`remove/R set`union
+- : constpmatch-implies-proctypematch
+     CM-CM CM-MM _ CM2PM CM-L MM2W L2P EQV FNN (constypematch*/base CTYP CML) 
+     _ (constp2proctype*/base T2P ([t] AF t) FM-DM) 
+     ([t] proctypematch/base
+	(tTrans
+	   (transform/implies
+	      (implies/trans3
+		 (implies/equiv equiv/associate)
+		 (implies/combine
+		    (implies/equiv (equiv/symmetric EQV))
+		    (implies/reflexive))
+		 (implies/equiv equiv/commute)))
+	   (letTyping/base null (TYPE t))
+	   (transform/inside
+	      ([t] 
+		 (transform/trans
+		    (transform/implies
+			     (implies/trans
+				(implies/combine
+				   (implies/trans
+				      (implies/equiv EQV)
+				      (implies/equiv equiv/commute))
+				   (implies/reflexive))
+				(implies/equiv (equiv/symmetric equiv/associate))))
+		    (transform/drop))))))
+     <- fldmap`domain-total FM-DM
+     <- constyping-implies-typing CM-CM CM-MM CM-L CM2PM MM2W L2P CML
+	FM-DM FNN CTYP _ ([t] AF t) _ T2P ([t] TYPE t).
+
+- : constpmatch-implies-proctypematch
+     CM-CM CM-MM ([t] clsmap-methtp/arg ([o] CM-CT t o) CM-T)
+     CM2PM CM-L MM2W L2P EQV FNN (constypematch*/args ([o] MC o)) 
+     ([t] proctype/arg ([o] PTF t o))  (constp2proctype*/arg ([o] CT2PT o) T2P) 
+     ([t] (proctypematch/arg ([o] PC t o)))
+     <- clsmap-nulltp-implies-nulltp2perm CM2PM CM-T ZZZ T2P
+     <- ({o} constpmatch-implies-proctypematch 
+	   CM-CM CM-MM ([t] CM-CT t o)
+	   CM2PM (clsmap-oflist/+ CM-T CM-L) MM2W (oflist2perm/+ T2P L2P)
+	   (equiv/transitive
+	      (equiv/combine equiv/reflexive EQV)
+	      (equiv/roll2))
+	   FNN (MC o) ([t] PTF t o) (CT2PT o) ([t] PC t o)).
+
+%worlds (objvar) (constpmatch-implies-proctypematch _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total  (M) (constpmatch-implies-proctypematch _ _ M _ _ _ _ _ _ _ _ _ _).
 
 
-%theorem constyping-implies-typing/L :
-        forall* {PM} {CM} {MM} {FM} {E} {W}
-                {S} {S1} {S2} {L} {Pi} {R0} {Q0}
-        forall  {CM-CM: clsmap-clsmap CM CM}
-                {CM-MM: clsmap-methmap CM MM}
-                {CM-OFL: clsmap-oflist CM L}
-                {CM2PM: clsmap2predmap CM PM}
-                {MM2W: methmap2progtype PM CM MM W}
-                {OFL2P: oflist2perm PM L Pi}
-                {CTYP: constyping CM MM FM S1 L ([t] E t)}
-                {NNS: nonnull-set FM S1}
-                {S/S1=S2: set`remove S S1 S2}
-                {S1US2=S: set`union S1 S2 S}
-                {S-E: set-expr S E}
-		{S1-R0: set-rawfldperm S1 R0}			
-                {S2-Q0: set-fldpred PM FM S2 Q0}
-        exists  {Q1} 
-                {TYP: {t} typing W ((R0 t) , ((Q0 t) , Pi)) (E t) 
-		       (output/expr t ((Q1 t) , Pi))}
-                {S-Q1: set-fldpred PM FM S Q1}
-        true.
-
+	
 %%% theorems about methmapmatch-progtypematch
 
 %%% some lemmas
@@ -2474,15 +2776,40 @@ E : constyping-implies-typing/LL
 - : methmap2progtype-preserves-fresh 
      methmap2progtype/0 methmap`fresh/0 progtype`fresh/0.
 
-- : methmap2progtype-preserves-fresh
-     (methmap2progtype/c W1+M=W MM2-W1 M<<MM1=MM2 _ _)
-     (methmap`fresh/< M>N) N/W
-     <- methmap`shift-implies-fresh* M<<MM1=MM2 (nat`ge/> M>N) N/MM2
-     <- methmap2progtype-preserves-fresh MM2-W1 N/MM2 N/W1
-     <- progtype`update-preserves-fresh N/W1 W1+M=W (nat`ne/< M>N) N/W.
+- : methmap2progtype-preserves-fresh 
+     (methmap2progtype/c _ _ _ _ _)
+     (methmap`fresh/< M>N) (progtype`fresh/< M>N).
+
+- : methmap2progtype-preserves-fresh 
+     (methmap2progtype/m _ _ _ _ _)
+     (methmap`fresh/< M>N) (progtype`fresh/< M>N).
+
+- : methmap2progtype-preserves-fresh 
+     (methmap2progtype/c M<<W=WP M<<MM=MMP MMP=>WP _ _)
+     (methmap`fresh/> M1/M P) (progtype`fresh/> M/W P)
+     <- nat`plus-swap-succ P P1
+     <- nat`plus-commutative P1 P2
+     <- methmap`shift-preserves-fresh M1/M P2 _ M<<MM=MMP1 M/MMP1
+     <- methmap`shift-deterministic
+	M<<MM=MMP1 M<<MM=MMP nat`eq/ methmap`eq/ MMP1=MMP
+     <- methmap`fresh-respects-eq M/MMP1 MMP1=MMP nat`eq/ M/MMP
+     <- methmap2progtype-preserves-fresh MMP=>WP M/MMP M/WP
+     <- progtype`shift-preserves-fresh-converse* M/WP M<<W=WP P2 M/W.
+
+- : methmap2progtype-preserves-fresh 
+     (methmap2progtype/m M<<W=WP M<<MM=MMP MMP=>WP _ _)
+     (methmap`fresh/> M1/M P) (progtype`fresh/> M/W P)
+     <- nat`plus-swap-succ P P1
+     <- nat`plus-commutative P1 P2
+     <- methmap`shift-preserves-fresh M1/M P2 _ M<<MM=MMP1 M/MMP1
+     <- methmap`shift-deterministic
+	M<<MM=MMP1 M<<MM=MMP nat`eq/ methmap`eq/ MMP1=MMP
+     <- methmap`fresh-respects-eq M/MMP1 MMP1=MMP nat`eq/ M/MMP
+     <- methmap2progtype-preserves-fresh MMP=>WP M/MMP M/WP
+     <- progtype`shift-preserves-fresh-converse* M/WP M<<W=WP P2 M/W.
 
 %worlds () (methmap2progtype-preserves-fresh _ _ _).
-%trustme %total  (MW) (methmap2progtype-preserves-fresh MW _ _).
+%total  (MW) (methmap2progtype-preserves-fresh MW _ _).
 
 
 %%% same lemma as fldmap-fresh-update-implies-shift 
@@ -2565,56 +2892,65 @@ E : constyping-implies-typing/LL
         true.
 
 %theorem methmapmatch-implies-progtypematch/L :
-        forall* {CM} {MMX} {MM} {PM} {WX} {W} {G}
+        forall* {CM} {MM1} {MM} {PM} {W1} {W} {G1}
         forall  {CM-CM: clsmap-clsmap CM CM}
-                {CM-MMX: clsmap-methmap CM MMX}
                 {CM-MM: clsmap-methmap CM MM}
-                {CM2PM: clsmap2predmap CM PM}
-		{MMX2WX: methmap2progtype PM CM MMX WX}				 
-                {MM2W: methmap2progtype PM CM MM W}
-                {MM-G: methmapmatch* CM MMX MM G}
-        exists  {W-G: progtypematch* WX W G}
+                {CM-MM1: clsmap-methmap CM MM1}
+                {CM=>PM: clsmap2predmap CM PM}
+		{MM=>W: methmap2progtype PM CM MM W}				 
+                {MM1=>W1: methmap2progtype PM CM MM1 W1}
+                {MM1-G1: methmapmatch* CM MM MM1 G1}
+        exists  {W-G: progtypematch* W W1 G1}
 	true.					 
 
 - : methmapmatch-implies-progtypematch/L _ _ _ _ _ _ methmapmatch*/0 progtypematch/0.
 
-
-%%% MM <=> (methmap`map/+ N MT MM1) shift N MM1 MM2
-%%% W <=> (progtype`map/+ N PT W1) shift N W1 W2 
-
-- : methmapmatch-implies-progtypematch/L CM-CM CM-MMX
-     (clsmap-methmap/+ CM-MM1 CM-MT) CM2PM MMX2WX
-     (methmap2progtype/c W2+PT=W MM2->W2 N<<MM1=MM2 CTF->PTF CM#N=FM)
-     (methmapmatch*/+/const MM2-G2 N<<G1=G2 N<<MM1=MM2' FUNF-CTF FM->S CM#N=FM')
-     (progtypematch/+ W1-G1 PT-FUN)
-     <- constyping-implies-typing/L
-	CM-CM CM-MM
-
-
-
-- : methmapmatch-implies-progtypematch/L CM-CM CM-MMX
-     (clsmap-methmap/+ CM-MM1 CM-MT) CM2PM MMX2WX
-     (methmap2progtype/m W2+PT=W MM22W2 N<<MM1=MM2 MT2PT N/CM1)
-     (methmapmatch*/+/meth MM2-G2' N<<G1=G2 N<<MM1=MM2' MT-FUN N/CM2) 
-     (progtypematch/+ W1-G1 PT-FUN)
-     <- methmap`shift-deterministic 
-	N<<MM1=MM2' N<<MM1=MM2 nat`eq/ methmap`eq/ MM2'=MM2
-     <- methmapmatch-respects-eq
-	MM2-G2' clsmap`eq/ methmap`eq/ MM2'=MM2 prog`eq/ MM2-G2
-     <- shift-preserves-clsmap-methmap CM-MM1 N<<MM1=MM2 CM-MM2
+- : {YY1} {N1:nat} {YY2:methtp} {YY3} {YY4:map} {YY5:proctype} {YY6}
+      {YY7} {YY8:term funck} {YY9} {CM-CM:clsmap-clsmap YY1 YY1}
+      {CM-MM:clsmap-methmap YY1 YY3} {CM-MT:clsmap-methtp YY1 YY2}
+      {CM=>PM:clsmap2predmap* YY1 map/0 YY1 YY4}
+      {MM=>W:methmap2progtype YY4 YY1 YY3 YY7} {YY10} {YY11}
+      {N<<W=WP:progtype`shift N1 YY6 YY10} {N<<MM=MMP:methmap`shift N1 YY3 YY11}
+      {MMP=>WP:methmap2progtype YY4 YY1 YY11 YY10}
+      {MT=>PT:methtp2proctype* YY4 empty YY2 YY5} {YY12:clsmap`fresh YY1 N1} {YY13}
+      {YY14} {MMP1-GP:methmapmatch* YY1 YY3 YY13 YY14}
+      {N<<G=GP:prog`shift N1 YY9 YY14} {N<<MM=MMP1:methmap`shift N1 YY3 YY13}
+      {FUN-MT:methtpmatch* YY1 YY3 oflist/0 YY8 YY2} {YY15:clsmap`fresh YY1 N1}
+      {YY16:progtypematch* YY7 (progtype`map/+ N1 YY5 YY6) (prog`map/+ N1 YY8 YY9)}
+     {MMP1=MMP} {MMP-GP} {CM-MMP} {WP-GP} {W-G} {MT=>PT1} {FUN-PT1} {PT1=PT} {FUN-PT} 
+      methmapmatch-implies-progtypematch/L CM-CM CM-MM
+         (clsmap-methmap/+ CM-MM CM-MT) CM=>PM MM=>W
+         (methmap2progtype/m N<<W=WP N<<MM=MMP MMP=>WP MT=>PT YY12)
+         (methmapmatch*/+/meth MMP1-GP N<<G=GP N<<MM=MMP1 FUN-MT YY15) YY16
+     <- methmap`shift-deterministic N<<MM=MMP1 N<<MM=MMP nat`eq/ methmap`eq/ MMP1=MMP
+     <- methmapmatch-respects-eq MMP1-GP clsmap`eq/ methmap`eq/ MMP1=MMP prog`eq/ MMP-GP
+     <- shift-preserves-clsmap-methmap CM-MM N<<MM=MMP CM-MMP
      <- methmapmatch-implies-progtypematch/L 
-	CM-CM CM-MMX CM-MM2 CM2PM MMX2WX MM22W2 MM2-G2 W2-G2
-     <- methmap`shift-implies-fresh N<<MM1=MM2 N/MM2
-     <- methmap2progtype-preserves-fresh MM22W2 N/MM2 N/W2
-     <- progtype-fresh-update-implies-shift N/W2 W2+PT=W N<<W1=W2
-     <- shift-preserves-progtypematch-converse W2-G2 N<<W1=W2 N<<G1=G2 W1-G1
-     <- methtpmatch-implies-proctypematch 
-	CM-CM CM-MMX CM-MT CM2PM MMX2WX MT-FUN _ MT2PT' PT-FUN'
-     <- methtp2proctype-deterministic MT2PT' MT2PT predmap`eq/ methtp`eq/ PT'=PT
-     <- proctypematch-respects-eq PT-FUN' progtype`eq/ term`eq/ PT'=PT PT-FUN.
+	CM-CM CM-MM CM-MMP CM=>PM MM=>W MMP=>WP MMP-GP WP-GP
+     <- shift-preserves-progtypematch-converse WP-GP N<<W=WP N<<G=GP W-G
+     <- methtpmatch-implies-proctypematch
+	CM-CM CM-MM CM-MT CM=>PM MM=>W FUN-MT _ MT=>PT1 FUN-PT1
+     <- methtp2proctype-deterministic MT=>PT1 MT=>PT predmap`eq/ methtp`eq/ PT1=PT
+     <- proctypematch-respects-eq FUN-PT1 progtype`eq/ term`eq/ PT1=PT FUN-PT.
+
+     %{(progtypematch/+ W-G FUN-PT)}%
+- : methmapmatch-implies-progtypematch/L CM-CM CM-MM
+     (clsmap-methmap/+ CM-MM CM-MT) CM=>PM MM=>W
+     (methmap2progtype/m N<<W=WP N<<MM=MMP MMP=>WP MT=>PT YY12)
+     (methmapmatch*/+/meth MMP1-GP N<<G=GP N<<MM=MMP1 FUN-MT YY15) 
+     (progtypematch/+ W-G FUN-PT)
+     <- methmap`shift-deterministic N<<MM=MMP1 N<<MM=MMP nat`eq/ methmap`eq/ MMP1=MMP
+     <- methmapmatch-respects-eq MMP1-GP clsmap`eq/ methmap`eq/ MMP1=MMP prog`eq/ MMP-GP
+     <- shift-preserves-clsmap-methmap CM-MM N<<MM=MMP CM-MMP
+     <- methmapmatch-implies-progtypematch/L 
+	CM-CM CM-MM CM-MMP CM=>PM MM=>W MMP=>WP MMP-GP WP-GP
+     <- shift-preserves-progtypematch-converse WP-GP N<<W=WP N<<G=GP W-G
+     <- methtpmatch-implies-proctypematch
+	CM-CM CM-MM CM-MT CM=>PM MM=>W FUN-MT _ MT=>PT1 FUN-PT1
+     <- methtp2proctype-deterministic MT=>PT1 MT=>PT predmap`eq/ methtp`eq/ PT1=PT
+     <- proctypematch-respects-eq FUN-PT1 progtype`eq/ term`eq/ PT1=PT FUN-PT.
 
 %%% the impossible cases
-
 - : methmapmatch-implies-progtypematch/L _ _ _ _ _
      (methmap2progtype/c _ _ _ _ CM-L) 
      (methmapmatch*/+/meth _ _ _ _ CM-FS) PTMH
@@ -2632,6 +2968,7 @@ E : constyping-implies-typing/LL
 
 %worlds () (methmapmatch-implies-progtypematch/L _ _ _ _ _ _ _ _).
 %total  (MW) (methmapmatch-implies-progtypematch/L _ _ _ _ _ MW _ _).
+
 
 
 %theorem methtpmatch-implies-proctypematch :

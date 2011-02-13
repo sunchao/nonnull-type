@@ -654,6 +654,7 @@ clsmap-predmap*/+
 %%% 3. totality theorems
 
 %%% it seems we need this not-so-interesting lemma about nat`plus
+%%% TODO: get rid of this later
 
 %theorem plus-ge-le :
         forall* {N} {N1} {N2} {N3} {N4}
@@ -676,20 +677,6 @@ clsmap-predmap*/+
 
 %worlds () (plus-ge-le _ _ _ _).
 %total P (plus-ge-le P _ _ _).
-
-
-%theorem fldnn2perm-total* :
-        forall  {F} {N}
-        exists  {PF} {FN2P: fldnn2perm F N PF}
-        true.
-
-- : fldnn2perm-total* _ nn/yes _ fldnn2perm/yes.
-- : fldnn2perm-total* _ nn/may _ fldnn2perm/may.
-
-%worlds (predvar) (fldnn2perm-total* _ _ _ _).
-%total  {} (fldnn2perm-total* _ _ _ _).
-
-%abbrev fldnn2perm-total = fldnn2perm-total* _ _ _.
 
 
 %theorem fldmap2conj-total/L1 :
@@ -901,8 +888,8 @@ clsmap-predmap*/+
 - : clsmap2predmap-total CM-CM PM CM2PM
      <- clsmap`domain-total DM-S
      <- clsmap`size-total SZ
-     <- clsmap2predmap-total/L1 
-	_ SZ CM-CM CM-CM clsmap-predmap*/0 DM-S predmap`domain/0 set`leq/0 PM CM2PM.
+     <- clsmap2predmap-total/L1 _ SZ CM-CM CM-CM 
+	clsmap-predmap*/0 DM-S predmap`domain/0 set`leq/0 PM CM2PM.
 
 %worlds () (clsmap2predmap-total _ _ _).
 %total  {} (clsmap2predmap-total _ _ _).

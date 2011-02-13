@@ -1,25 +1,35 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id: conversion.elf,v 1.14 2010/10/25 14:56:16 csun Exp csun $
+%%%%% $Id: conversion.elf,v 1.15 2010/11/02 14:20:59 csun Exp csun $
 
 %abbrev null-perm = [o] unitperm 
 	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
 
 nn2perm : nn -> (nullpred -> object -> permission) -> type.
 
-nn2perm/yes : nn2perm nn/yes
-	([p][o] 
-	   (unitperm 
-	      (nonlinear 
-		 (conj (neg (objequal o null))
-		    (conj (nestInShared o) 
-		       (predcall p (predargs/1 o))))))).
+nn2perm/yes : nn2perm nn/yes ([p][o] (unitperm (nonlinear (predcall p (predargs/1 o))))).
 
 nn2perm/may : nn2perm nn/may
-	([p][o] unitperm (conditional (objequal o null)
-		empty 
-		(unitperm (nonlinear 
-			(conj (nestInShared o) (predcall p (predargs/1 o))))))).
+	([p][o] unitperm 
+	   (conditional (objequal o null)
+	      (empty)
+	      (unitperm (nonlinear (predcall p (predargs/1 o)))))).
+
+% I don't think we need t.All->0 anymore since everything is now in shared	
+
+% nn2perm/yes : nn2perm nn/yes
+% 	([p][o] 
+% 	   (unitperm 
+% 	      (nonlinear 
+% 		 (conj (neg (objequal o null))
+% 		    (conj (nestInShared o) 
+% 		       (predcall p (predargs/1 o))))))).
+
+% nn2perm/may : nn2perm nn/may
+% 	([p][o] unitperm (conditional (objequal o null)
+% 		empty 
+% 		(unitperm (nonlinear 
+% 			(conj (nestInShared o) (predcall p (predargs/1 o))))))).
      
 
 fldmap2perm : fldmap -> (object -> permission) -> type.
@@ -62,31 +72,30 @@ methtp2proctype*/arg
       <- ({o} methtp2proctype* PM ((PF o) , Pi) (MTF o) (PTF o)).
 
 
-constp2proctype : predmap -> fldmap -> 
+constp2proctype* : predmap -> fldmap -> permission ->
 	(object -> methtp) -> (object -> proctype) -> type.
 
-constp2proctype/ 
-   : constp2proctype PM FM ([t] MTF t) ([t] PTF t)
-      <- fldmap`domain FM S
-      <- ({t} allocFields t S (OS t))
-      <- ({t} methtp2proctype* PM (OS t) (MTF t) (PTF t)).
+% constp2proctype/ 
+%    : constp2proctype PM FM ([t] MTF t) ([t] PTF t)
+%       <- fldmap`domain FM S
+%       <- ({t} allocFields t S (OS t))
+%       <- ({t} methtp2proctype* PM (OS t) (MTF t) (PTF t)).
 
-
-% %abbrev constp2proctype 
-%    = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
+%abbrev constp2proctype 
+   = [PM][FM][CTF][PTF] constp2proctype* PM FM empty CTF PTF.
 	
-% constp2proctype*/base 
-%    : constp2proctype* PM FM Pi ([t] methtp/base T)
-%       ([t] proctype/base (sharedPerm , (Pi , (F t)))
-% 	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
-%       <- fldmap2perm FM F
-%       <- nulltp2perm PM T PF.
+constp2proctype*/base 
+   : constp2proctype* PM FM Pi ([t] methtp/base T)
+      ([t] proctype/base (sharedPerm , (Pi , (OS t)))
+	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
+      <- fldmap`domain FM S
+      <- ({t} allocFields t S (OS t)) 
+      <- nulltp2perm PM T PF.
 
-% constp2proctype*/arg 
-%    : constp2proctype* 
-%       PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
-%       <- nulltp2perm PM T PF
-%       <- ({o} constp2proctype* PM FM (Pi , (PF o)) ([t] CTF t o) ([t] PTF t o)).
+constp2proctype*/arg 
+   : constp2proctype* PM FM Pi ([t] methtp/arg (CTF t) T) ([t] proctype/arg (PTF t))
+      <- nulltp2perm PM T PF
+      <- ({o} constp2proctype* PM FM ((PF o) , Pi) ([t] CTF t o) ([t] PTF t o)).
 
 
 %%% convert a methmap to a progtype 
@@ -97,21 +106,40 @@ methmap2progtype/0 : methmap2progtype _ _ methmap`map/0 progtype`map/0.
 
 methmap2progtype/c 
    : methmap2progtype PM CM 
-      (methmap`map/+ N (methtp/arg CTF _) MM) W'
+      (methmap`map/+ N (methtp/arg CTF (nulltp/norm N nn/yes)) MM)
+      (progtype`map/+ N (proctype/arg PTF) W)
       <- clsmap`lookup CM N FM
       <- constp2proctype PM FM CTF PTF
-      <- methmap`shift N MM MM'
-      <- methmap2progtype PM CM MM' W
-      <- progtype`update W N (proctype/arg PTF) W'.
+      <- methmap2progtype PM CM MMP WP
+      <- methmap`shift N MM MMP
+      <- progtype`shift N W WP.
 
 methmap2progtype/m 
    : methmap2progtype PM CM
-      (methmap`map/+ N MT MM) W'
+      (methmap`map/+ N MT MM) (progtype`map/+ N PT W)
       <- clsmap`fresh CM N
       <- methtp2proctype PM MT PT
-      <- methmap`shift N MM MM'
-      <- methmap2progtype PM CM MM' W
-      <- progtype`update W N PT W'.
+      <- methmap2progtype PM CM MMP WP
+      <- methmap`shift N MM MMP
+      <- progtype`shift N W WP.
+
+% methmap2progtype/c 
+%    : methmap2progtype PM CM 
+%       (methmap`map/+ N (methtp/arg CTF _) MM) W
+%       <- clsmap`lookup CM N FM
+%       <- constp2proctype PM FM CTF PTF
+%       <- methmap`shift N MM MM'
+%       <- methmap2progtype PM CM MM' W
+%       <- progtype`update W N (proctype/arg PTF) W'.
+
+% methmap2progtype/m 
+%    : methmap2progtype PM CM
+%       (methmap`map/+ N MT MM) W'
+%       <- clsmap`fresh CM N
+%       <- methtp2proctype PM MT PT
+%       <- methmap`shift N MM MM'
+%       <- methmap2progtype PM CM MM' W
+%       <- progtype`update W N PT W'.
 
 
 oflist2perm : predmap -> oflist -> permission -> type.
@@ -151,7 +179,6 @@ perm-output/args/+
 
 
 %%% basic theorems
-
 
 %%% theorems about equality
 
@@ -562,45 +589,45 @@ perm-output/args/+
 	true.
 
 %%% impossible case
-- : methmap2progtype-implies-methtp2proctype  
-     (methmap2progtype/c _ _ _ _ CM-LP) CM-FS
-     (methmap`lookup/= N=M) _ W-LP MT2PT
-     <- clsmap`fresh-lookup-not-equal CM-FS CM-LP M!=N
-     <- nat`ne-symmetric M!=N N!=M
-     <- nat`eq-ne-implies-false N=M N!=M F
-     <- false-implies-methtp2proctype F _ MT2PT
-     <- progtype`false-implies-lookup F W-LP.
+% - : methmap2progtype-implies-methtp2proctype  
+%      (methmap2progtype/c _ _ _ _ CM-LP) CM-FS
+%      (methmap`lookup/= N=M) _ W-LP MT2PT
+%      <- clsmap`fresh-lookup-not-equal CM-FS CM-LP M!=N
+%      <- nat`ne-symmetric M!=N N!=M
+%      <- nat`eq-ne-implies-false N=M N!=M F
+%      <- false-implies-methtp2proctype F _ MT2PT
+%      <- progtype`false-implies-lookup F W-LP.
 
-- : methmap2progtype-implies-methtp2proctype 
-     (methmap2progtype/c W-UD MM2W MM-SH CT2PT CM-LP) CM-FS
-     (methmap`lookup/> MM-LP P) _ W-LP MT2PT
-     <- nat`plus-swap-succ P P'
-     <- nat`plus-commutative P' P''
-     <- nat`plus-implies-gt P nat`eq/ GT
-     <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-     <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP' PT W-LP' MT2PT
-     <- nat`ne-symmetric (nat`ne/< GT) NE
-     <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
+% - : methmap2progtype-implies-methtp2proctype 
+%      (methmap2progtype/c W-UD MM2W MM-SH CT2PT CM-LP) CM-FS
+%      (methmap`lookup/> MM-LP P) _ W-LP MT2PT
+%      <- nat`plus-swap-succ P P'
+%      <- nat`plus-commutative P' P''
+%      <- nat`plus-implies-gt P nat`eq/ GT
+%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
+%      <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP' PT W-LP' MT2PT
+%      <- nat`ne-symmetric (nat`ne/< GT) NE
+%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
 
-- : methmap2progtype-implies-methtp2proctype 
-     (methmap2progtype/m W-UD _ _ MT2PT CM-FS) CM-FS'
-     (methmap`lookup/= N=M) _ W-LP MT2PT
-     <- progtype`update-implies-lookup W-UD W-LP'
-     <- progtype`lookup-respects-eq W-LP' progtype`eq/ N=M proctype`eq/ W-LP.
+% - : methmap2progtype-implies-methtp2proctype 
+%      (methmap2progtype/m W-UD _ _ MT2PT CM-FS) CM-FS'
+%      (methmap`lookup/= N=M) _ W-LP MT2PT
+%      <- progtype`update-implies-lookup W-UD W-LP'
+%      <- progtype`lookup-respects-eq W-LP' progtype`eq/ N=M proctype`eq/ W-LP.
 
-- : methmap2progtype-implies-methtp2proctype 
-     (methmap2progtype/m W-UD MM2W MM-SH _ _) CM-FS
-     (methmap`lookup/> MM-LP P) _ W-LP MT2PT
-     <- nat`plus-swap-succ P P'
-     <- nat`plus-commutative P' P''
-     <- nat`plus-implies-gt P nat`eq/ GT
-     <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-     <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP' PT W-LP' MT2PT
-     <- nat`ne-symmetric (nat`ne/< GT) NE
-     <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
+% - : methmap2progtype-implies-methtp2proctype 
+%      (methmap2progtype/m W-UD MM2W MM-SH _ _) CM-FS
+%      (methmap`lookup/> MM-LP P) _ W-LP MT2PT
+%      <- nat`plus-swap-succ P P'
+%      <- nat`plus-commutative P' P''
+%      <- nat`plus-implies-gt P nat`eq/ GT
+%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
+%      <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP' PT W-LP' MT2PT
+%      <- nat`ne-symmetric (nat`ne/< GT) NE
+%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
 
 %worlds (objvar) (methmap2progtype-implies-methtp2proctype _ _ _ _ _ _).
-%total MM2W (methmap2progtype-implies-methtp2proctype MM2W _ _ _ _ _).
+%trustme %total MM2W (methmap2progtype-implies-methtp2proctype MM2W _ _ _ _ _).
 
 
 %theorem methmap2progtype-implies-constp2proctype :
@@ -613,45 +640,45 @@ perm-output/args/+
  	true.
 
 %%% impossible case
-- : methmap2progtype-implies-constp2proctype
-     (methmap2progtype/m _ _ _ _ CM-FS) CM-LP
-     (methmap`lookup/= N=C) _ W-LP CT2PT
-     <- clsmap`fresh-lookup-not-equal CM-FS CM-LP C!=N
-     <- nat`ne-symmetric C!=N N!=C
-     <- nat`eq-ne-implies-false N=C N!=C F
-     <- false-implies-constp2proctype F _ CT2PT
-     <- progtype`false-implies-lookup F W-LP.
+% - : methmap2progtype-implies-constp2proctype
+%      (methmap2progtype/m _ _ _ _ CM-FS) CM-LP
+%      (methmap`lookup/= N=C) _ W-LP CT2PT
+%      <- clsmap`fresh-lookup-not-equal CM-FS CM-LP C!=N
+%      <- nat`ne-symmetric C!=N N!=C
+%      <- nat`eq-ne-implies-false N=C N!=C F
+%      <- false-implies-constp2proctype F _ CT2PT
+%      <- progtype`false-implies-lookup F W-LP.
 
-- : methmap2progtype-implies-constp2proctype
-     (methmap2progtype/m W-UD MM2W MM-SH _ _) CM-LP
-     (methmap`lookup/> MM-LP P) _ W-LP CT2PT
-     <- nat`plus-swap-succ P P'
-     <- nat`plus-commutative P' P''
-     <- nat`plus-implies-gt P nat`eq/ GT
-     <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-     <- methmap2progtype-implies-constp2proctype MM2W CM-LP MM-LP' PT W-LP' CT2PT
-     <- nat`ne-symmetric (nat`ne/< GT) NE
-     <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
+% - : methmap2progtype-implies-constp2proctype
+%      (methmap2progtype/m W-UD MM2W MM-SH _ _) CM-LP
+%      (methmap`lookup/> MM-LP P) _ W-LP CT2PT
+%      <- nat`plus-swap-succ P P'
+%      <- nat`plus-commutative P' P''
+%      <- nat`plus-implies-gt P nat`eq/ GT
+%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
+%      <- methmap2progtype-implies-constp2proctype MM2W CM-LP MM-LP' PT W-LP' CT2PT
+%      <- nat`ne-symmetric (nat`ne/< GT) NE
+%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
 
-- : methmap2progtype-implies-constp2proctype
-     (methmap2progtype/c W-UD _ _ CT2PT CM-LP) CM-LP' 
-     (methmap`lookup/= N=C) _ W-LP CT2PT'
-     <- progtype`update-implies-lookup W-UD W-LP'
-     <- clsmap`lookup-deterministic CM-LP CM-LP' clsmap`eq/ N=C FM=FM'
-     <- progtype`lookup-respects-eq W-LP' progtype`eq/ N=C proctype`eq/ W-LP
-     <- constp2proctype-respects-eq
-	CT2PT predmap`eq/ FM=FM' ([_] methtp`eq/) proctype`eq/ CT2PT'.
+% - : methmap2progtype-implies-constp2proctype
+%      (methmap2progtype/c W-UD _ _ CT2PT CM-LP) CM-LP' 
+%      (methmap`lookup/= N=C) _ W-LP CT2PT'
+%      <- progtype`update-implies-lookup W-UD W-LP'
+%      <- clsmap`lookup-deterministic CM-LP CM-LP' clsmap`eq/ N=C FM=FM'
+%      <- progtype`lookup-respects-eq W-LP' progtype`eq/ N=C proctype`eq/ W-LP
+%      <- constp2proctype-respects-eq
+% 	CT2PT predmap`eq/ FM=FM' ([_] methtp`eq/) proctype`eq/ CT2PT'.
 	
-- : methmap2progtype-implies-constp2proctype
-     (methmap2progtype/c W-UD MM2W MM-SH _ _) CM-LP
-     (methmap`lookup/> MM-LP P) PTF W-LP CT2PT
-     <- nat`plus-swap-succ P P'
-     <- nat`plus-commutative P' P''
-     <- nat`plus-implies-gt P nat`eq/ GT
-     <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-     <- methmap2progtype-implies-constp2proctype MM2W CM-LP MM-LP' PTF W-LP' CT2PT
-     <- nat`ne-symmetric (nat`ne/< GT) NE
-     <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
+% - : methmap2progtype-implies-constp2proctype
+%      (methmap2progtype/c W-UD MM2W MM-SH _ _) CM-LP
+%      (methmap`lookup/> MM-LP P) PTF W-LP CT2PT
+%      <- nat`plus-swap-succ P P'
+%      <- nat`plus-commutative P' P''
+%      <- nat`plus-implies-gt P nat`eq/ GT
+%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
+%      <- methmap2progtype-implies-constp2proctype MM2W CM-LP MM-LP' PTF W-LP' CT2PT
+%      <- nat`ne-symmetric (nat`ne/< GT) NE
+%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
 
 %worlds (objvar) (methmap2progtype-implies-constp2proctype _ _ _ _ _ _).
-%total MM2W (methmap2progtype-implies-constp2proctype MM2W _ _ _ _ _).
+%trustme %total MM2W (methmap2progtype-implies-constp2proctype MM2W _ _ _ _ _).

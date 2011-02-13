@@ -82,10 +82,12 @@ nulltIfNotNull
       <- nullTyping CM MM L E2 Rslt
       <- nullTyping CM MM (oflist/+ O (nulltp/norm C nn/yes) L) E1 Rslt.
 
-nulltSub : nullTyping CM MM L E (result/expr T')
-    <- sub T T'
-    <- clsmap-nulltp CM T'
-    <- nullTyping CM MM L E (result/expr T).
+% this rule causes problem in constructor
+
+% nulltSub : nullTyping CM MM L E (result/expr T')
+%     <- sub T T'
+%     <- clsmap-nulltp CM T'
+%     <- nullTyping CM MM L E (result/expr T).
 
 
 %%%% Conditionals
@@ -160,14 +162,15 @@ constyping/nn
 constyping/mn 
    : constyping CM MM FM S L ([t] (seq (write (lit t) F E) (B t)))
       <- fldmap`lookup FM F (nulltp/norm C nn/may)
-      <- nullTyping CM MM L E (result/expr (nulltp/norm C _))
+      <- nullTyping CM MM L E (result/expr (nulltp/norm C nn/may))
       <- constyping CM MM FM S L ([t] B t).
 
 constypematch* : clsmap -> methmap -> fldmap -> set ->
    oflist -> (object -> func) -> (object -> methtp) -> type.
 
 constypematch*/base 
-   : constypematch* CM MM FM S L ([t] func/0 (E t)) ([t] methtp/base T)
+   : constypematch* CM MM FM S L ([t] func/0 (E t)) ([t] methtp/base (nulltp/norm C nn/yes))
+      <- clsmap`lookup CM C FM % restrict return type 
       <- constyping CM MM FM S L E.
     
 constypematch*/args 
@@ -203,13 +206,13 @@ methmapmatch*/0 : methmapmatch* _ _ methmap`map/0 prog`map/0.
 
 methmapmatch*/+/const 
    : methmapmatch* CM MM0
-      (methmap`map/+ N (methtp/arg ([t] CTF t) T) MM) 
-      (prog`map/+ N (func/+ ([t] FUNF t)) G)
-      <- clsmap`lookup CM N FM
+      (methmap`map/+ C (methtp/arg ([t] CTF t) (nulltp/norm C nn/yes)) MM) 
+      (prog`map/+ C (func/+ ([t] FUNF t)) G)
+      <- clsmap`lookup CM C FM
       <- filt-nnflds FM S
       <- constypematch CM MM0 FM S FUNF CTF
-      <- methmap`shift N MM MM1
-      <- prog`shift N G G1
+      <- methmap`shift C MM MM1
+      <- prog`shift C G G1
       <- methmapmatch* CM MM0 MM1 G1.
 
 methmapmatch*/+/meth 
@@ -227,28 +230,6 @@ methmapmatch*/+/meth
 
 %%% Theorems
 
-%%% theorems about nulltyping
-
-%theorem nulltyping-sub :
-        forall* {CM} {MM} {L} {E} {C} 
-        forall  {NN} {CM-CM: clsmap-clsmap CM CM}
-                {CM-MM: clsmap-methmap CM MM}
-                {CM-OFL: clsmap-oflist CM L}
-                {NTYP: nullTyping CM MM L E (result/expr (nulltp/norm C NN))}
-        exists  {NTYP: nullTyping CM MM L E (result/expr (nulltp/norm C nn/may))}
-        true.
-
-- : nulltyping-sub nn/may _ _ _ NTYP NTYP.
-
-% - : nulltyping-sub nn/yes CM-CM CM-MM CM-OFL NTYP 
-%      (nulltSub NTYP (clsmap-nulltp/norm IN) (sub/oo nn`subtype/my))
-%      <- typing-implies-clsmap-nulltp
-% 	CM-CM CM-MM CM-OFL NTYP (clsmap-nulltp/norm IN).
-
-%worlds () (nulltyping-sub _ _ _ _ _ _).
-%trustme %total  NN (nulltyping-sub NN _ _ _ _ _).
-
-
 %%% theorems about constyping
 
 %theorem constyping-respects-eq :
@@ -260,7 +241,7 @@ methmapmatch*/+/meth
 
 - : constyping-respects-eq CTYP set`eq/ CTYP.
 
-%worlds () (constyping-respects-eq _ _ _).
+%worlds (objvar) (constyping-respects-eq _ _ _).
 %total  {} (constyping-respects-eq _ _ _).
 
 

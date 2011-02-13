@@ -1,6 +1,6 @@
 %%%%% conversion-lemmas.elf
 %%%%% lemmas used for proving theorems in conversion-thms.elf
-%%%%% $Id: conversion-lemmas.elf,v 1.16 2010/11/24 04:59:02 csun Exp csun $
+%%%%% $Id: conversion-lemmas.elf,v 1.17 2011/01/17 04:55:19 csun Exp csun $
 %%%%% Created at July 19, 2010
 
 %theorem conversion-helper/let3 :
@@ -107,7 +107,7 @@
      <- oflist-lookup-implies-clspred O L L2P _ T2P I.
 
 %worlds (objvar) (oflist-lookup-implies-clspred _ _ _ _ _ _).
-%total  LP (oflist-lookup-implies-clspred _ LP _ _ _ _).
+%total  (LP) (oflist-lookup-implies-clspred _ LP _ _ _ _).
 
 
 %theorem clspred-remove-cond :
@@ -115,13 +115,8 @@
         forall  {PM-LP: predmap`lookup PM C PD}
                 {NN2P: nn2perm NN PF}
         exists  {I: {o} implies
-		     (unitperm
-			(nonlinear (neg (objequal o null))) , (PF PD o))
-		     (unitperm
-			(nonlinear
-			   (conj (neg (objequal o null))
-			      (conj (nestInShared o) 
-				 (predcall PD (predargs/1 o)))))) }
+		     (unitperm (nonlinear (neg (objequal o null))) , (PF PD o))
+		     (unitperm (nonlinear (predcall PD (predargs/1 o))))}
 	true.		
 
 - : clspred-remove-cond _ nn2perm/yes	
@@ -135,13 +130,11 @@
 	(implies/equiv equiv/identity)).
 
 - : clspred-remove-cond _ nn2perm/may
-     ([o] implies/trans4
+     ([o] implies/trans2
 	(implies/combine
-	   (implies/duplicate)
+	   (implies/reflexive)
 	   (implies/cond-neg))
-	(implies/equiv (equiv/symmetric equiv/associate))
-	(implies/combine implies/reflexive implies/cond-elim)
-	(implies/combine2conj)).
+	(implies/cond-elim)).
 
 %worlds (objvar) (clspred-remove-cond _ _ _).
 %total {} (clspred-remove-cond _ _ _).
@@ -158,7 +151,7 @@
 - : nn2perm-implies-fldnn2perm nn2perm/yes _ _ fldnn2perm/yes ([r][_] (implies/pack r)) .
 - : nn2perm-implies-fldnn2perm nn2perm/may _ _ fldnn2perm/may ([r][_] (implies/pack r)).
 
-%worlds () (nn2perm-implies-fldnn2perm _ _ _ _ _).
+%worlds (objvar) (nn2perm-implies-fldnn2perm _ _ _ _ _).
 %total NP (nn2perm-implies-fldnn2perm NP _ _ _ _).
 
 
@@ -773,55 +766,55 @@
 %total  CPO (conversion-helper/while _ CPO _ _ _ _ _ _ _).    
 
 
-%theorem conversion-helper/subL :
-        forall* {NN1} {NN2}
-	        {PF1} {PF2} {PD1} {PD2}
-        forall  {SUB: nn`subtype NN1 NN2}
-		{EQ: nullpred`eq PD1 PD2}		   
-	        {NN2P: nn2perm NN1 ([p][r] PF1 p r)}
-		{NN2P: nn2perm NN2 ([p][r] PF2 p r)}
-	exists  {T: {r} implies (PF1 PD1 r) (PF2 PD2 r)}
- 	true.
+% %theorem conversion-helper/subL :
+%         forall* {NN1} {NN2}
+% 	        {PF1} {PF2} {PD1} {PD2}
+%         forall  {SUB: nn`subtype NN1 NN2}
+% 		{EQ: nullpred`eq PD1 PD2}		   
+% 	        {NN2P: nn2perm NN1 ([p][r] PF1 p r)}
+% 		{NN2P: nn2perm NN2 ([p][r] PF2 p r)}
+% 	exists  {T: {r} implies (PF1 PD1 r) (PF2 PD2 r)}
+%  	true.
 		   
-- : conversion-helper/subL nn`subtype/ref nullpred`eq/
-     NN2P NN2P ([_] implies/reflexive).
+% - : conversion-helper/subL nn`subtype/ref nullpred`eq/
+%      NN2P NN2P ([_] implies/reflexive).
 
-- : conversion-helper/subL nn`subtype/my nullpred`eq/
-     nn2perm/yes nn2perm/may 
-     ([_] (implies/trans
-       (implies/conj2combine) (implies/cond-intro-neg))).
+% - : conversion-helper/subL nn`subtype/my nullpred`eq/
+%      nn2perm/yes nn2perm/may 
+%      ([_] (implies/trans
+%        (implies/conj2combine) (implies/cond-intro-neg))).
 
-%worlds (objvar) (conversion-helper/subL _ _ _ _ _).
-%total SB (conversion-helper/subL SB _ _ _ _).
+% %worlds (objvar) (conversion-helper/subL _ _ _ _ _).
+% %total SB (conversion-helper/subL SB _ _ _ _).
 
 
-%theorem conversion-helper/sub :
-	forall* {PM} {T} {T'} {PF} {PF'}
-	forall  {SUB: sub T T'}
-	        {T2P: nulltp2perm PM T PF}
-                {T2P: nulltp2perm PM T' PF'}
-        exists  {T: {o} implies (PF o) (PF' o)}
-	true.			  
+% %theorem conversion-helper/sub :
+% 	forall* {PM} {T} {T'} {PF} {PF'}
+% 	forall  {SUB: sub T T'}
+% 	        {T2P: nulltp2perm PM T PF}
+%                 {T2P: nulltp2perm PM T' PF'}
+%         exists  {T: {o} implies (PF o) (PF' o)}
+% 	true.			  
 
-- : conversion-helper/sub 
-     sub/uu nulltp2perm/null nulltp2perm/null ([_] implies/reflexive).
+% - : conversion-helper/sub 
+%      sub/uu nulltp2perm/null nulltp2perm/null ([_] implies/reflexive).
 
-- : conversion-helper/sub
-     sub/uo nulltp2perm/null (nulltp2perm/norm _ nn2perm/may)
-     ([_] implies/trans
-	(implies/equiv
-	   (equiv/symmetric equiv/identity))
-	(implies/cond-intro)).
+% - : conversion-helper/sub
+%      sub/uo nulltp2perm/null (nulltp2perm/norm _ nn2perm/may)
+%      ([_] implies/trans
+% 	(implies/equiv
+% 	   (equiv/symmetric equiv/identity))
+% 	(implies/cond-intro)).
 
-- : conversion-helper/sub
-     (sub/oo NN1<=NN2)
-     (nulltp2perm/norm (PM-LP1) NN2P1) 
-     (nulltp2perm/norm (PM-LP2) NN2P2) I
-     <- predmap`lookup-deterministic PM-LP1 PM-LP2 predmap`eq/ nat`eq/ EQ
-     <- conversion-helper/subL NN1<=NN2 EQ NN2P1 NN2P2 ([o] I o).
+% - : conversion-helper/sub
+%      (sub/oo NN1<=NN2)
+%      (nulltp2perm/norm (PM-LP1) NN2P1) 
+%      (nulltp2perm/norm (PM-LP2) NN2P2) I
+%      <- predmap`lookup-deterministic PM-LP1 PM-LP2 predmap`eq/ nat`eq/ EQ
+%      <- conversion-helper/subL NN1<=NN2 EQ NN2P1 NN2P2 ([o] I o).
 			  
-%worlds (objvar) (conversion-helper/sub _ _ _ _).
-%total SB (conversion-helper/sub SB _ _ _).
+% %worlds (objvar) (conversion-helper/sub _ _ _ _).
+% %total SB (conversion-helper/sub SB _ _ _).
 
 
 %theorem conversion-helper/callmeth/L :

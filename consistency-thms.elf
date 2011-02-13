@@ -242,7 +242,7 @@
      (nulltIfNotNull _ TYP _) CM-T
      <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
 
-- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltSub TYP CM-T' _) CM-T'.
+% - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltSub TYP CM-T' _) CM-T'.
 
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
      (nulltCallMeth CTYP _ MM-LP _) CM-T
