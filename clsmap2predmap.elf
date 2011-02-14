@@ -1,16 +1,11 @@
 %%%% clsmap2predmap.elf
 %%%%% Chao Sun
+%%%%% $Id$
 %%%%% Jun 30, 2010
-
-%abbrev all : nat = z.
 
 %abbrev own : nat = s z.
 
-%abbrev allPerm : object -> permission = ([r] (unitperm (basic r all null))).
-
 %abbrev sharedPerm = unitperm (basic null own null).
-
-%abbrev nestInShared : object -> formula = ([r] (nested (allPerm r) null own)).
 
 %abbrev conj2pred : (nullpred -> object -> formula) -> nullpred 
 	= [g] (predicate/Y ([f] (predicate/+ ([o] predicate/0 (g f o))))).
@@ -18,33 +13,16 @@
 
 fldnn2perm : nat -> nn -> (nullpred -> object -> permission) -> type.
 
-% fldnn2perm/yes : fldnn2perm F nn/yes
-%     ([p][r] (unitperm (precise-exists r F 
-% 	([o] (unitperm (nonlinear 
-% 	  (conj (neg (objequal o null))
-% 	    (conj (nestInShared o) (predcall p (predargs/1 o)))))))))).
-
-% I don't think we need this t.All->0 anymore since everything is in shared.
-
 fldnn2perm/yes : fldnn2perm F nn/yes
     ([p][r] (unitperm (precise-exists r F 
-	([o] (unitperm (nonlinear (predcall p (predargs/1 o)))))))).
+	([o] (unitperm (nonlinear
+		(conj (neg (objequal o null))
+		   (predcall p (predargs/1 o))))))))).
 
 fldnn2perm/may : fldnn2perm F nn/may
     ([p][r] (unitperm (precise-exists r F
         ([o] (unitperm (conditional (objequal o null) empty
 	    (unitperm (nonlinear (predcall p (predargs/1 o)))))))))).         
-
-% fldnn2perm/yes : fldnn2perm F nn/yes
-%     ([p][r] (unitperm (precise-exists r F 
-% 	([o] (unitperm (nonlinear 
-% 	    (conj (nestInShared o) (predcall p (predargs/1 o))))))))).
-
-% fldnn2perm/may : fldnn2perm F nn/may
-%     ([p][r] (unitperm (precise-exists r F
-%         ([o] (unitperm (conditional (objequal o null) empty
-% 	    (unitperm (nonlinear
-% 	        (conj (nestInShared o) (predcall p (predargs/1 o))))))))))).         
 
 
 fldmap2conj : clsmap -> predmap -> fldmap -> 
@@ -101,85 +79,9 @@ clsmap2predmap*/out
 
 
 
-%%% Theorems
+%%% basic theorems
 
-%%% some basic properties
-
-%theorem false-implies-fldmap2conj :
-        forall* {CM} {FM} {PMFin:nullpred -> predmap} {PMFout} {CJ}
-        forall  {F: void}
-        exists  {F2CF: {f} fldmap2conj CM (PMFin f) FM ([r] CJ f r) (PMFout f)}
-        true.
-
-%worlds (objvar | predvar) (false-implies-fldmap2conj _ _).
-%total  {} (false-implies-fldmap2conj _ _).
-
-
-%theorem fldmap2conj-respects-eq :
-        forall* {CM} {CM'} {FM} {FM'} {PMin} {PMin'} 
-                {PMout} {PMout'} {G} {G'}
-        forall  {E: clsmap`eq CM CM'}
-                {E: fldmap`eq FM FM'}
-                {E: predmap`eq PMin PMin'}
-                {E: predmap`eq PMout PMout'}
-                {E: {r} permission`eq (G r) (G' r)}
-                {F2C: fldmap2conj CM PMin FM ([r] G r) PMout}
-        exists  {F2C: fldmap2conj CM' PMin' FM' ([r] G' r) PMout'}
-        true.
-                
-- : fldmap2conj-respects-eq clsmap`eq/ fldmap`eq/
-     predmap`eq/ predmap`eq/ ([r] permission`eq/) F2C F2C.
-
-%worlds (objvar | predvar) (fldmap2conj-respects-eq _ _ _ _ _ _ _).
-%total  {} (fldmap2conj-respects-eq _ _ _ _ _ _ _).
-
-
-%%% 1. deterministic theorems
-
-%theorem conj-respects-eq :
-        forall* {PF1:nullpred -> object -> permission} 
-                {PF2} {PD1} {PD2} {G1} {G2}
-        forall  {E: {f} {r} permission`eq (PF1 f r) (PF2 f r)}
-                {E: predicate`eq PD1 PD2}
-                {E: {r} permission`eq (G1 r) (G2 r)}
-        exists  {E: {r} permission`eq
-		     (conj (nested (PF1 PD1 r) null own) (G1 r))
-		     (conj (nested (PF2 PD2 r) null own) (G2 r))}
-        true.
-
-- : conj-respects-eq
-     ([f][r] permission`eq/) predicate`eq/ ([r] permission`eq/)
-     ([r] permission`eq/).
-
-%worlds (objvar | predvar) (conj-respects-eq _ _ _ _).
-%total  {} (conj-respects-eq _ _ _ _).
-
-
-%theorem conj2pred-deterministic :
-        forall* {CJ1} {CJ2} 
-        forall  {E: {f}{r} permission`eq (CJ1 f r) (CJ2 f r)}
-        exists  {E: predicate`eq (conj2pred CJ1) (conj2pred CJ2)}
-        true.
-
-- : conj2pred-deterministic ([f][r] permission`eq/) predicate`eq/.
-
-%worlds (objvar | predvar) (conj2pred-deterministic _ _).
-%total  {} (conj2pred-deterministic _ _).
-
-
-%theorem predmap-eq-respects-pred-eq :
-        forall* {PMF1} {PMF2} {CJ1} {CJ2}
-        forall  {E: {f} predmap`eq (PMF1 f) (PMF2 f)}
-                {E: {f}{r} permission`eq (CJ1 f r) (CJ2 f r)}
-        exists  {E: predmap`eq (PMF1 (conj2pred CJ1)) (PMF2 (conj2pred CJ2))}
-        true.
-
-- : predmap-eq-respects-pred-eq ([f] predmap`eq/) 
-     ([f][r] permission`eq/) predmap`eq/.
-
-%worlds (objvar | predvar) (predmap-eq-respects-pred-eq _ _ _).
-%total  {} (predmap-eq-respects-pred-eq _ _ _).
-
+%%% theorems about fldnn2perm
 
 %theorem fldnn2perm-respects-eq :
         forall* {F1} {NN1} {W1} {F2} {NN2} {W2}
@@ -227,30 +129,35 @@ clsmap2predmap*/out
 %total  {} (fldnn2perm-deterministic _ _ _ _ _).
 
 
-%theorem false-implies-permission-eq :
-        forall* {G1:object -> formula} {G2}
+%%% theorems about fldmap2conj
+
+%theorem false-implies-fldmap2conj :
+        forall* {CM} {FM} {PMFin:nullpred -> predmap} {PMFout} {CJ}
         forall  {F: void}
-        exists  {E: {r} permission`eq (G1 r) (G2 r)}
+        exists  {F2CF: {f} fldmap2conj CM (PMFin f) FM ([r] CJ f r) (PMFout f)}
         true.
 
-%worlds (objvar | predvar) (false-implies-permission-eq _ _).
-%total  {} (false-implies-permission-eq _ _).
+%worlds (objvar | predvar) (false-implies-fldmap2conj _ _).
+%total  {} (false-implies-fldmap2conj _ _).
 
 
-%theorem fldmap2conj-deterministic/L1 :
-        forall* {PM1} {PM2} {N1} {N2} {D}
-        forall  {E: predmap`eq PM1 PM2}
-                {L: predmap`lookup PM1 N1 D}
-                {F: predmap`fresh PM2 N2}
-        exists  {NE: nat`ne N1 N2}
+%theorem fldmap2conj-respects-eq :
+        forall* {CM} {CM'} {FM} {FM'} {PMin} {PMin'} 
+                {PMout} {PMout'} {G} {G'}
+        forall  {E: clsmap`eq CM CM'}
+                {E: fldmap`eq FM FM'}
+                {E: predmap`eq PMin PMin'}
+                {E: predmap`eq PMout PMout'}
+                {E: {r} permission`eq (G r) (G' r)}
+                {F2C: fldmap2conj CM PMin FM ([r] G r) PMout}
+        exists  {F2C: fldmap2conj CM' PMin' FM' ([r] G' r) PMout'}
         true.
+                
+- : fldmap2conj-respects-eq clsmap`eq/ fldmap`eq/
+     predmap`eq/ predmap`eq/ ([r] permission`eq/) F2C F2C.
 
-- : fldmap2conj-deterministic/L1 predmap`eq/ L FS NE
-     <- predmap`fresh-lookup-not-equal FS L NE'
-     <- nat`ne-symmetric NE' NE.
-
-%worlds (objvar | predvar) (fldmap2conj-deterministic/L1 _ _ _ _).
-%total  {} (fldmap2conj-deterministic/L1 _ _ _ _).
+%worlds (objvar | predvar) (fldmap2conj-respects-eq _ _ _ _ _ _ _).
+%total  {} (fldmap2conj-respects-eq _ _ _ _ _ _ _).
 
 
 %theorem fldmap2conj-respects-eq :
@@ -266,6 +173,24 @@ clsmap2predmap*/out
 
 %worlds (objvar | predvar) (fldmap2conj-respects-eq _ _ _ _ _).
 %total {} (fldmap2conj-respects-eq _ _ _ _ _).
+
+
+%theorem fldmap2conj-deterministic/nest-preserves-eq :
+        forall* {PF1:nullpred -> object -> permission} 
+                {PF2} {PD1} {PD2} {G1} {G2}
+        forall  {E: {f} {r} permission`eq (PF1 f r) (PF2 f r)}
+                {E: predicate`eq PD1 PD2}
+                {E: {r} permission`eq (G1 r) (G2 r)}
+        exists  {E: {r} permission`eq
+		     (conj (nested (PF1 PD1 r) null own) (G1 r))
+		     (conj (nested (PF2 PD2 r) null own) (G2 r))}
+        true.
+
+- : fldmap2conj-deterministic/nest-preserves-eq ([_][_] permission`eq/)
+     predicate`eq/ ([_] permission`eq/) ([_] permission`eq/).
+
+%worlds (objvar | predvar) (fldmap2conj-deterministic/nest-preserves-eq _ _ _ _).
+%total  {} (fldmap2conj-deterministic/nest-preserves-eq _ _ _ _).
 
 
 %theorem fldmap2conj-deterministic :
@@ -303,7 +228,7 @@ clsmap2predmap*/out
      <- fldmap`shift-deterministic FM-SH1 FM-SH2 F1=F2 FM1=FM2' FM1'=FM2'
      <- fldmap2conj-deterministic CM1=CM2 FM1'=FM2' PMin1=PMin2 F2C1 F2C2 
 	([r] G1=G2 r) PMout1=PMout2
-     <- conj-respects-eq PF1=PF2 PD1=PD2 G1=G2 CJ1=CJ2.
+     <- fldmap2conj-deterministic/nest-preserves-eq PF1=PF2 PD1=PD2 G1=G2 CJ1=CJ2.
 
 - : fldmap2conj-deterministic CM1=CM2 FM1=FM2 PMin1=PMin2
      (fldmap2conj/norm/out 
@@ -324,7 +249,7 @@ clsmap2predmap*/out
      <- fldmap`shift-deterministic FM1-SH FM2-SH F1=F2 FM1=FM2' FM1'=FM2'
      <- fldmap2conj-deterministic CM1=CM2 FM1'=FM2' PMF1=PMF2'
 	F2C1 F2C2 ([r] G1=G2 r) PMout1=PMout2
-     <- conj-respects-eq PF1=PF2 PD1=PD2 G1=G2 FF1=FF2.
+     <- fldmap2conj-deterministic/nest-preserves-eq PF1=PF2 PD1=PD2 G1=G2 FF1=FF2.
 
 % impossible cases
 
@@ -333,7 +258,9 @@ clsmap2predmap*/out
      (fldmap2conj/norm/out _ _ _ _ _ _ PMin2-FS) G1=G2 PMout1=PMout2
      <- fldmap`map/+-preserves-eq-converse FM1=FM2 _ NT1=NT2 _
      <- nulltp`nulltp-eq-implies-eq NT1=NT2 C1=C2 _
-     <- fldmap2conj-deterministic/L1 PMin1=PMin2 PMin1-L PMin2-FS C1!=C2
+     <- predmap`lookup-respects-eq PMin1-L PMin1=PMin2 nat`eq/ predicate`eq/ PMin2-L
+     <- predmap`fresh-lookup-not-equal PMin2-FS PMin2-L C2!=C1
+     <- nat`ne-symmetric C2!=C1 C1!=C2
      <- nat`eq-ne-implies-false C1=C2 C1!=C2 V
      <- false-implies-permission-eq V G1=G2
      <- predmap`false-implies-eq V PMout1=PMout2.
@@ -344,14 +271,14 @@ clsmap2predmap*/out
      <- fldmap`map/+-preserves-eq-converse FM1=FM2 _ NT1=NT2 _
      <- nulltp`nulltp-eq-implies-eq NT1=NT2 C1=C2 _
      <- predmap`eq-symmetric PMin1=PMin2 PMin2=PMin1
-     <- fldmap2conj-deterministic/L1 PMin2=PMin1 PMin2-L PMin1-FS C2!=C1
-     <- nat`ne-symmetric C2!=C1 C1!=C2
+     <- predmap`fresh-respects-eq PMin1-FS PMin1=PMin2 nat`eq/ PMin2-FS
+     <- predmap`fresh-lookup-not-equal PMin2-FS PMin2-L C1!=C2
      <- nat`eq-ne-implies-false C1=C2 C1!=C2 V
      <- false-implies-permission-eq V G1=G2
      <- predmap`false-implies-eq V PMout1=PMout2.
 
 %worlds (objvar | predvar) (fldmap2conj-deterministic _ _ _ _ _ _ _).
-%total  {F2C1} (fldmap2conj-deterministic _ _ _ F2C1 _ _ _).
+%total  (F2C) (fldmap2conj-deterministic _ _ _ F2C _ _ _).
 
 
 %theorem fldmap2conj-deterministic* :
@@ -368,4 +295,3 @@ clsmap2predmap*/out
 
 %worlds (objvar | predvar) (fldmap2conj-deterministic* _ _ _ _ _ _).
 %total  {} (fldmap2conj-deterministic* _ _ _ _ _ _).
-
