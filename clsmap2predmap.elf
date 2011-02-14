@@ -1,6 +1,6 @@
 %%%% clsmap2predmap.elf
 %%%%% Chao Sun
-%%%%% $Id$
+%%%%% $Id: clsmap2predmap.elf,v 1.10 2011/02/14 15:38:18 csun Exp csun $
 %%%%% Jun 30, 2010
 
 %abbrev own : nat = s z.
@@ -131,10 +131,36 @@ clsmap2predmap*/out
 
 %%% theorems about fldmap2conj
 
+%theorem conj2pred-deterministic :
+        forall* {CJ1} {CJ2} 
+        forall  {E: {p}{r} permission`eq (CJ1 p r) (CJ2 p r)}
+        exists  {E: predicate`eq (conj2pred CJ1) (conj2pred CJ2)}
+        true.
+
+- : conj2pred-deterministic ([_][_] permission`eq/) predicate`eq/.
+
+%worlds (objvar | predvar) (conj2pred-deterministic _ _).
+%total  {} (conj2pred-deterministic _ _).
+
+
+%theorem predmap-eq-respects-pred-eq :
+        forall* {PMF1} {PMF2} {CJ1} {CJ2}
+        forall  {E: {f} predmap`eq (PMF1 f) (PMF2 f)}
+                {E: {f}{r} permission`eq (CJ1 f r) (CJ2 f r)}
+        exists  {E: predmap`eq (PMF1 (conj2pred CJ1)) (PMF2 (conj2pred CJ2))}
+        true.
+
+- : predmap-eq-respects-pred-eq
+     ([_] predmap`eq/) ([_][_] permission`eq/) predmap`eq/.
+
+%worlds (objvar | predvar) (predmap-eq-respects-pred-eq _ _ _).
+%total  {} (predmap-eq-respects-pred-eq _ _ _).
+
+
 %theorem false-implies-fldmap2conj :
         forall* {CM} {FM} {PMFin:nullpred -> predmap} {PMFout} {CJ}
         forall  {F: void}
-        exists  {F2CF: {f} fldmap2conj CM (PMFin f) FM ([r] CJ f r) (PMFout f)}
+        exists  {F2CF: {p} fldmap2conj CM (PMFin p) FM ([r] CJ p r) (PMFout p)}
         true.
 
 %worlds (objvar | predvar) (false-implies-fldmap2conj _ _).
@@ -262,7 +288,7 @@ clsmap2predmap*/out
      <- predmap`fresh-lookup-not-equal PMin2-FS PMin2-L C2!=C1
      <- nat`ne-symmetric C2!=C1 C1!=C2
      <- nat`eq-ne-implies-false C1=C2 C1!=C2 V
-     <- false-implies-permission-eq V G1=G2
+     <- ({o} permission`false-implies-eq V (G1=G2 o))
      <- predmap`false-implies-eq V PMout1=PMout2.
 
 - : fldmap2conj-deterministic _ FM1=FM2 PMin1=PMin2
@@ -274,7 +300,7 @@ clsmap2predmap*/out
      <- predmap`fresh-respects-eq PMin1-FS PMin1=PMin2 nat`eq/ PMin2-FS
      <- predmap`fresh-lookup-not-equal PMin2-FS PMin2-L C1!=C2
      <- nat`eq-ne-implies-false C1=C2 C1!=C2 V
-     <- false-implies-permission-eq V G1=G2
+     <- ({o} permission`false-implies-eq V (G1=G2 o))
      <- predmap`false-implies-eq V PMout1=PMout2.
 
 %worlds (objvar | predvar) (fldmap2conj-deterministic _ _ _ _ _ _ _).
