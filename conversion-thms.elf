@@ -1,6 +1,6 @@
 %%%%% conversion-thms.elf
 %%%%% Theorems about conversion
-%%%%% $Id: conversion-thms.elf,v 1.22 2011/02/01 15:07:05 csun Exp csun $
+%%%%% $Id: conversion-thms.elf,v 1.23 2011/02/13 23:33:58 csun Exp csun $
 
 %theorem convert/expr-ok :
         forall* {PM} {CM} {MM} {OFL} {W} {Pi} {T} {E: term exprk} 
@@ -201,7 +201,7 @@
      <- nulltp2perm-deterministic T2P1 T2P2 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
      <- ({o} combine-preserves-eq (PFEQ o) permission`eq/ (PEQ o))
      <- ({o} output/expr-preserves-eq object`eq/ (PEQ o) (OEQ o))
-     <- output/exists-preserves-eq OEQ OEQ'
+     <- envadd-deterministic/exists OEQ OEQ'
      <- typing-respects-eq TYP1 progtype`eq/ permission`eq/ term`eq/ OEQ' TYP1'
      <- conversion-helper/if TYP1' TYP2 (perm-output/expr T2P2) CPO YY IFTYP T.
 
@@ -253,7 +253,7 @@
      <- nulltp2perm-deterministic T2P1 T2P2 predmap`eq/ nulltp`eq/ ([o] PFEQ o)
      <- ({o} combine-preserves-eq (PFEQ o) permission`eq/ (PEQ o))
      <- ({o} output/expr-preserves-eq object`eq/ (PEQ o) (OEQ o))
-     <- output/exists-preserves-eq OEQ OEQ'
+     <- envadd-deterministic/exists OEQ OEQ'
      <- typing-respects-eq TYP1 progtype`eq/ permission`eq/ term`eq/ OEQ' TYP1'.
 
 - : convert/expr-ok
@@ -265,6 +265,12 @@
      <- conversion-helper/callmeth 
 	CM2PM MM2W CM-MT L2P NTYPC APO MT2PT AOut' TA Out TYPC PF TO T2P.
 
+- : convert/expr-ok
+     CM2PM CM-CM CM-MM CM-L MM2W L2P
+     (nulltCallConst FM-DM1 ([t] NTYPC t) NTYPA MM-LP CM-LP) _ T2P _
+     <- methmap2progtype-implies-constp2proctype MM2W CML MML _ WL CT2PT 
+     <- convert/args-ok CM2PM CM-CM CM-MM CM-L MM2W L2P NTYPA _ TYPA APO
+ 
 - : convert/expr-ok
      CM2PM CM-CM CM-MM CM-L MM2W L2P 
      (nulltCallConst FM-DM1 ([t] NTYPC t) NTYPA MM-LP CM-LP) _ T2P

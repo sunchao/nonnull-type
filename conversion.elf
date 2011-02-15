@@ -1,41 +1,27 @@
 %%%%% conversion.elf
 %%%%% Conversion from nonnull type to permission type
-%%%%% $Id: conversion.elf,v 1.15 2010/11/02 14:20:59 csun Exp csun $
-
-%abbrev null-perm = [o] unitperm 
-	(conditional (objequal o null) empty (unitperm (nonlinear f))).	     
+%%%%% $Id: conversion.elf,v 1.16 2011/02/13 23:33:51 csun Exp csun $
 
 nn2perm : nn -> (nullpred -> object -> permission) -> type.
 
-nn2perm/yes : nn2perm nn/yes ([p][o] (unitperm (nonlinear (predcall p (predargs/1 o))))).
+nn2perm/yes
+   : nn2perm nn/yes
+      ([p][o] 
+	 (unitperm 
+	    (nonlinear 
+	       (conj (neg (objequal o null))
+		  (predcall p (predargs/1 o)))))).
 
-nn2perm/may : nn2perm nn/may
-	([p][o] unitperm 
-	   (conditional (objequal o null)
-	      (empty)
-	      (unitperm (nonlinear (predcall p (predargs/1 o)))))).
-
-% I don't think we need t.All->0 anymore since everything is now in shared	
-
-% nn2perm/yes : nn2perm nn/yes
-% 	([p][o] 
-% 	   (unitperm 
-% 	      (nonlinear 
-% 		 (conj (neg (objequal o null))
-% 		    (conj (nestInShared o) 
-% 		       (predcall p (predargs/1 o))))))).
-
-% nn2perm/may : nn2perm nn/may
-% 	([p][o] unitperm (conditional (objequal o null)
-% 		empty 
-% 		(unitperm (nonlinear 
-% 			(conj (nestInShared o) (predcall p (predargs/1 o))))))).
-     
+nn2perm/may
+   : nn2perm nn/may
+      ([p][o] 
+	 (unitperm
+	    (conditional (objequal o null)
+	       empty 
+	       (unitperm (nonlinear (predcall p (predargs/1 o))))))).
+			
 
 fldmap2perm : fldmap -> (object -> permission) -> type.
-
-% fldmap2perm/0 
-%    : fldmap2perm fldmap`map/0 ([o] (unitperm (basic o all null))).
 
 fldmap2perm/0 : fldmap2perm fldmap`map/0 ([o] empty).
 
@@ -72,6 +58,10 @@ methtp2proctype*/arg
       <- ({o} methtp2proctype* PM ((PF o) , Pi) (MTF o) (PTF o)).
 
 
+%abbrev obj-ne-null
+   : object -> permission =
+	([r] (unitperm (nonlinear (neg (objequal r (object/ z)))))).		     
+	       
 constp2proctype* : predmap -> fldmap -> permission ->
 	(object -> methtp) -> (object -> proctype) -> type.
 
@@ -86,7 +76,8 @@ constp2proctype* : predmap -> fldmap -> permission ->
 	
 constp2proctype*/base 
    : constp2proctype* PM FM Pi ([t] methtp/base T)
-      ([t] proctype/base (sharedPerm , (Pi , (OS t)))
+      ([t] proctype/base
+	 (sharedPerm , (Pi , ((obj-ne-null t) , (OS t))))
 	 (output/exists ([ret] (output/expr ret (sharedPerm , (PF ret))))))
       <- fldmap`domain FM S
       <- ({t} allocFields t S (OS t)) 
@@ -122,24 +113,6 @@ methmap2progtype/m
       <- methmap2progtype PM CM MMP WP
       <- methmap`shift N MM MMP
       <- progtype`shift N W WP.
-
-% methmap2progtype/c 
-%    : methmap2progtype PM CM 
-%       (methmap`map/+ N (methtp/arg CTF _) MM) W
-%       <- clsmap`lookup CM N FM
-%       <- constp2proctype PM FM CTF PTF
-%       <- methmap`shift N MM MM'
-%       <- methmap2progtype PM CM MM' W
-%       <- progtype`update W N (proctype/arg PTF) W'.
-
-% methmap2progtype/m 
-%    : methmap2progtype PM CM
-%       (methmap`map/+ N MT MM) W'
-%       <- clsmap`fresh CM N
-%       <- methtp2proctype PM MT PT
-%       <- methmap`shift N MM MM'
-%       <- methmap2progtype PM CM MM' W
-%       <- progtype`update W N PT W'.
 
 
 oflist2perm : predmap -> oflist -> permission -> type.
@@ -178,83 +151,10 @@ perm-output/args/+
       <- ({o} perm-output PM ((PF o) , Pi) Rslt (Out o)).
 
 
+
 %%% basic theorems
 
 %%% theorems about equality
-
-%theorem output/exists-preserves-eq :
-        forall* {K} {Out1: object -> output K} {Out2: object -> output K}
-        forall  {E: {o} environment`eq (Out1 o) (Out2 o)}
-        exists  {E: environment`eq
-		     (output/exists [o] (Out1 o)) (output/exists [o] (Out2 o))}
-        true.
-
-- : output/exists-preserves-eq ([o] environment`eq/) environment`eq/.
-
-%worlds (objvar) (output/exists-preserves-eq _ _).
-%total  {} (output/exists-preserves-eq _ _).
-
-
-%theorem combine-preserves-eq :
-        forall* {Pi1} {Pi2} {Pi3} {Pi4}
-        forall  {E1: permission`eq Pi1 Pi2}
-                {E2: permission`eq Pi3 Pi4}
-        exists  {E3: permission`eq (Pi1 , Pi3) (Pi2 , Pi4)}
-        true.
-
-- : combine-preserves-eq permission`eq/ permission`eq/ permission`eq/.
-
-%worlds (objvar) (combine-preserves-eq _ _ _).
-%total  {} (combine-preserves-eq _ _ _).
-
-
-%theorem permission`eq-implies-equiv :
-        forall* {Pi1} {Pi2}
-        forall  {EQ: permission`eq Pi1 Pi2}
-        exists  {EQV: equiv Pi1 Pi2}
-        true.
-
-- : permission`eq-implies-equiv permission`eq/ equiv/reflexive.
-
-%worlds (objvar) (permission`eq-implies-equiv _ _).
-%total  {} (permission`eq-implies-equiv _ _).
-
-
-%theorem nn2perm-preserves-eq :
-        forall* {NN} {PF} {PD1} {PD2}
-        forall  {NN2P: nn2perm NN PF}
-                {EQ: nullpred`eq PD1 PD2}
-        exists  {EQ: {o} permission`eq (PF PD1 o) (PF PD2 o)}
-        true.
-
-- : nn2perm-preserves-eq NN2P nullpred`eq/ ([_] permission`eq/).
-
-%worlds (objvar) (nn2perm-preserves-eq _ _ _).
-%total  {} (nn2perm-preserves-eq _ _ _).
-
-
-%theorem typing-preserves-eq :
-        forall* {W} {Pi} {E} {PD1} {PD2} {NN} {PF}
-        forall  {NN2P: nn2perm NN PF}
-                {EQ: nullpred`eq PD1 PD2}
-                {TYP1: typing W Pi E
-			(output/exists [r]
-			   (output/expr r ((PF PD1 r) , Pi)))}
-        exists  {TYP2: typing W Pi E
-			(output/exists [r]
-			   (output/expr r ((PF PD2 r) , Pi)))}
-        true.
-
-- : typing-preserves-eq NN2P EQ TYP1 TYP2
-     <- nn2perm-preserves-eq NN2P EQ PEQ
-     <- ({o} combine-preserves-eq (PEQ o) permission`eq/ (CBEQ o))
-     <- ({o} output/expr-preserves-eq object`eq/ (CBEQ o) (OEQ o))
-     <- output/exists-preserves-eq OEQ OEQ'
-     <- typing-respects-eq 
-	TYP1 progtype`eq/ permission`eq/ term`eq/ OEQ' TYP2. 
-
-%worlds (objvar) (typing-preserves-eq _ _ _ _).
-%total  {} (typing-preserves-eq _ _ _ _).
 
 
 %theorem allocFields-respects-eq :
@@ -271,25 +171,46 @@ perm-output/args/+
 %total  {} (allocFields-respects-eq _ _ _ _).
 
 
-%theorem no-variable-lookup :
-	forall* {PM} {C} {PDF: object -> nullpred} 
-	forall  {PMLP: {o} predmap`lookup PM C (PDF o)}
-	exists  {PD} {PMLP: predmap`lookup PM C PD}
-                {EQ: {o} predicate`eq (PDF o) PD}
-	true.		       
-			  
-- : no-variable-lookup ([_] predmap`lookup/= N1=N2) 
-     _ (predmap`lookup/= N1=N2) ([_] predicate`eq/).
+%%% theorems about nn2perm
 
-- : no-variable-lookup ([o] predmap`lookup/> (PMLP o) P)
-     PD (predmap`lookup/> PMLP' P) EQF
-     <- no-variable-lookup PMLP PD PMLP' EQF.
+%theorem false-implies-nn2perm :
+	forall* {NN} {PF}
+	forall  {F:void}
+	exists  {NN2P: nn2perm NN ([o] PF o)}
+	true.
 
-%worlds (objvar) (no-variable-lookup _ _ _ _).
-%total  PMLP (no-variable-lookup PMLP _ _ _).
+%worlds () (false-implies-nn2perm _ _).
+%total  {} (false-implies-nn2perm _ _).
 
 
-%%% theorems about totality
+% %theorem nn2perm-deterministic :
+%         forall* {NN} {PF} {PD1} {PD2}
+%         forall  {NN2P: nn2perm NN PF}
+%                 {EQ: nullpred`eq PD1 PD2}
+%         exists  {EQ: {o} permission`eq (PF PD1 o) (PF PD2 o)}
+%         true.
+
+% - : nn2perm-deterministic _ nullpred`eq/ ([_] permission`eq/).
+
+% %worlds (objvar) (nn2perm-deterministic _ _ _).
+% %total  {} (nn2perm-deterministic _ _ _).
+
+
+
+%theorem nn2perm-deterministic :
+        forall* {NN1} {NN2} {FF1} {FF2}
+        forall  {NN2P1: nn2perm NN1 FF1}
+                {NN2P2: nn2perm NN2 FF2}
+                {NNEQ: nn`eq NN1 NN2}
+        exists  {EQ: {p}{o} permission`eq (FF1 p o) (FF2 p o)}
+        true.
+
+- : nn2perm-deterministic nn2perm/yes nn2perm/yes _ ([_][_] permission`eq/).
+- : nn2perm-deterministic nn2perm/may nn2perm/may _ ([_][_] permission`eq/).
+
+%worlds (objvar) (nn2perm-deterministic _ _ _ _).
+%total  {} (nn2perm-deterministic _ _ _ _).
+
 
 %theorem nn2perm-total :
         forall {NN}
@@ -339,21 +260,7 @@ perm-output/args/+
 %total CO (oflist2perm-total _ CO _ _).
 
 
-%theorem nn2perm-deterministic :
-        forall* {NN1} {NN2} {FF1} {FF2}
-        forall  {NN2P1: nn2perm NN1 FF1}
-                {NN2P2: nn2perm NN2 FF2}
-                {NNEQ: nn`eq NN1 NN2}
-        exists  {EQ: {p}{o} permission`eq (FF1 p o) (FF2 p o)}
-        true.
-
-- : nn2perm-deterministic nn2perm/yes nn2perm/yes _ ([_][_] permission`eq/).
-- : nn2perm-deterministic nn2perm/may nn2perm/may _ ([_][_] permission`eq/).
-
-%worlds (objvar) (nn2perm-deterministic _ _ _ _).
-%total  {} (nn2perm-deterministic _ _ _ _).
-
-
+%%% theorems about nulltp2perm
 
 %theorem nulltp2perm-respects-eq :
         forall* {PM1} {PM2} {T1} {T2} {PF1} {PF2}
@@ -449,6 +356,40 @@ perm-output/args/+
 %total  {} (methtp2proctype-respects-eq* _ _ _ _ _ _).
 
 
+%theorem constp2proctype-respects-eq* :
+        forall* {PM1} {PM2} {FM1} {FM2} {Pi1} {Pi2} {MTF1} {MTF2} 
+		{PTF1} {PTF2}
+        forall  {CT2PT: constp2proctype* PM1 FM1 Pi1 ([t] MTF1 t) ([t] PTF1 t)}
+                {MEQ: predmap`eq PM1 PM2} {MEQ: fldmap`eq FM1 FM2}
+                {PEQ: permission`eq Pi1 Pi2}
+                {MTEQ: {t} methtp`eq (MTF1 t) (MTF2 t)}
+                {PTEQ: {t} proctype`eq (PTF1 t) (PTF2 t)}
+        exists  {CT2PT: constp2proctype* PM2 FM2 Pi2 ([t] MTF2 t) ([t] PTF2 t)}
+        true.
+
+- : constp2proctype-respects-eq* C2P predmap`eq/ fldmap`eq/
+     permission`eq/ ([_] methtp`eq/) ([_] proctype`eq/) C2P.
+
+%worlds (objvar) (constp2proctype-respects-eq* _ _ _ _ _ _ _).
+%total  {} (constp2proctype-respects-eq* _ _ _ _ _ _ _).
+
+
+%theorem constp2proctype-respects-eq :
+        forall* {PM1} {PM2} {FM1} {FM2} {MTF1} {MTF2} {PTF1} {PTF2}
+        forall  {CT2PT: constp2proctype PM1 FM1 ([t] MTF1 t) ([t] PTF1 t)}
+                {MEQ: predmap`eq PM1 PM2} {MEQ: fldmap`eq FM1 FM2}
+                {MTEQ: {t} methtp`eq (MTF1 t) (MTF2 t)}
+                {PTEQ: {t} proctype`eq (PTF1 t) (PTF2 t)}
+        exists  {CT2PT: constp2proctype PM2 FM2 ([t] MTF2 t) ([t] PTF2 t)}
+        true.
+
+- : constp2proctype-respects-eq C2P predmap`eq/ fldmap`eq/
+     ([_] methtp`eq/) ([_] proctype`eq/) C2P.
+
+%worlds () (constp2proctype-respects-eq _ _ _ _ _ _).
+%total  {} (constp2proctype-respects-eq _ _ _ _ _ _).
+
+
 %theorem methtp2proctype-respects-eq :
         forall* {PM1} {PM2} {MT1} {MT2} {PT1} {PT2}
         forall  {MT2PT: methtp2proctype PM1 MT1 PT1}
@@ -462,6 +403,24 @@ perm-output/args/+
 
 %worlds () (methtp2proctype-respects-eq _ _ _ _ _).
 %total  {} (methtp2proctype-respects-eq _ _ _ _ _).
+
+
+%theorem constp2proctype-respects-eq :
+	forall* {PM1} {PM2} {FM1} {FM2} 
+                {CTF1} {CTF2} {PTF1} {PTF2}
+        forall  {C2P: constp2proctype PM1 FM1 CTF1 PTF1}
+                {E: predmap`eq PM1 PM2}
+                {E: fldmap`eq FM1 FM2}
+                {E: {o} methtp`eq (CTF1 o) (CTF2 o)}
+                {E: proctype`eq (proctype/arg PTF1) (proctype/arg PTF2)}
+        exists  {C2P: constp2proctype PM2 FM2 CTF2 PTF2}
+        true.
+
+- : constp2proctype-respects-eq 
+     C2P predmap`eq/ fldmap`eq/ ([_] methtp`eq/) proctype`eq/ C2P.
+     
+%worlds (objvar) (constp2proctype-respects-eq _ _ _ _ _ _).
+%total  {} (constp2proctype-respects-eq _ _ _ _ _ _).
 
 
 %theorem proctype/base-preserves-eq :
@@ -491,6 +450,19 @@ perm-output/args/+
 %total  {} (proctype/arg-preserves-eq _ _).
 
 
+%theorem combine-preserves-eq :
+        forall* {Pi1} {Pi2} {Pi3} {Pi4}
+        forall  {E1: permission`eq Pi1 Pi2}
+                {E2: permission`eq Pi3 Pi4}
+        exists  {E3: permission`eq (Pi1 , Pi3) (Pi2 , Pi4)}
+        true.
+
+- : combine-preserves-eq permission`eq/ permission`eq/ permission`eq/.
+
+%worlds (objvar) (combine-preserves-eq _ _ _).
+%total  {} (combine-preserves-eq _ _ _).
+
+
 %theorem methtp2proctype-deterministic/L :
         forall* {PM1} {PM2} {MT1} {MT2} {PT1} {PT2} {Pi1} {Pi2}
         forall  {MT2PT: methtp2proctype* PM1 Pi1 MT1 PT1}
@@ -508,7 +480,7 @@ perm-output/args/+
      <- nulltp2perm-deterministic T2P1 T2P2 PMEQ TEQ ([o] PFEQ o)
      <- ({o} combine-preserves-eq permission`eq/ (PFEQ o) (PEQ o))
      <- ({o} output/expr-preserves-eq object`eq/ (PEQ o) (OEQ o))
-     <- output/exists-preserves-eq OEQ OEQ'
+     <- envadd-deterministic/exists OEQ OEQ'
      <- proctype/base-preserves-eq permission`eq/ OEQ' PTEQ.
      
 - : methtp2proctype-deterministic/L
@@ -541,43 +513,6 @@ perm-output/args/+
 %worlds (objvar) (methtp2proctype-deterministic _ _ _ _ _).
 %total  {} (methtp2proctype-deterministic _ _ _ _ _).
 
-% constp2proctype : predmap -> fldmap -> 
-% 	(object -> methtp) -> (object -> proctype) -> type.
-
-% constp2proctype/ 
-%    : constp2proctype PM FM ([t] MTF t) ([t] PTF t)
-%       <- fldmap`domain FM S
-%       <- ({t} allocFields t S (OS t))
-%       <- ({t} methtp2proctype* PM (OS t) (MTF t) (PTF t)).
-
-
-% %theorem constp2proctype-deterministic :
-%         forall* {PM1} {PM2} {CT1} {CT2} {PT1} {PT2}
-%         forall  {CT2PT: constp2proctype PM1 CT1 PT1}
-%                 {CT2PT: constp2proctype PM2 CT2 PT2}
-%                 {EQ: predmap`eq PM1 PM2}
-%                 {EQ: ({o} methtp`eq CT1 CT2}
-%         exists  {EQ: proctype`eq PT1 PT2}
-%         true.
-
-        
-%theorem constp2proctype-respects-eq :
-	forall* {PM1} {PM2} {FM1} {FM2} 
-                {CTF1} {CTF2} {PTF1} {PTF2}
-        forall  {C2P: constp2proctype PM1 FM1 CTF1 PTF1}
-                {E: predmap`eq PM1 PM2}
-                {E: fldmap`eq FM1 FM2}
-                {E: {o} methtp`eq (CTF1 o) (CTF2 o)}
-                {E: proctype`eq (proctype/arg PTF1) (proctype/arg PTF2)}
-        exists  {C2P: constp2proctype PM2 FM2 CTF2 PTF2}
-        true.
-
-- : constp2proctype-respects-eq 
-     C2P predmap`eq/ fldmap`eq/ ([_] methtp`eq/) proctype`eq/ C2P.
-     
-%worlds (objvar) (constp2proctype-respects-eq _ _ _ _ _ _).
-%total  {} (constp2proctype-respects-eq _ _ _ _ _ _).
-
 
 %theorem methmap2progtype-implies-methtp2proctype :
 	forall* {PM} {CM} {MM} {W} {M} {MT} 
@@ -588,97 +523,85 @@ perm-output/args/+
 		{MT2PT: methtp2proctype PM MT PT}			      
 	true.
 
+- : methmap2progtype-implies-methtp2proctype
+     (methmap2progtype/m _ _ _ CT2PT _) _
+     (methmap`lookup/= N=C) _ (progtype`lookup/= N=C) CT2PT.
+
+- : methmap2progtype-implies-methtp2proctype
+     (methmap2progtype/m N<<W=WP N<<MM=MMP MMP=>WP _ _) CML
+     (methmap`lookup/> MML P) _ (progtype`lookup/> WL P) CT2PT
+     <- nat`plus-swap-succ P P1
+     <- nat`plus-commutative P1 P2
+     <- methmap`shift-preserves-lookup* MML N<<MM=MMP P2 MMPL
+     <- methmap2progtype-implies-methtp2proctype MMP=>WP CML MMPL _ WPL CT2PT
+     <- progtype`shift-preserves-lookup-converse* WPL N<<W=WP P2 WL.
+
+- : methmap2progtype-implies-methtp2proctype	
+     (methmap2progtype/c N<<W=WP N<<MM=MMP MMP=>WP _ _) CML
+     (methmap`lookup/> MML P) _ (progtype`lookup/> WL P) CT2PT
+     <- nat`plus-swap-succ P P1
+     <- nat`plus-commutative P1 P2
+     <- methmap`shift-preserves-lookup* MML N<<MM=MMP P2 MMPL
+     <- methmap2progtype-implies-methtp2proctype MMP=>WP CML MMPL _ WPL CT2PT
+     <- progtype`shift-preserves-lookup-converse* WPL N<<W=WP P2 WL.
+
 %%% impossible case
-% - : methmap2progtype-implies-methtp2proctype  
-%      (methmap2progtype/c _ _ _ _ CM-LP) CM-FS
-%      (methmap`lookup/= N=M) _ W-LP MT2PT
-%      <- clsmap`fresh-lookup-not-equal CM-FS CM-LP M!=N
-%      <- nat`ne-symmetric M!=N N!=M
-%      <- nat`eq-ne-implies-false N=M N!=M F
-%      <- false-implies-methtp2proctype F _ MT2PT
-%      <- progtype`false-implies-lookup F W-LP.
-
-% - : methmap2progtype-implies-methtp2proctype 
-%      (methmap2progtype/c W-UD MM2W MM-SH CT2PT CM-LP) CM-FS
-%      (methmap`lookup/> MM-LP P) _ W-LP MT2PT
-%      <- nat`plus-swap-succ P P'
-%      <- nat`plus-commutative P' P''
-%      <- nat`plus-implies-gt P nat`eq/ GT
-%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-%      <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP' PT W-LP' MT2PT
-%      <- nat`ne-symmetric (nat`ne/< GT) NE
-%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
-
-% - : methmap2progtype-implies-methtp2proctype 
-%      (methmap2progtype/m W-UD _ _ MT2PT CM-FS) CM-FS'
-%      (methmap`lookup/= N=M) _ W-LP MT2PT
-%      <- progtype`update-implies-lookup W-UD W-LP'
-%      <- progtype`lookup-respects-eq W-LP' progtype`eq/ N=M proctype`eq/ W-LP.
-
-% - : methmap2progtype-implies-methtp2proctype 
-%      (methmap2progtype/m W-UD MM2W MM-SH _ _) CM-FS
-%      (methmap`lookup/> MM-LP P) _ W-LP MT2PT
-%      <- nat`plus-swap-succ P P'
-%      <- nat`plus-commutative P' P''
-%      <- nat`plus-implies-gt P nat`eq/ GT
-%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-%      <- methmap2progtype-implies-methtp2proctype MM2W CM-FS MM-LP' PT W-LP' MT2PT
-%      <- nat`ne-symmetric (nat`ne/< GT) NE
-%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
+- : methmap2progtype-implies-methtp2proctype
+     (methmap2progtype/c _ _ _ _ CML) CMFS
+     (methmap`lookup/= N=C) _ WL MT2PT
+     <- clsmap`fresh-lookup-not-equal CMFS CML C!=N
+     <- nat`ne-symmetric C!=N N!=C
+     <- nat`eq-ne-implies-false N=C N!=C F
+     <- false-implies-methtp2proctype F _ MT2PT
+     <- progtype`false-implies-lookup F WL.
 
 %worlds (objvar) (methmap2progtype-implies-methtp2proctype _ _ _ _ _ _).
-%trustme %total MM2W (methmap2progtype-implies-methtp2proctype MM2W _ _ _ _ _).
+%total  (MM2W) (methmap2progtype-implies-methtp2proctype MM2W _ _ _ _ _).
 
 
 %theorem methmap2progtype-implies-constp2proctype :
 	forall* {PM} {CM} {MM} {W} {C} {CTF} {FM} {T}
 	forall  {MM2W: methmap2progtype PM CM MM W}
-                {CM-LP: clsmap`lookup CM C FM}			      
-		{MM-LP: methmap`lookup MM C (methtp/arg CTF T)}
-	exists  {PTF} {W-LP: progtype`lookup W C (proctype/arg PTF)}
+                {CML: clsmap`lookup CM C FM}			      
+		{MML: methmap`lookup MM C (methtp/arg CTF T)}
+	exists  {PTF} {WL: progtype`lookup W C (proctype/arg PTF)}
 		{MT2PT: constp2proctype PM FM ([o] CTF o) ([o] PTF o)}
  	true.
 
+- : methmap2progtype-implies-constp2proctype
+     (methmap2progtype/c _ _ _ CT2PT CML) CML1
+     (methmap`lookup/= N=C) _ (progtype`lookup/= N=C) CT2PT1
+     <- clsmap`lookup-deterministic CML CML1 clsmap`eq/ N=C FM=FM1
+     <- constp2proctype-respects-eq CT2PT predmap`eq/ 
+	FM=FM1 ([_] methtp`eq/) proctype`eq/ CT2PT1.
+
+- : methmap2progtype-implies-constp2proctype
+     (methmap2progtype/m N<<W=WP N<<MM=MMP MMP=>WP _ _) CML
+     (methmap`lookup/> MML P) _ (progtype`lookup/> WL P) CT2PT
+     <- nat`plus-swap-succ P P1
+     <- nat`plus-commutative P1 P2
+     <- methmap`shift-preserves-lookup* MML N<<MM=MMP P2 MMPL
+     <- methmap2progtype-implies-constp2proctype MMP=>WP CML MMPL _ WPL CT2PT
+     <- progtype`shift-preserves-lookup-converse* WPL N<<W=WP P2 WL.
+
+- : methmap2progtype-implies-constp2proctype	
+     (methmap2progtype/c N<<W=WP N<<MM=MMP MMP=>WP _ _) CML
+     (methmap`lookup/> MML P) _ (progtype`lookup/> WL P) CT2PT
+     <- nat`plus-swap-succ P P1
+     <- nat`plus-commutative P1 P2
+     <- methmap`shift-preserves-lookup* MML N<<MM=MMP P2 MMPL
+     <- methmap2progtype-implies-constp2proctype MMP=>WP CML MMPL _ WPL CT2PT
+     <- progtype`shift-preserves-lookup-converse* WPL N<<W=WP P2 WL.
+
 %%% impossible case
-% - : methmap2progtype-implies-constp2proctype
-%      (methmap2progtype/m _ _ _ _ CM-FS) CM-LP
-%      (methmap`lookup/= N=C) _ W-LP CT2PT
-%      <- clsmap`fresh-lookup-not-equal CM-FS CM-LP C!=N
-%      <- nat`ne-symmetric C!=N N!=C
-%      <- nat`eq-ne-implies-false N=C N!=C F
-%      <- false-implies-constp2proctype F _ CT2PT
-%      <- progtype`false-implies-lookup F W-LP.
-
-% - : methmap2progtype-implies-constp2proctype
-%      (methmap2progtype/m W-UD MM2W MM-SH _ _) CM-LP
-%      (methmap`lookup/> MM-LP P) _ W-LP CT2PT
-%      <- nat`plus-swap-succ P P'
-%      <- nat`plus-commutative P' P''
-%      <- nat`plus-implies-gt P nat`eq/ GT
-%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-%      <- methmap2progtype-implies-constp2proctype MM2W CM-LP MM-LP' PT W-LP' CT2PT
-%      <- nat`ne-symmetric (nat`ne/< GT) NE
-%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
-
-% - : methmap2progtype-implies-constp2proctype
-%      (methmap2progtype/c W-UD _ _ CT2PT CM-LP) CM-LP' 
-%      (methmap`lookup/= N=C) _ W-LP CT2PT'
-%      <- progtype`update-implies-lookup W-UD W-LP'
-%      <- clsmap`lookup-deterministic CM-LP CM-LP' clsmap`eq/ N=C FM=FM'
-%      <- progtype`lookup-respects-eq W-LP' progtype`eq/ N=C proctype`eq/ W-LP
-%      <- constp2proctype-respects-eq
-% 	CT2PT predmap`eq/ FM=FM' ([_] methtp`eq/) proctype`eq/ CT2PT'.
-	
-% - : methmap2progtype-implies-constp2proctype
-%      (methmap2progtype/c W-UD MM2W MM-SH _ _) CM-LP
-%      (methmap`lookup/> MM-LP P) PTF W-LP CT2PT
-%      <- nat`plus-swap-succ P P'
-%      <- nat`plus-commutative P' P''
-%      <- nat`plus-implies-gt P nat`eq/ GT
-%      <- methmap`shift-preserves-lookup* MM-LP MM-SH P'' MM-LP'
-%      <- methmap2progtype-implies-constp2proctype MM2W CM-LP MM-LP' PTF W-LP' CT2PT
-%      <- nat`ne-symmetric (nat`ne/< GT) NE
-%      <- progtype`update-preserves-lookup W-LP' W-UD NE W-LP.
+- : methmap2progtype-implies-constp2proctype
+     (methmap2progtype/m _ _ _ _ CMFS) CML
+     (methmap`lookup/= N=C) _ WL CT2PT
+     <- clsmap`fresh-lookup-not-equal CMFS CML C!=N
+     <- nat`ne-symmetric C!=N N!=C
+     <- nat`eq-ne-implies-false N=C N!=C F
+     <- false-implies-constp2proctype F _ CT2PT
+     <- progtype`false-implies-lookup F WL.
 
 %worlds (objvar) (methmap2progtype-implies-constp2proctype _ _ _ _ _ _).
-%trustme %total MM2W (methmap2progtype-implies-constp2proctype MM2W _ _ _ _ _).
+%total  (MM2W) (methmap2progtype-implies-constp2proctype MM2W _ _ _ _ _).
