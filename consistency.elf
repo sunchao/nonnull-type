@@ -1,10 +1,28 @@
 %%%%% consistency.elf
 %%%%% Consistency relation between clsmap, methmap, fldmap and oflist
 %%%%% Chao Sun
-%%%%% March, 2010
+%%%%% $Id$
+%%%%% Created at March, 2010
 
 
-%%% Check whether class types used in method-type is consistent with the clsmap.
+%%% environment for local variables
+
+oflist : type.
+
+oflist/0 : oflist.
+
+oflist/+ : {x: object} ({t: nulltp} (oflist -> oflist)).
+
+
+oflist-lookup : oflist -> object -> nulltp -> type.
+
+oflist-lookup/= : oflist-lookup (oflist/+ O T _) O T.
+
+oflist-lookup/!= : oflist-lookup (oflist/+ O1 _ L) O2 T 
+      <- oflist-lookup L O2 T.
+
+
+%%% check whether class types used in method-type is consistent with the clsmap.
 
 clsmap-nulltp : clsmap -> nulltp -> type.
 
@@ -14,6 +32,8 @@ clsmap-nulltp/norm : clsmap-nulltp CM (nulltp/norm C _)
 clsmap-nulltp/null : clsmap-nulltp CM nulltp/null.
 
 
+%%% check that all types used in method type is in class map
+
 clsmap-methtp : clsmap -> methtp -> type.
 
 clsmap-methtp/base : clsmap-methtp CM (methtp/base T) <- clsmap-nulltp CM T.
@@ -22,18 +42,6 @@ clsmap-methtp/arg
    : clsmap-methtp CM (methtp/arg MTF T)
       <- clsmap-nulltp CM T
       <- ({o} clsmap-methtp CM (MTF o)).
-
-
-%%% check whether the return type of the constructor
-%%%  is the same as the nat provided.
-
-nat-constp : nat -> methtp -> type.
-
-nat-constp/base : nat-constp N (methtp/base (nulltp/norm N _)).
-
-nat-constp/arg 
-   : nat-constp N (methtp/arg ([o] MTF o) _)
-      <- {O} nat-constp N (MTF O).
 
 
 %%% Check whether a fldmap is consistent with a clsmap
@@ -62,10 +70,9 @@ clsmap-clsmap/+
    : clsmap-clsmap M (clsmap`map/+ C FM CM)
       <- clsmap`lookup M C FM
       <- clsmap-fldmap M FM
-      <- clsmap`shift C CM CM'
-      <- clsmap-clsmap M CM'.
+      <- clsmap`shift C CM CMP
+      <- clsmap-clsmap M CMP.
 
-% %abbrev clsmap-clsmap = [CM] clsmap-clsmap* CM CM.
 
 %%% Check whether a methmap is consistent with a clsmap
 
@@ -73,10 +80,20 @@ clsmap-methmap : clsmap -> methmap -> type.
 
 clsmap-methmap/0 : clsmap-methmap _ methmap`map/0.
 
-clsmap-methmap/+
-   : clsmap-methmap CM (methmap`map/+ _ MT MM)
+clsmap-methmap/m 
+   : clsmap-methmap CM (methmap`map/+ N MT MM)
+      <- clsmap`fresh CM N
       <- clsmap-methtp CM MT
-      <- clsmap-methmap CM MM.
+      <- methmap`shift N MM MMP
+      <- clsmap-methmap CM MMP.
+
+clsmap-methmap/c 
+   : clsmap-methmap CM
+      (methmap`map/+ N (methtp/arg ([t] MTF t) (nulltp/norm N nn/yes)) MM)
+      <- clsmap`lookup CM N FM
+      <- ({t} clsmap-methtp CM (MTF t))
+      <- methmap`shift N MM MMP
+      <- clsmap-methmap CM MMP.
 
 
 % consistency between clsmap and oflist
