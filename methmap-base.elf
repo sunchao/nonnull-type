@@ -1,8 +1,9 @@
 %%%%% methmap.elf
 %%%%% Method Mapping
 %%%%% Chao Sun
+%%%%% $Id$
 %%%%% February, 2010
-
+%%%%% Auto-generated file
 
 %%%% Definition for methtp
 
@@ -19,6 +20,7 @@ eq/ : eq M M.
 
 
 %{%
+#define WORLDS objvar
 #define EQ eq
 BEGIN_ELF
 #include "EQ.i"
@@ -31,7 +33,6 @@ END_ELF
 
 
 %{%
-#define WORLDS objvar
 #define data methtp
 BEGIN_ELF
 %abbrev methtp`eq = eq.

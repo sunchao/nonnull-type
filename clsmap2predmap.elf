@@ -1,6 +1,6 @@
 %%%% clsmap2predmap.elf
 %%%%% Chao Sun
-%%%%% $Id: clsmap2predmap.elf,v 1.10 2011/02/14 15:38:18 csun Exp csun $
+%%%%% $Id: clsmap2predmap.elf,v 1.11 2011/02/14 16:07:40 csun Exp csun $
 %%%%% Jun 30, 2010
 
 %abbrev own : nat = s z.
@@ -24,6 +24,8 @@ fldnn2perm/may : fldnn2perm F nn/may
         ([o] (unitperm (conditional (objequal o null) empty
 	    (unitperm (nonlinear (predcall p (predargs/1 o)))))))))).         
 
+
+%%% rules for converting a field map into a permission conjunction
 
 fldmap2conj : clsmap -> predmap -> fldmap -> 
      (object -> formula) -> predmap -> type.
@@ -56,26 +58,28 @@ fldmap2conj/norm/out
       <- fldmap2conj CM (PM2 (conj2pred CJ)) FMP ([r] G r) PMout.
 	 
 
+%%% rules for converting a class map into a predicate map
+
 clsmap2predmap* : clsmap -> predmap -> clsmap -> predmap -> type.
 
 %abbrev clsmap2predmap
    = [CM][PM] clsmap2predmap* CM predmap`map/0 CM PM.
 
-clsmap2predmap*/0 : clsmap2predmap* _ PM clsmap`map/0 PM.
+clsmap2predmap/0 : clsmap2predmap* _ PM clsmap`map/0 PM.
 
-clsmap2predmap*/in
+clsmap2predmap/in
    : clsmap2predmap* M PMin (clsmap`map/+ C _ CM) PMout
       <- predmap`lookup PMin C (conj2pred CJ)
-      <- clsmap`shift C CM CM'
-      <- clsmap2predmap* M PMin CM' PMout.
+      <- clsmap`shift C CM CMP
+      <- clsmap2predmap* M PMin CMP PMout.
 
-clsmap2predmap*/out
+clsmap2predmap/out
    : clsmap2predmap* M PMin (clsmap`map/+ C FM CM) PMout
       <- predmap`domain? PMin C false
-      <- clsmap`shift C CM CM'
-      <- ({f} predmap`update PMin C f (PMF' f))
-      <- ({f} fldmap2conj M (PMF' f) FM ([o] CJ f o) (PMF f))
-      <- clsmap2predmap* M (PMF (conj2pred CJ)) CM' PMout.
+      <- clsmap`shift C CM CMP
+      <- ({f} predmap`update PMin C f (PMP f))
+      <- ({f} fldmap2conj M (PMP f) FM ([o] CJ f o) (PMF f))
+      <- clsmap2predmap* M (PMF (conj2pred CJ)) CMP PMout.
 
 
 
@@ -143,18 +147,18 @@ clsmap2predmap*/out
 %total  {} (conj2pred-deterministic _ _).
 
 
-%theorem predmap-eq-respects-pred-eq :
+%theorem predmap`eq-respects-predicate`eq :
         forall* {PMF1} {PMF2} {CJ1} {CJ2}
         forall  {E: {f} predmap`eq (PMF1 f) (PMF2 f)}
                 {E: {f}{r} permission`eq (CJ1 f r) (CJ2 f r)}
         exists  {E: predmap`eq (PMF1 (conj2pred CJ1)) (PMF2 (conj2pred CJ2))}
         true.
 
-- : predmap-eq-respects-pred-eq
+- : predmap`eq-respects-predicate`eq
      ([_] predmap`eq/) ([_][_] permission`eq/) predmap`eq/.
 
-%worlds (objvar | predvar) (predmap-eq-respects-pred-eq _ _ _).
-%total  {} (predmap-eq-respects-pred-eq _ _ _).
+%worlds (objvar | predvar) (predmap`eq-respects-predicate`eq _ _ _).
+%total  {} (predmap`eq-respects-predicate`eq _ _ _).
 
 
 %theorem false-implies-fldmap2conj :
@@ -165,25 +169,6 @@ clsmap2predmap*/out
 
 %worlds (objvar | predvar) (false-implies-fldmap2conj _ _).
 %total  {} (false-implies-fldmap2conj _ _).
-
-
-%theorem fldmap2conj-respects-eq :
-        forall* {CM} {CM'} {FM} {FM'} {PMin} {PMin'} 
-                {PMout} {PMout'} {G} {G'}
-        forall  {E: clsmap`eq CM CM'}
-                {E: fldmap`eq FM FM'}
-                {E: predmap`eq PMin PMin'}
-                {E: predmap`eq PMout PMout'}
-                {E: {r} permission`eq (G r) (G' r)}
-                {F2C: fldmap2conj CM PMin FM ([r] G r) PMout}
-        exists  {F2C: fldmap2conj CM' PMin' FM' ([r] G' r) PMout'}
-        true.
-                
-- : fldmap2conj-respects-eq clsmap`eq/ fldmap`eq/
-     predmap`eq/ predmap`eq/ ([r] permission`eq/) F2C F2C.
-
-%worlds (objvar | predvar) (fldmap2conj-respects-eq _ _ _ _ _ _ _).
-%total  {} (fldmap2conj-respects-eq _ _ _ _ _ _ _).
 
 
 %theorem fldmap2conj-respects-eq :
@@ -212,8 +197,8 @@ clsmap2predmap*/out
 		     (conj (nested (PF2 PD2 r) null own) (G2 r))}
         true.
 
-- : fldmap2conj-deterministic/nest-preserves-eq ([_][_] permission`eq/)
-     predicate`eq/ ([_] permission`eq/) ([_] permission`eq/).
+- : fldmap2conj-deterministic/nest-preserves-eq
+     ([_][_] permission`eq/) predicate`eq/ ([_] permission`eq/) ([_] permission`eq/).
 
 %worlds (objvar | predvar) (fldmap2conj-deterministic/nest-preserves-eq _ _ _ _).
 %total  {} (fldmap2conj-deterministic/nest-preserves-eq _ _ _ _).
@@ -270,7 +255,7 @@ clsmap2predmap*/out
 	   PMin1=PMin2 C1=C2 predicate`eq/ (PME1=PME2 f))
      <- ({f} fldmap2conj-deterministic CM1=CM2 KM1=KM2 (PME1=PME2 f)
 	   (F2CF1 f) (F2CF2 f) ([r] CJ1=CJ2 f r) (PMF1=PMF2 f))
-     <- predmap-eq-respects-pred-eq PMF1=PMF2 CJ1=CJ2 PMF1=PMF2'
+     <- predmap`eq-respects-predicate`eq PMF1=PMF2 CJ1=CJ2 PMF1=PMF2'
      <- conj2pred-deterministic CJ1=CJ2 PD1=PD2
      <- fldmap`shift-deterministic FM1-SH FM2-SH F1=F2 FM1=FM2' FM1'=FM2'
      <- fldmap2conj-deterministic CM1=CM2 FM1'=FM2' PMF1=PMF2'

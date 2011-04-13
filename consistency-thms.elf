@@ -1,6 +1,7 @@
 %%%%% consistency-thms.elf
 %%%%% theorems about consistency between clsmap, fldmap, methmap, and oflist
 %%%%% Chao Sun
+%%%%% $Id$
 %%%%% Jun 17, 2010
 
 
@@ -25,23 +26,6 @@
 %total  {} (shift-preserves-clsmap-fldmap _ _ _).
 
 
-%theorem shift-preserves-clsmap-methmap : 
-        forall* {CM} {MM1} {MM2} {N}
-        forall  {CM-MM1: clsmap-methmap CM MM1}
-                {SH: methmap`shift N MM1 MM2}
-        exists  {CM-MM2: clsmap-methmap CM MM2}
-        true.
-
-- : shift-preserves-clsmap-methmap clsmap-methmap/0 _ clsmap-methmap/0.
-
-- : shift-preserves-clsmap-methmap 
-     (clsmap-methmap/+ CM-MM1 CM-MT) _ (clsmap-methmap/+ CM-MM1 CM-MT).
-
-%worlds () (shift-preserves-clsmap-methmap _ _ _).
-%total  {} (shift-preserves-clsmap-methmap _ _ _).
-
-
-
 % This theorem says if under a "bigger" clsmap CM0, CM is well-defined, and
 % class C in CM has fldmap FM, then all classes in FM is well-defined under CM0
 
@@ -55,22 +39,22 @@
 - : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ _ _ M-FM _)
      (clsmap`lookup/= _) M-FM.
 
-- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ M-CM' SH _ _)
-     (clsmap`lookup/> L P) M-FM
-     <- nat`plus-swap-succ P P'
-     <- nat`plus-commutative P' P''
-     <- clsmap`shift-preserves-lookup* L SH P'' L'
-     <- lookup-implies-clsmap-fldmap M-CM' L' M-FM.
+- : lookup-implies-clsmap-fldmap (clsmap-clsmap/+ M-CMP SH _ _)
+     (clsmap`lookup/> L P0) M-FM
+     <- nat`plus-swap-succ P0 P1
+     <- nat`plus-commutative P1 P2
+     <- clsmap`shift-preserves-lookup* L SH P2 L2
+     <- lookup-implies-clsmap-fldmap M-CMP L2 M-FM.
 
 %worlds () (lookup-implies-clsmap-fldmap _ _ _).
-%total  M-CM (lookup-implies-clsmap-fldmap M-CM _ _).
+%total  (M-CM) (lookup-implies-clsmap-fldmap M-CM _ _).
 
 
 %theorem lookup-implies-clsmap-nulltp :
         forall* {CM} {FM} {F} {T}
         forall  {CM-FM: clsmap-fldmap CM FM}
-                {FM-LP: fldmap`lookup FM F T}
-        exists  {CM-T : clsmap-nulltp CM T}
+                {FML: fldmap`lookup FM F T}
+        exists  {CM-NT : clsmap-nulltp CM T}
         true.
 
 - : lookup-implies-clsmap-nulltp (clsmap-fldmap/n _) _ clsmap-nulltp/null.
@@ -87,7 +71,7 @@
      <- lookup-implies-clsmap-nulltp CM-FM LP CM-T.
 
 %worlds () (lookup-implies-clsmap-nulltp _ _ _).
-%total  CM-FM (lookup-implies-clsmap-nulltp CM-FM _ _).
+%total  (CM-FM) (lookup-implies-clsmap-nulltp CM-FM _ _).
 
 
 %theorem lookup-implies-clsmap-methtp :
@@ -97,21 +81,37 @@
         exists  {CM-MT: clsmap-methtp CM MT}
         true.
 
-- : lookup-implies-clsmap-methtp (clsmap-methmap/+ CM-MM CM-MT)
-     (methmap`lookup/= _) CM-MT.
+- : lookup-implies-clsmap-methtp
+     (clsmap-methmap/m _ _ CM-MT _) (methmap`lookup/= _) CM-MT.
 
-- : lookup-implies-clsmap-methtp (clsmap-methmap/+ CM-MM _)
-     (methmap`lookup/> LP _) CM-MT
-     <- lookup-implies-clsmap-methtp CM-MM LP CM-MT.
+- : lookup-implies-clsmap-methtp
+     (clsmap-methmap/c _ _ ([t] CM-MTF t) CML) (methmap`lookup/= _) 
+     (clsmap-methtp/arg CM-MTF (clsmap-nulltp/norm (clsmap`domain?/in CML))).
+
+- : lookup-implies-clsmap-methtp
+     (clsmap-methmap/m CM-MMP N<<MM=MMP _ _) 
+     (methmap`lookup/> MML P1) CM-MT
+     <- nat`plus-swap-succ P1 P2
+     <- nat`plus-commutative P2 P3
+     <- methmap`shift-preserves-lookup* MML N<<MM=MMP P3 MMPL
+     <- lookup-implies-clsmap-methtp CM-MMP MMPL CM-MT.
+
+- : lookup-implies-clsmap-methtp
+     (clsmap-methmap/c CM-MMP N<<MM=MMP _ _)
+     (methmap`lookup/> MML P1) CM-MT
+     <- nat`plus-swap-succ P1 P2
+     <- nat`plus-commutative P2 P3
+     <- methmap`shift-preserves-lookup* MML N<<MM=MMP P3 MMPL
+     <- lookup-implies-clsmap-methtp CM-MMP MMPL CM-MT.
 
 %worlds (objvar) (lookup-implies-clsmap-methtp _ _ _).
-%total MM-LP (lookup-implies-clsmap-methtp _ MM-LP _).
+%total  (L) (lookup-implies-clsmap-methtp L _ _).
 
 
 %theorem oflist-lookup-implies-clsmap-nulltp :
         forall* {CM} {L} {O} {T}
         forall  {CM-L: clsmap-oflist CM L} 
-                {LP: oflist-lookup L O T}
+                {LL: oflist-lookup L O T}
         exists  {CM-T: clsmap-nulltp CM T}
         true.
 
@@ -124,7 +124,7 @@
 
 
 %worlds (objvar) (oflist-lookup-implies-clsmap-nulltp _ _ _).
-%total  LP (oflist-lookup-implies-clsmap-nulltp _ LP _).
+%total  (LP) (oflist-lookup-implies-clsmap-nulltp _ LP _).
 
 
 %theorem clsmap-methtp-implies-lookup :
@@ -132,22 +132,22 @@
 	forall  {CM-MT: clsmap-methtp CM MT}
 		{TYP: nullCallTyping CM MM R MT 
 		       (result/expr (nulltp/norm C NN))}
-	exists  {CT} {CM-LP: clsmap`lookup CM C CT}
+	exists  {CT} {CML: clsmap`lookup CM C CT}
 	true.
 
 - : clsmap-methtp-implies-lookup 
      (clsmap-methtp/base (clsmap-nulltp/norm (clsmap`domain?/in L))) _ _ L.
 
 - : clsmap-methtp-implies-lookup 
-     (clsmap-methtp/arg CM-MT CM-NT) (nullCallTyping/arg TYP) _ CM-LP
-     <- ({o} clsmap-methtp-implies-lookup (CM-MT o) (TYP o) _ CM-LP).
+     (clsmap-methtp/arg CM-MT CM-NT) (nullCallTyping/arg TYP) _ CML
+     <- ({o} clsmap-methtp-implies-lookup (CM-MT o) (TYP o) _ CML).
 
 %worlds (objvar) (clsmap-methtp-implies-lookup _ _ _ _).
-%total  TYP (clsmap-methtp-implies-lookup _ TYP _ _).
+%total  (TYP) (clsmap-methtp-implies-lookup _ TYP _ _).
 
 
 %theorem clsmap-methtp-implies-clsmap-nulltp :
-        forall* {CM} {MM:methmap} {R} {MT} {T}
+        forall* {CM} {MM} {R} {MT} {T}
         forall  {CM-MT: clsmap-methtp CM MT}
                 {TYP: nullCallTyping CM MM R MT (result/expr T)}
         exists  {CM-T: clsmap-nulltp CM T}
@@ -156,21 +156,21 @@
 - : clsmap-methtp-implies-clsmap-nulltp _ _ clsmap-nulltp/null.
 
 - : clsmap-methtp-implies-clsmap-nulltp CM-MT TYP
-     (clsmap-nulltp/norm (clsmap`domain?/in CM-LP))
-     <- clsmap-methtp-implies-lookup CM-MT TYP CT CM-LP.
+     (clsmap-nulltp/norm (clsmap`domain?/in CML))
+     <- clsmap-methtp-implies-lookup CM-MT TYP CT CML.
 
 %worlds (objvar) (clsmap-methtp-implies-clsmap-nulltp _ _ _).
-%total   CM-MT   (clsmap-methtp-implies-clsmap-nulltp CM-MT _ _).
+%total  (CM-MT)   (clsmap-methtp-implies-clsmap-nulltp CM-MT _ _).
 
 
 %theorem clsmap-nulltp-implies-lookup : 
 	forall* {CM} {C} {NN}
 	forall  {CM-T: clsmap-nulltp CM (nulltp/norm C NN)}
-	exists  {FM} {L: clsmap`lookup CM C FM}		 
+	exists  {FM} {CML: clsmap`lookup CM C FM}		 
 	true.
 
-- : clsmap-nulltp-implies-lookup (clsmap-nulltp/norm IN) FM L
-     <- clsmap`in-implies-lookup IN FM L.
+- : clsmap-nulltp-implies-lookup (clsmap-nulltp/norm IN) FM CML
+     <- clsmap`in-implies-lookup IN FM CML.
 
 %worlds () (clsmap-nulltp-implies-lookup _ _ _).
 %total  {} (clsmap-nulltp-implies-lookup _ _ _).
@@ -242,7 +242,7 @@
      (nulltIfNotNull _ TYP _) CM-T
      <- typing-implies-clsmap-nulltp CM-CM CM-MM CM-L TYP CM-T.
 
-% - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltSub TYP CM-T' _) CM-T'.
+- : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L (nulltSub TYP CM-T' _) CM-T'.
 
 - : typing-implies-clsmap-nulltp CM-CM CM-MM CM-L
      (nulltCallMeth CTYP _ MM-LP _) CM-T
@@ -255,4 +255,4 @@
      <- ({o} clsmap-methtp-implies-clsmap-nulltp (CM-MTF o) (CTYP o) CM-T).
 
 %worlds (objvar) (typing-implies-clsmap-nulltp _ _ _ _ _).
-%total  TYP (typing-implies-clsmap-nulltp _ _ _ TYP _).
+%total  (TYP) (typing-implies-clsmap-nulltp _ _ _ TYP _).

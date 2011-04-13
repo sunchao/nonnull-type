@@ -2,7 +2,9 @@
 %%%%% Map Class ID to their predicate (without recursion)
 %%%%% Used in proving totality of conversion
 %%%%% Chao Sun
-%%%%% March, 2010
+%%%%% $Id$
+%%%%% Created at March, 2010
+%%%%% Auto-generated file
 
 %%% Functor Use
 
