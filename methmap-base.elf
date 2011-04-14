@@ -1,7 +1,7 @@
 %%%%% methmap.elf
 %%%%% Method Mapping
 %%%%% Chao Sun
-%%%%% $Id$
+%%%%% $Id: methmap-base.elf,v 1.3 2011/04/13 19:43:23 csun Exp csun $
 %%%%% February, 2010
 %%%%% Auto-generated file
 
@@ -24,6 +24,32 @@ eq/ : eq M M.
 #define EQ eq
 BEGIN_ELF
 #include "EQ.i"
+
+
+%theorem base-eq-implies-nulltp-eq :
+        forall* {T1} {T2}
+        forall  {E: eq (methtp/base T1) (methtp/base T2)}
+        exists  {E: nulltp`eq T1 T2}
+        true.
+
+- : base-eq-implies-nulltp-eq eq/ nulltp`eq/.
+
+%worlds (objvar) (base-eq-implies-nulltp-eq _ _).
+%total  {} (base-eq-implies-nulltp-eq _ _).
+
+
+%theorem arg-eq-implies-nulltp-eq :
+        forall* {T1} {T2} {MTF1} {MTF2}
+        forall  {E: eq (methtp/arg MTF1 T1) (methtp/arg MTF2 T2)}
+        exists  {E: {o} eq (MTF1 o) (MTF2 o)}
+                {E: nulltp`eq T1 T2}
+        true.
+
+- : arg-eq-implies-nulltp-eq eq/ ([_] eq/) nulltp`eq/.
+
+%worlds (objvar) (arg-eq-implies-nulltp-eq _ _ _).
+%total  {} (arg-eq-implies-nulltp-eq _ _ _).
+
 END_ELF
 #undef EQ
 %}%
