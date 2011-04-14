@@ -2,7 +2,7 @@
 %%%%% Map Class ID to their predicate (without recursion)
 %%%%% Used in proving totality of conversion
 %%%%% Chao Sun
-%%%%% $Id$
+%%%%% $Id: predmap-base.elf,v 1.3 2011/04/13 19:45:58 csun Exp csun $
 %%%%% Created at March, 2010
 %%%%% Auto-generated file
 
@@ -22,20 +22,20 @@ BEGIN_ELF
 %abbrev nullpred`eq-transitive = predicate`eq-transitive.
 %abbrev nullpred`leq = nullpred`eq.
 %abbrev nullpred`false-implies-leq = predicate`false-implies-eq.
-%abbrev nullpred`leq-reflexive = predicate`eq-reflxive.
+%abbrev nullpred`leq-reflexive = predicate`eq-reflexive.
 %abbrev nullpred`leq-transitive = predicate`eq-transitive.
 
 
 %theorem nullpred`leq-anti-symmetric :
-        forall* {PD1} {PD2} 
+        forall* {PD1:nullpred} {PD2:nullpred} 
         forall  {L12: nullpred`leq PD1 PD2} {L21: nullpred`leq PD2 PD1}
         exists  {E: nullpred`eq PD1 PD2}
         true.
 
 - : nullpred`leq-anti-symmetric E _ E.
 
-%worlds () (unit`leq-anti-symmetric _ _ _).
-%total { } (unit`leq-anti-symmetric _ _ _).
+%worlds (predvar | objvar) (nullpred`leq-anti-symmetric _ _ _).
+%total { } (nullpred`leq-anti-symmetric _ _ _).
 
 
 #include "map-base.elf"
