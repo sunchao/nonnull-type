@@ -2,7 +2,7 @@
 %%%%% Map Class ID to their predicate (without recursion)
 %%%%% Used in proving totality of conversion
 %%%%% Chao Sun
-%%%%% $Id: predmap-base.elf,v 1.4 2011/04/14 04:30:14 csun Exp csun $
+%%%%% $Id: predmap-base.elf,v 1.5 2011/04/15 19:28:43 csun Exp csun $
 %%%%% Created at March, 2010
 %%%%% Auto-generated file
 
@@ -39,7 +39,7 @@ BEGIN_ELF
 
 
 %theorem nullpred`leq-respects-eq :
-        forall* {PD1} {PD2} {PD3} {PD4}
+        forall* {PD1:nullpred} {PD2:nullpred} {PD3:nullpred} {PD4:nullpred}
         forall  {L1: nullpred`leq PD1 PD2}
                 {E1: nullpred`eq PD1 PD3}
                 {E2: nullpred`eq PD2 PD4}
