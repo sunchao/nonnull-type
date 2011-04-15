@@ -2,7 +2,7 @@
 %%%%% Map Class ID to their predicate (without recursion)
 %%%%% Used in proving totality of conversion
 %%%%% Chao Sun
-%%%%% $Id: predmap-base.elf,v 1.3 2011/04/13 19:45:58 csun Exp csun $
+%%%%% $Id: predmap-base.elf,v 1.4 2011/04/14 04:30:14 csun Exp csun $
 %%%%% Created at March, 2010
 %%%%% Auto-generated file
 
@@ -36,6 +36,20 @@ BEGIN_ELF
 
 %worlds (predvar | objvar) (nullpred`leq-anti-symmetric _ _ _).
 %total { } (nullpred`leq-anti-symmetric _ _ _).
+
+
+%theorem nullpred`leq-respects-eq :
+        forall* {PD1} {PD2} {PD3} {PD4}
+        forall  {L1: nullpred`leq PD1 PD2}
+                {E1: nullpred`eq PD1 PD3}
+                {E2: nullpred`eq PD2 PD4}
+        exists  {L3: nullpred`leq PD3 PD4}
+        true.
+
+- : nullpred`leq-respects-eq L _ _ L.
+
+%worlds (predvar | objvar) (nullpred`leq-respects-eq _ _ _ _).
+%total { } (nullpred`leq-respects-eq _ _ _ _).
 
 
 #include "map-base.elf"
