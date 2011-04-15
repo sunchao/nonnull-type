@@ -4,9 +4,9 @@ SUBDIRS = library frac-nesting simple-concur permission-type
 META = Makefile sources.cfg
 GEN  = clsmap.elf methmap.elf fldmap.elf predmap.elf
 HELP = clsmap-base.elf methmap-base.elf fldmap-base.elf predmap-base.elf
-HAND = nonnull.elf nulltp.elf subtype.elf oflist.elf typing.elf consistency.elf \
-       consistency-thms.elf clsmap2predmap.elf clsmap2predmap-thms.elf conversion.elf \
-			 conversion-lemmas.elf conversion-thms.elf 
+HAND = nonnull.elf subtype.elf typing.elf consistency.elf \
+       consistency-thms.elf clsmap2predmap.elf clsmap2predmap-thms.elf \
+       conversion.elf conversion-lemmas.elf conversion-thms.elf 
 CSRC = clsmap.cpp fldmap.cpp methmap.cpp predmap.cpp
 
 RELEASE = nonnull-type.tgz
@@ -18,7 +18,9 @@ all : ${SUBDIRS} ${SRC} ${GEN}
 
 CAT = cat
 # The C preprocessor (not C++ compiler!)
-CPP = /usr/bin/cpp
+# Modify it if yours are not in the same path
+CPP = /lib/cpp
+
 CPPFLAGS = -DBEGIN_ELF="%}%" -DEND_ELF="%{%" -I../library 
 REC = ../library/remove-empty-comments.pl
 GN = ../library/get-names.pl
