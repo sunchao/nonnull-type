@@ -63,6 +63,12 @@ BEGIN_ELF
 %abbrev nulltp`eq-transitive = eq-transitive.
 %abbrev nulltp`nulltp-eq-implies-eq = nulltp-eq-implies-eq.
 %abbrev nulltp`nulltp-preserves-eq = nulltp-preserves-eq.
+%abbrev nulltp`leq = eq.
+%abbrev nulltp`false-implies-leq = false-implies-eq.
+%abbrev nulltp`leq-reflexive = eq-reflexive.
+%abbrev nulltp`leq-transitive = eq-transitive.
+%abbrev nulltp`nulltp-eq-implies-eq = nulltp-eq-implies-eq.
+%abbrev nulltp`nulltp-preserves-eq = nulltp-preserves-eq.
 #include "map-base.elf"
 #include "map-domain.elf"
 END_ELF

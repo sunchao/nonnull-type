@@ -1,7 +1,7 @@
 %%%%% clsmap.elf
 %%%%% Mapping a class to its fldmap
 %%%%% Chao Sun
-%%%%% $Id$
+%%%%% $Id: clsmap-base.elf,v 1.4 2011/04/14 04:36:20 csun Exp $
 %%%%% June 30, 2010
 %%%%% Auto-generated file
 
@@ -21,15 +21,29 @@ BEGIN_ELF
 
 
 %theorem fldmap`leq-anti-symmetric :
-        forall* {PD1} {PD2} 
-        forall  {L12: fldmap`leq PD1 PD2} {L21: fldmap`leq PD2 PD1}
-        exists  {E: fldmap`eq PD1 PD2}
+        forall* {M1} {M2} 
+        forall  {L12: fldmap`leq M1 M2} {L21: fldmap`leq M2 M1}
+        exists  {E: fldmap`eq M1 M2}
         true.
 
 - : fldmap`leq-anti-symmetric E _ E.
 
 %worlds () (fldmap`leq-anti-symmetric _ _ _).
 %total { } (fldmap`leq-anti-symmetric _ _ _).
+
+
+%theorem fldmap`leq-respects-eq :
+        forall* {M1} {M2} {M3} {M4}
+        forall  {L1: fldmap`leq M1 M2}
+                {E1: fldmap`eq M1 M3}
+                {E2: fldmap`eq M2 M4}
+        exists  {L3: fldmap`leq M3 M4}
+        true.
+
+- : fldmap`leq-respects-eq L _ _ L.
+
+%worlds () (fldmap`leq-respects-eq _ _ _ _).
+%total { } (fldmap`leq-respects-eq _ _ _ _).
 
 
 #include "map-base.elf"
